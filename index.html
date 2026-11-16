@@ -945,7 +945,7 @@
           <span class="text-lg">☁️</span>
           <div>
             <h3 class="text-sm font-bold theme-heading">Google Drive Cloud Sync</h3>
-            <p class="text-[11px] theme-muted">Back up all chapters, images &amp; cloze states to your personal Google Drive.</p>
+            <p class="text-[11px] theme-muted">Two-way sync and dated conflict-safe backups across your devices.</p>
           </div>
         </div>
         <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
@@ -967,7 +967,7 @@
         <!-- Method Switch Tabs -->
         <div class="grid grid-cols-2 gap-1.5 p-1 rounded-lg theme-nested border border-[var(--border-color)]">
           <button type="button" id="tab-btn-appsscript" onclick="switchGDriveTab('appsscript')" class="py-1.5 px-2 rounded-md font-semibold bg-sky-500/20 text-sky-400 transition">
-            ⚡ Easy Apps Script URL (Recommended)
+            ⚡ Apps Script (Legacy backup)
           </button>
           <button type="button" id="tab-btn-oauth" onclick="switchGDriveTab('oauth')" class="py-1.5 px-2 rounded-md font-semibold theme-muted hover:text-[var(--text-heading)] transition">
             🔑 Google OAuth Client ID
@@ -1015,7 +1015,7 @@ function getOrCreateFile_() {
           <div>
             <label class="block font-semibold theme-heading mb-1">Google Cloud OAuth 2.0 Client ID (Web Application)</label>
             <input id="gdrive-client-id" type="text" placeholder="1234567890-abcdefg.apps.googleusercontent.com" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
-            <p class="text-[11px] theme-muted mt-1">Uses official <code>drive.file</code> scope — only accesses the backup file created by this app.</p>
+            <p class="text-[11px] theme-muted mt-1">Recommended for two-way sync. Uses the official <code>drive.file</code> scope and accesses files created by this app.</p>
           </div>
           <button type="button" onclick="connectGoogleOAuth()" class="px-3.5 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 font-semibold">
             🔐 Sign in with Google
@@ -1024,6 +1024,9 @@ function getOrCreateFile_() {
 
         <!-- Push & Pull Cloud Action Buttons -->
         <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-[var(--border-color)]">
+          <button type="button" onclick="syncWithGoogleDrive()" class="col-span-2 py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
+            <span>🔄</span> Sync Now (Two-way)
+          </button>
           <button type="button" onclick="pushBackupToGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
             <span>⬆️</span> Push Backup to Drive
           </button>
@@ -1660,6 +1663,9 @@ function getOrCreateFile_() {
     };
     let gdriveAccessToken = null;
     let gdriveAutoSyncTimer = null;
+    let gdriveSyncInProgress = false;
+    const GDRIVE_SYNC_STATE_KEY = 'NEET_BioNotes_GDriveSyncState';
+    const GDRIVE_DEVICE_KEY = 'NEET_BioNotes_DeviceId';
 
     window.addEventListener('DOMContentLoaded', async () => {
       loadPreferences();
@@ -1884,7 +1890,7 @@ function getOrCreateFile_() {
           }
 
           // Trigger background Google Drive Auto-Sync only after local save succeeds.
-          if (gdriveConfig.autoSync && (gdriveConfig.scriptUrl || gdriveAccessToken)) {
+          if (gdriveConfig.autoSync && gdriveAccessToken && gdriveConfig.mode === 'oauth') {
             clearTimeout(gdriveAutoSyncTimer);
             gdriveAutoSyncTimer = setTimeout(() => {
               pushBackupToGoogleDrive(true);
@@ -2647,8 +2653,10 @@ function getOrCreateFile_() {
         callback: (resp) => {
           if (resp && resp.access_token) {
             gdriveAccessToken = resp.access_token;
+            gdriveConfig.mode = 'oauth'; saveGDriveConfig();
             updateGDriveUI();
-            showToast('Signed in to Google Drive!');
+            showToast('Signed in to Google Drive! Starting a safe sync check...');
+            setTimeout(() => syncWithGoogleDrive(false), 400);
           } else {
             showToast('Google sign-in cancelled or failed.');
           }
@@ -2677,140 +2685,216 @@ function getOrCreateFile_() {
       };
     }
 
-    async function pushBackupToGoogleDrive(silent = false) {
-      const payload = buildFullBackupPayload();
-      const jsonStr = JSON.stringify(payload);
-
-      // Option A: Google Apps Script Web App URL
-      if (gdriveConfig.mode === 'appsscript' && gdriveConfig.scriptUrl) {
-        if (!silent) showToast('Uploading backup to Google Drive...');
-        try {
-          await fetch(gdriveConfig.scriptUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: jsonStr
-          });
-          gdriveConfig.lastSync = new Date().toISOString();
-          saveGDriveConfig();
-          if (!silent) showToast('☁️ Backup pushed to Google Drive!');
-        } catch (err) {
-          if (!silent) showToast('Drive sync failed — verify your Web App URL & internet.');
-        }
-        return;
+    function getGDriveDeviceId() {
+      let id = localStorage.getItem(GDRIVE_DEVICE_KEY);
+      if (!id) {
+        id = 'device-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+        localStorage.setItem(GDRIVE_DEVICE_KEY, id);
       }
+      return id;
+    }
 
-      // Option B: Google Drive REST API v3 with OAuth2 Access Token
-      if (gdriveAccessToken) {
-        if (!silent) showToast('Syncing with Google Drive API...');
-        try {
-          const searchRes = await fetch(
-            "https://www.googleapis.com/drive/v3/files?q=name='NEET_BioNotes_Cloud_Backup.json' and trashed=false&fields=files(id,name)",
-            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
-          );
-          const searchData = await searchRes.json();
-          const existingFile = searchData.files && searchData.files[0];
-
-          const metadata = {
-            name: 'NEET_BioNotes_Cloud_Backup.json',
-            mimeType: 'application/json'
-          };
-          const boundary = '-------neetbionotes314159';
-          const multipartBody =
-            `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
-            `--${boundary}\r\nContent-Type: application/json\r\n\r\n${jsonStr}\r\n--${boundary}--`;
-
-          const uploadUrl = existingFile
-            ? `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`
-            : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-
-          const upRes = await fetch(uploadUrl, {
-            method: existingFile ? 'PATCH' : 'POST',
-            headers: {
-              Authorization: 'Bearer ' + gdriveAccessToken,
-              'Content-Type': `multipart/related; boundary="${boundary}"`
-            },
-            body: multipartBody
-          });
-
-          if (!upRes.ok) throw new Error('Drive upload failed');
-          gdriveConfig.lastSync = new Date().toISOString();
-          saveGDriveConfig();
-          if (!silent) showToast('☁️ Backup synced to Google Drive!');
-        } catch (err) {
-          if (!silent) showToast('OAuth Drive sync error — try signing in again.');
-        }
-        return;
+    async function hashBackupPayload(payload) {
+      const stable = { ...payload };
+      delete stable.exportedAt;
+      delete stable.syncMeta;
+      const bytes = new TextEncoder().encode(JSON.stringify(stable));
+      if (window.crypto && crypto.subtle) {
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
       }
+      // Stable fallback for older browsers; used only for change detection.
+      let h = 2166136261;
+      for (const b of bytes) { h ^= b; h = Math.imul(h, 16777619); }
+      return 'fnv-' + (h >>> 0).toString(16) + '-' + bytes.length;
+    }
 
-      if (!silent) {
-        showToast('Configure Apps Script URL or Sign in with Google first.');
+    async function driveApi(path, options = {}) {
+      if (!gdriveAccessToken) throw new Error('Google Drive is not connected on this device.');
+      const res = await fetch('https://www.googleapis.com/drive/v3/' + path, {
+        ...options,
+        headers: { Authorization: 'Bearer ' + gdriveAccessToken, ...(options.headers || {}) }
+      });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error('Drive API ' + res.status + ': ' + detail.slice(0, 300));
+      }
+      return res.status === 204 ? null : res.json();
+    }
+
+    async function findDriveBackup() {
+      const q = encodeURIComponent("name='NEET_BioNotes_Cloud_Backup.json' and trashed=false");
+      const data = await driveApi('files?q=' + q + '&pageSize=10&orderBy=modifiedTime desc&fields=files(id,name,modifiedTime,version,mimeType)');
+      return (data.files || [])[0] || null;
+    }
+
+    async function readDriveBackup(file) {
+      const res = await fetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(file.id) + '?alt=media', {
+        headers: { Authorization: 'Bearer ' + gdriveAccessToken }
+      });
+      if (!res.ok) throw new Error('Could not download Drive backup (' + res.status + ').');
+      return await res.json();
+    }
+
+    async function uploadDriveJson(name, payload, fileId = null) {
+      const boundary = 'neetbio_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+      const metadata = { name, mimeType: 'application/json' };
+      const body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) +
+        '\r\n--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(payload) + '\r\n--' + boundary + '--';
+      const url = 'https://www.googleapis.com/upload/drive/v3/files' + (fileId ? '/' + encodeURIComponent(fileId) : '') + '?uploadType=multipart&fields=id,name,modifiedTime,version';
+      const res = await fetch(url, {
+        method: fileId ? 'PATCH' : 'POST',
+        headers: { Authorization: 'Bearer ' + gdriveAccessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
+        body
+      });
+      if (!res.ok) throw new Error('Drive upload failed (' + res.status + '): ' + (await res.text().catch(() => '')).slice(0, 250));
+      return await res.json();
+    }
+
+    function validateDrivePayload(data) {
+      return !!(data && data.app === 'NEET_BioNotes' && data.library && data.library.chapters && typeof data.library.chapters === 'object');
+    }
+
+    async function applyDrivePayload(data, label) {
+      if (!validateDrivePayload(data)) throw new Error('The Drive file is not a valid NEET BioNotes backup.');
+      recordRollingSnapshot(label || 'Before Drive restore');
+      const oldLibrary = JSON.parse(JSON.stringify(library));
+      const oldPrefs = { currentFontSize, currentFontFamily, currentTheme };
+      try {
+        library = data.library;
+        if (data.preferences) {
+          currentFontSize = Number(data.preferences.fontSize) || currentFontSize;
+          currentFontFamily = data.preferences.fontFamily || currentFontFamily;
+          currentTheme = data.preferences.theme || currentTheme;
+        }
+        await persistLibrary();
+        renderSidebar();
+        loadActiveChapterIntoDOM();
+        if (typeof applyTheme === 'function') applyTheme(currentTheme);
+      } catch (err) {
+        library = oldLibrary;
+        currentFontSize = oldPrefs.currentFontSize;
+        currentFontFamily = oldPrefs.currentFontFamily;
+        currentTheme = oldPrefs.currentTheme;
+        throw err;
       }
     }
 
-    async function pullBackupFromGoogleDrive() {
-      // Option A: Google Apps Script Web App URL
-      if (gdriveConfig.mode === 'appsscript' && gdriveConfig.scriptUrl) {
-        showToast('Fetching latest notes from Google Drive...');
-        try {
-          const res = await fetch(gdriveConfig.scriptUrl);
-          const parsed = await res.json();
-          if (parsed && parsed.library && parsed.library.chapters) {
-            recordRollingSnapshot('Before Google Drive Pull');
-            library = parsed.library;
-            await persistLibrary();
-            renderSidebar();
-            loadActiveChapterIntoDOM();
-            gdriveConfig.lastSync = new Date().toISOString();
-            saveGDriveConfig();
-            closeGDriveModal();
-            showToast('☁️ Restored all chapters from Google Drive!');
-          } else {
-            showToast('No backup data found in Google Drive yet.');
-          }
-        } catch (err) {
-          showToast('Could not fetch from Apps Script URL (check "Who has access: Anyone").');
-        }
+    async function syncWithGoogleDrive(silent = false) {
+      if (gdriveSyncInProgress) return;
+      if (gdriveConfig.mode !== 'oauth' || !gdriveAccessToken) {
+        if (!silent) showToast('For conflict-safe two-way sync, select Google OAuth and sign in on this device. Apps Script remains backup-only.');
         return;
       }
+      gdriveSyncInProgress = true;
+      try {
+        if (!silent) showToast('Checking Google Drive for changes...');
+        await flushNow();
+        const localPayload = buildFullBackupPayload();
+        const localHash = await hashBackupPayload(localPayload);
+        const state = JSON.parse(localStorage.getItem(GDRIVE_SYNC_STATE_KEY) || '{}');
+        const remoteFile = await findDriveBackup();
 
-      // Option B: Google Drive REST API v3
-      if (gdriveAccessToken) {
-        showToast('Downloading backup from Google Drive...');
-        try {
-          const searchRes = await fetch(
-            "https://www.googleapis.com/drive/v3/files?q=name='NEET_BioNotes_Cloud_Backup.json' and trashed=false&fields=files(id,name)",
-            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
-          );
-          const searchData = await searchRes.json();
-          const existingFile = searchData.files && searchData.files[0];
-          if (!existingFile) {
-            showToast('No backup file found on Google Drive.');
+        if (!remoteFile) {
+          const firstPayload = { ...localPayload, syncMeta: { revision: 1, deviceId: getGDriveDeviceId(), updatedAt: new Date().toISOString() } };
+          await uploadDriveJson('NEET_BioNotes_Cloud_Backup.json', firstPayload);
+          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: localHash, revision: 1, driveFileId: null }));
+          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+          if (!silent) showToast('First Drive backup created. This device is now synced.');
+          return;
+        }
+
+        const remotePayload = await readDriveBackup(remoteFile);
+        if (!validateDrivePayload(remotePayload)) throw new Error('Drive backup format is invalid. Download a manual backup before continuing.');
+        const remoteHash = await hashBackupPayload({ ...remotePayload, syncMeta: undefined });
+        const remoteRevision = Number(remotePayload.syncMeta && remotePayload.syncMeta.revision) || Number(remoteFile.version) || 1;
+        const baselineHash = state.hash || '';
+        const localChanged = !!baselineHash && localHash !== baselineHash;
+        const remoteChanged = !!baselineHash && remoteHash !== baselineHash;
+
+        if (!baselineHash) {
+          const hasLocalContent = Object.keys(library.chapters || {}).length > 0;
+          if (hasLocalContent && localHash !== remoteHash) {
+            const useRemote = confirm('This device has not synced with this Drive backup before, and the two copies differ.\n\nOK = Load the Google Drive copy onto this device.\nCancel = Keep this device\'s copy and upload it after preserving the Drive copy as a dated backup.');
+            if (useRemote) {
+              await applyDrivePayload(remotePayload, 'Before first Drive sync');
+              const adoptedHash = await hashBackupPayload(buildFullBackupPayload());
+              localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: adoptedHash, revision: remoteRevision, driveFileId: remoteFile.id }));
+              gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+              if (!silent) showToast('Loaded the Google Drive version on this device.');
+              return;
+            }
+            await uploadDriveJson('NEET_BioNotes_ConflictBackup_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json', remotePayload);
+          } else if (localHash === remoteHash) {
+            localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: localHash, revision: remoteRevision, driveFileId: remoteFile.id }));
+            if (!silent) showToast('Already up to date with Google Drive.');
             return;
           }
-          const fileRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`,
-            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
-          );
-          const parsed = await fileRes.json();
-          if (parsed && parsed.library && parsed.library.chapters) {
-            recordRollingSnapshot('Before Google Drive Pull');
-            library = parsed.library;
-            await persistLibrary();
-            renderSidebar();
-            loadActiveChapterIntoDOM();
-            gdriveConfig.lastSync = new Date().toISOString();
-            saveGDriveConfig();
-            closeGDriveModal();
-            showToast('☁️ Restored all chapters from Google Drive!');
+        } else if (localChanged && remoteChanged && localHash !== remoteHash) {
+          const useRemote = confirm('SYNC CONFLICT: This device and Google Drive both changed since the last successful sync.\n\nOK = Keep the Google Drive version on this device (your current local copy is first saved in a local recovery snapshot).\nCancel = Keep this device\'s version and save the Drive version as a separate dated conflict backup before uploading.');
+          if (useRemote) {
+            await applyDrivePayload(remotePayload, 'Local version before resolving Drive conflict');
+            const adoptedHash = await hashBackupPayload(buildFullBackupPayload());
+            localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: adoptedHash, revision: remoteRevision, driveFileId: remoteFile.id }));
+            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+            if (!silent) showToast('Conflict resolved: Drive version loaded. Your previous local copy is in local snapshots.');
+            return;
           }
-        } catch (err) {
-          showToast('Failed to download backup from Google Drive.');
+          await uploadDriveJson('NEET_BioNotes_ConflictBackup_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json', remotePayload);
+        } else if (remoteChanged && !localChanged) {
+          await applyDrivePayload(remotePayload, 'Before receiving Drive updates');
+          const adoptedHash = await hashBackupPayload(buildFullBackupPayload());
+          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: adoptedHash, revision: remoteRevision, driveFileId: remoteFile.id }));
+          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+          if (!silent) showToast('Received the latest changes from Google Drive.');
+          return;
+        } else if (!localChanged && !remoteChanged && localHash === remoteHash) {
+          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: localHash, revision: remoteRevision, driveFileId: remoteFile.id }));
+          if (!silent) showToast('Already up to date with Google Drive.');
+          return;
         }
+
+        // Preserve the previous cloud state as a dated recovery point before replacing the main sync file.
+        await uploadDriveJson('NEET_BioNotes_Backup_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json', remotePayload);
+        // Local copy is authoritative when only this device changed, or after the user chose local in a conflict.
+        const nextPayload = { ...localPayload, syncMeta: { revision: remoteRevision + 1, deviceId: getGDriveDeviceId(), updatedAt: new Date().toISOString() } };
+        await uploadDriveJson('NEET_BioNotes_Cloud_Backup.json', nextPayload, remoteFile.id);
+        const finalHash = await hashBackupPayload(localPayload);
+        localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash: finalHash, revision: remoteRevision + 1, driveFileId: remoteFile.id }));
+        gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+        if (!silent) showToast('Two-way sync completed. Drive backup updated.');
+      } catch (err) {
+        console.error('Google Drive sync failed:', err);
+        if (!silent) showToast('Sync failed: ' + (err.message || 'Check sign-in, internet and Drive permissions.'));
+      } finally {
+        gdriveSyncInProgress = false;
+      }
+    }
+
+    async function pushBackupToGoogleDrive(silent = false) {
+      // Push is deliberately routed through conflict-aware sync; it never blindly overwrites a newer cloud copy.
+      return syncWithGoogleDrive(silent);
+    }
+
+    async function pullBackupFromGoogleDrive() {
+      if (gdriveConfig.mode !== 'oauth' || !gdriveAccessToken) {
+        showToast('Select Google OAuth and sign in to restore from Drive.');
         return;
       }
-
-      showToast('Configure Apps Script URL or Sign in with Google first.');
+      try {
+        await flushNow();
+        const remoteFile = await findDriveBackup();
+        if (!remoteFile) { showToast('No BioNotes backup found in Drive.'); return; }
+        const remotePayload = await readDriveBackup(remoteFile);
+        if (!validateDrivePayload(remotePayload)) throw new Error('Invalid BioNotes backup file.');
+        if (!confirm('Restore the Google Drive backup to this device? Your current local library will first be saved in local snapshots.')) return;
+        await applyDrivePayload(remotePayload, 'Before manual Google Drive restore');
+        const hash = await hashBackupPayload(buildFullBackupPayload());
+        const revision = Number(remotePayload.syncMeta && remotePayload.syncMeta.revision) || Number(remoteFile.version) || 1;
+        localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({ hash, revision, driveFileId: remoteFile.id }));
+        gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+        closeGDriveModal(); showToast('Google Drive backup restored successfully.');
+      } catch (err) { showToast('Restore failed: ' + (err.message || 'Check Drive access.')); }
     }
 
     /* =====================================================================
