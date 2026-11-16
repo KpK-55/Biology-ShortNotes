@@ -22,3 +22,11 @@ The service worker caches application files only. Your notes remain in IndexedDB
 
 LIMITATION
 The app's existing Tailwind CDN and Google Fonts are fetched and cached after they are first loaded online. Google sign-in and Google Drive sync need an internet connection. This package does not claim that every external dependency is guaranteed offline before its first successful online load.
+
+
+CHAPTER JSON WORKFLOW
+- Use the sidebar's Export Chapter button to download the currently open chapter as a portable JSON file.
+- Use Import Chapter to add a chapter JSON file. The app shows a confirmation preview before adding it.
+- Imported chapters are assigned a unique internal ID. Importing the same file again creates another copy; it does not overwrite an existing chapter.
+- Full-library backup JSON files can also be imported through Import Chapter; valid chapters are added as new copies.
+- Keep a Full Backup before importing large collections. Individual chapter JSON files contain HTML content, including embedded images where present.

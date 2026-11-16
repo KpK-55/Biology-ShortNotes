@@ -2400,19 +2400,19 @@ function getOrCreateFile_() {
     function exportCurrentChapterJSON() {
       const ch = library.chapters[library.activeChapterId];
       if (!ch) return;
-      ch.title = document.getElementById('chapter-title').innerHTML;
-      ch.subtitle = document.getElementById('chapter-subtitle').innerHTML;
-      ch.html = document.getElementById('notes-canvas').innerHTML;
+      captureActiveChapterFromDOM();
 
-      const plainName = ch.title.replace(/<[^>]*>/g, '').trim().replace(/[^a-z0-9]+/gi, '_') || ch.id;
+      const plainTitle = (ch.title || 'chapter').replace(/<[^>]*>/g, '').trim();
+      const plainName = plainTitle.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || ch.id;
       const payload = {
         app: 'NEET_BioNotes_Chapter',
+        schemaVersion: 1,
         exportedAt: new Date().toISOString(),
         id: ch.id,
-        badge: ch.badge,
-        title: ch.title,
-        subtitle: ch.subtitle,
-        html: ch.html
+        badge: ch.badge || 'NCERT Biology',
+        title: ch.title || plainTitle,
+        subtitle: ch.subtitle || '',
+        html: ch.html || ''
       };
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -2420,50 +2420,120 @@ function getOrCreateFile_() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${plainName}.json`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-      showToast('Chapter exported as .json!');
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Chapter exported as portable .json file!');
+    }
+
+    function getUniqueImportedChapterId(sourceId, title) {
+      const safeBase = String(sourceId || title || 'imported-chapter')
+        .toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'imported-chapter';
+      let candidate = `import-${safeBase}`;
+      if (!library.chapters[candidate]) return candidate;
+      let suffix = 2;
+      while (library.chapters[`${candidate}-${suffix}`]) suffix++;
+      return `${candidate}-${suffix}`;
     }
 
     async function importSingleChapterJSON(e) {
-      const file = e.target.files[0];
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const parsed = JSON.parse(ev.target.result);
-          recordRollingSnapshot('Before importing single chapter');
-
-          if (parsed && parsed.html) {
-            const newId = 'ch-' + Date.now();
-            library.chapters[newId] = {
-              id: newId,
-              badge: parsed.badge || 'NCERT Biology',
-              title: parsed.title || file.name.replace(/\.json$/i, ''),
-              subtitle: parsed.subtitle || '',
-              html: parsed.html,
-              updatedAt: Date.now()
-            };
-            const switched = await switchChapter(newId);
-            if (switched) showToast(`Added "${library.chapters[newId].title.replace(/<[^>]*>/g, '')}" to Chapter Library!`);
-          } else if (parsed && parsed.library && parsed.library.chapters) {
-            const entries = Object.values(parsed.library.chapters);
-            entries.forEach((chData, i) => {
-              const id = 'ch-' + (Date.now() + i);
-              library.chapters[id] = { ...chData, id, updatedAt: Date.now() };
-            });
-            await persistLibrary();
-            renderSidebar();
-            showToast(`Merged ${entries.length} chapter(s) into library!`);
-          } else {
-            showToast('Invalid chapter .json file.');
-          }
-        } catch (err) {
-          showToast('Could not read chapter .json file.');
-        }
-      };
-      reader.readAsText(file);
       e.target.value = '';
+
+      try {
+        if (file.size > 15 * 1024 * 1024) {
+          showToast('Chapter file is larger than 15 MB. Export/import a smaller chapter file.');
+          return;
+        }
+
+        const rawText = await file.text();
+        const parsed = JSON.parse(rawText);
+
+        // Accept the established single-chapter format and older exports.
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('Invalid JSON object');
+        }
+
+        if (parsed.library && parsed.library.chapters && typeof parsed.library.chapters === 'object') {
+          const entries = Object.values(parsed.library.chapters);
+          if (!entries.length) {
+            showToast('This backup contains no chapters.');
+            return;
+          }
+          const preview = entries.slice(0, 8).map(ch => (ch.title || 'Untitled chapter').replace(/<[^>]*>/g, '')).join('\n• ');
+          const more = entries.length > 8 ? `\n…and ${entries.length - 8} more` : '';
+          if (!confirm(`This is a full-library backup with ${entries.length} chapter(s).\n\n${preview ? '• ' + preview : ''}${more}\n\nImport as NEW copies? Existing chapters will not be overwritten.`)) return;
+
+          const additions = {};
+          entries.forEach((ch, index) => {
+            if (!ch || typeof ch !== 'object' || typeof ch.html !== 'string') return;
+            const title = ch.title || `Imported Chapter ${index + 1}`;
+            const id = getUniqueImportedChapterId(ch.id, title);
+            additions[id] = { ...ch, id, badge: ch.badge || 'NCERT Biology', title, subtitle: ch.subtitle || '', html: ch.html, updatedAt: Date.now() };
+          });
+          const addedIds = Object.keys(additions);
+          if (!addedIds.length) {
+            showToast('No valid chapters found in this backup.');
+            return;
+          }
+          recordRollingSnapshot('Before importing chapter collection');
+          const previousChapters = library.chapters;
+          library.chapters = { ...library.chapters, ...additions };
+          try {
+            await persistLibrary();
+          } catch (saveError) {
+            library.chapters = previousChapters;
+            throw saveError;
+          }
+          renderSidebar();
+          showToast(`Imported ${addedIds.length} chapter(s). Existing chapters were preserved.`);
+          return;
+        }
+
+        if (parsed.app && parsed.app !== 'NEET_BioNotes_Chapter') {
+          throw new Error('Unrecognized chapter file type');
+        }
+        if (typeof parsed.html !== 'string' || !parsed.html.trim()) {
+          showToast('Invalid chapter file: missing chapter content.');
+          return;
+        }
+        if (parsed.html.length > 12 * 1024 * 1024) {
+          showToast('Chapter content is too large to import safely.');
+          return;
+        }
+
+        const title = String(parsed.title || file.name.replace(/\.json$/i, '') || 'Imported Chapter').slice(0, 300);
+        const subtitle = typeof parsed.subtitle === 'string' ? parsed.subtitle : '';
+        const badge = typeof parsed.badge === 'string' ? parsed.badge : 'NCERT Biology';
+        const newId = getUniqueImportedChapterId(parsed.id, title);
+        const plainTitle = title.replace(/<[^>]*>/g, '').trim() || 'Imported Chapter';
+        const preview = `Chapter: ${plainTitle}\nBadge: ${badge.replace(/<[^>]*>/g, '')}\nContent size: ${(parsed.html.length / 1024).toFixed(1)} KB\n\nThis will be added as a NEW chapter. Existing chapters will not be overwritten.`;
+        if (!confirm(`${preview}\n\nContinue?`)) return;
+
+        recordRollingSnapshot('Before importing single chapter');
+        library.chapters[newId] = {
+          id: newId,
+          badge,
+          title,
+          subtitle,
+          html: parsed.html,
+          updatedAt: Date.now()
+        };
+
+        const switched = await switchChapter(newId);
+        if (switched) {
+          showToast(`Added "${plainTitle}" to Chapter Library!`);
+        } else {
+          delete library.chapters[newId];
+          renderSidebar();
+          showToast('Import cancelled because the current chapter could not be saved.');
+        }
+      } catch (err) {
+        console.error('Chapter JSON import failed:', err);
+        showToast('Could not import this JSON file. Check that it is a valid BioNotes chapter export.');
+      }
     }
 
     /* =====================================================================
