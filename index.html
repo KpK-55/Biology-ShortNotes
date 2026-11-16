@@ -1,0 +1,3964 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#141417" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>NEET BioNotes — Active Recall, Mind Map &amp; Fullscreen Reader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['"Source Serif 4"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --bg-main: #141417;
+      --bg-panel: #1d1d22;
+      --bg-nested: #18181c;
+      --bg-hover: #28282f;
+      --border-color: #2b2b33;
+      --border-strong: #3f3f4a;
+      --text-main: #e4e4e7;
+      --text-muted: #9ca3af;
+      --text-heading: #fafafa;
+      --table-th: #232329;
+      --table-td: #19191e;
+      --cloze-revealed: #38bdf8;
+      --cloze-line: #71717a;
+      --note-font: 'Inter', system-ui, sans-serif;
+      --note-size: 15px;
+    }
+
+    html.light {
+      --bg-main: #ffffff;
+      --bg-panel: #f8fafc;
+      --bg-nested: #ffffff;
+      --bg-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --text-heading: #0f172a;
+      --table-th: #f1f5f9;
+      --table-td: #ffffff;
+      --cloze-revealed: #0284c7;
+      --cloze-line: #94a3b8;
+    }
+
+    html.sepia {
+      --bg-main: #f6efe2;
+      --bg-panel: #ede3d2;
+      --bg-nested: #faf5eb;
+      --bg-hover: #e3d6c1;
+      --border-color: #d8c8af;
+      --border-strong: #bfa988;
+      --text-main: #3b2f23;
+      --text-muted: #6e5b47;
+      --text-heading: #241b12;
+      --table-th: #e5d8c3;
+      --table-td: #faf5eb;
+      --cloze-revealed: #b45309;
+      --cloze-line: #8c745a;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--note-font);
+      font-size: var(--note-size);
+      line-height: 1.65;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 3. Universal Font Family & Font Size Inheritance across all editable surfaces */
+    #notes-canvas,
+    #notes-canvas p,
+    #notes-canvas li,
+    #notes-canvas td,
+    #notes-canvas th,
+    #notes-canvas div,
+    #chapter-title,
+    #chapter-subtitle {
+      font-family: var(--note-font);
+    }
+
+    #notes-canvas {
+      font-size: var(--note-size);
+    }
+    #notes-canvas h2 {
+      font-size: calc(var(--note-size) * 1.22);
+    }
+    #notes-canvas h3 {
+      font-size: calc(var(--note-size) * 1.08);
+    }
+    #notes-canvas .notion-table {
+      font-size: calc(var(--note-size) * 0.93);
+    }
+
+    .theme-panel { background-color: var(--bg-panel); border-color: var(--border-color); }
+    .theme-nested { background-color: var(--bg-nested); border-color: var(--border-color); }
+    .theme-heading { color: var(--text-heading); }
+    .theme-muted { color: var(--text-muted); }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(130, 130, 130, 0.32); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(130, 130, 130, 0.5); }
+
+    /* Notion Toggle Block Transitions */
+    .toggle-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      transition: transform 0.16s ease, background-color 0.15s ease;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .toggle-arrow:hover { background-color: var(--bg-hover); }
+    .toggle-block.collapsed > .toggle-header .toggle-arrow { transform: rotate(-90deg); }
+    .toggle-block.collapsed > .toggle-body { display: none; }
+
+    /* Edit Mode Indicators */
+    body.edit-mode [contenteditable="true"] {
+      outline: none;
+      border-radius: 4px;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    body.edit-mode [contenteditable="true"]:hover {
+      background-color: rgba(128, 128, 128, 0.08);
+    }
+    body.edit-mode [contenteditable="true"]:focus {
+      background-color: rgba(56, 189, 248, 0.07);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.38);
+    }
+
+    .edit-only { display: none; }
+    body.edit-mode .edit-only { display: inline-flex; }
+
+    /* =====================================================================
+       2. CLEAN BLANK UNDERLINE CLOZE (NO '?' QUESTION MARK OR PILL BOX)
+       ===================================================================== */
+    .cloze {
+      display: inline;
+      padding: 0 2px;
+      margin: 0 1px;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s ease, border-color 0.15s ease;
+      position: relative;
+      background: transparent !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    /* Hidden Cloze State: Pure clean proportional blank underline, zero '?' */
+    body:not(.edit-mode) .cloze.cloze-hidden {
+      color: transparent !important;
+      border-bottom: 2px solid var(--cloze-line);
+      padding: 0 4px;
+    }
+    body:not(.edit-mode) .cloze.cloze-hidden * {
+      color: transparent !important;
+    }
+    body:not(.edit-mode) .cloze.cloze-hidden:hover {
+      border-bottom-color: var(--cloze-revealed);
+    }
+
+    /* Revealed Cloze State: Bold theme-accent inline text */
+    body:not(.edit-mode) .cloze:not(.cloze-hidden) {
+      color: var(--cloze-revealed) !important;
+      font-weight: 700;
+      border-bottom: none;
+      padding: 0 1px;
+    }
+    body:not(.edit-mode) .cloze:not(.cloze-hidden) * {
+      color: var(--cloze-revealed) !important;
+      font-weight: 700;
+    }
+
+    /* Edit Mode Cloze Appearance */
+    body.edit-mode .cloze {
+      border-bottom: 2px dotted #f59e0b;
+      color: #fbbf24;
+      font-weight: 600;
+      user-select: text;
+      cursor: text;
+    }
+    html.light body.edit-mode .cloze,
+    html.sepia body.edit-mode .cloze {
+      color: #b45309;
+      border-bottom-color: #d97706;
+    }
+
+    /* =====================================================================
+       INTERACTIVE RESIZABLE TABLE SYSTEM
+       ===================================================================== */
+    .table-wrapper {
+      position: relative;
+      margin: 0.65rem 0;
+      max-width: 100%;
+      transition: width 0.12s ease;
+    }
+    .table-toolbar {
+      display: none;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 5px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background-color: var(--bg-nested);
+      border: 1px solid var(--border-strong);
+      font-size: 11px;
+    }
+    body.edit-mode .table-wrapper:hover .table-toolbar,
+    body.edit-mode .table-wrapper:focus-within .table-toolbar {
+      display: flex;
+    }
+
+    .notion-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+    }
+    .notion-table th {
+      position: relative;
+      background-color: var(--table-th);
+      color: var(--text-heading);
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      word-wrap: break-word;
+    }
+    .notion-table td {
+      background-color: var(--table-td);
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+
+    .col-resizer {
+      display: none;
+      position: absolute;
+      top: 0;
+      right: -3px;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 15;
+      background: transparent;
+    }
+    body.edit-mode .col-resizer { display: block; }
+    body.edit-mode .col-resizer:hover,
+    body.edit-mode .col-resizer.resizing { background: rgba(56, 189, 248, 0.7); }
+
+    .table-edge-resizer {
+      display: none;
+      position: absolute;
+      top: 28px;
+      right: -5px;
+      bottom: 4px;
+      width: 8px;
+      cursor: ew-resize;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.28);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    body.edit-mode .table-wrapper:hover .table-edge-resizer {
+      display: block;
+      opacity: 1;
+    }
+
+    /* =====================================================================
+       FLOATING CURSOR SYMBOL QUICK-INSERT BAR
+       ===================================================================== */
+    #cursor-quick-bar {
+      position: fixed;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 6px;
+      border-radius: 9999px;
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      transform: translateY(-115%);
+    }
+    #cursor-quick-bar button {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: background-color 0.12s, color 0.12s, transform 0.1s;
+    }
+    #cursor-quick-bar button:hover {
+      background-color: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+      transform: scale(1.08);
+    }
+
+    /* Inserted Image Wrapper & Resize Handle */
+    .inserted-img-wrapper {
+      position: relative;
+      display: block;
+      max-width: 100%;
+      margin: 0.75rem 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-panel);
+      transition: border-color 0.15s ease;
+    }
+    .inserted-img-wrapper.align-center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .inserted-img-wrapper.align-left {
+      margin-left: 0;
+      margin-right: auto;
+    }
+    .img-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      background: var(--bg-nested);
+    }
+    .toggle-block.drag-over-img {
+      outline: 2px dashed #38bdf8 !important;
+      background-color: rgba(56, 189, 248, 0.06) !important;
+    }
+    .img-resize-handle {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 18px;
+      height: 18px;
+      background: #38bdf8;
+      border-radius: 4px;
+      cursor: nwse-resize;
+      opacity: 0;
+      transition: opacity 0.15s;
+      touch-action: none;
+    }
+    .img-controls {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+    body.edit-mode .inserted-img-wrapper:hover .img-resize-handle,
+    body.edit-mode .inserted-img-wrapper:hover .img-controls,
+    body.edit-mode .inserted-img-wrapper:focus-within .img-controls {
+      opacity: 1;
+    }
+
+    /* =====================================================================
+       4. UNIVERSAL SIDEBAR DRAWER / COLLAPSIBLE RAIL (PORTRAIT & LANDSCAPE)
+       ===================================================================== */
+    #chapter-sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.sidebar-open #chapter-sidebar {
+      transform: translateX(0);
+    }
+    @media (min-width: 1024px) {
+      body.sidebar-open #main-wrapper {
+        margin-left: 18rem; /* 288px = w-72 */
+      }
+    }
+    #main-wrapper {
+      margin-left: 0;
+      transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* =====================================================================
+       1. READING MODE — PRESERVES ACTIVE THEME (DARK / LIGHT / SEPIA)
+       & KEYWORD COLOR CODES, STRIPS CARD BORDERS & TOOLBARS ONLY
+       ===================================================================== */
+    body.reading-mode {
+      background-color: var(--bg-main) !important;
+      color: var(--text-main) !important;
+    }
+    body.reading-mode #chapter-sidebar,
+    body.reading-mode #sidebar-backdrop,
+    body.reading-mode #top-toolbar,
+    body.reading-mode #search-filter-bar,
+    body.reading-mode #bottom-quick-add,
+    body.reading-mode #cursor-quick-bar,
+    body.reading-mode .edit-only,
+    body.reading-mode .table-toolbar,
+    body.reading-mode .table-edge-resizer,
+    body.reading-mode .col-resizer,
+    body.reading-mode .img-controls,
+    body.reading-mode .img-resize-handle,
+    body.reading-mode #chapter-subtitle,
+    body.reading-mode #save-indicator {
+      display: none !important;
+    }
+    body.reading-mode #main-wrapper {
+      margin-left: 0 !important;
+    }
+    body.reading-mode main {
+      max-width: 820px !important;
+      padding-top: 3.25rem !important;
+      padding-bottom: 5rem !important;
+    }
+    /* Strip toggle card borders & boxes while preserving active theme & keyword colors */
+    body.reading-mode .toggle-block,
+    body.reading-mode .theme-panel,
+    body.reading-mode .theme-nested,
+    body.reading-mode #notes-canvas section,
+    body.reading-mode #notes-canvas div.rounded-lg,
+    body.reading-mode #notes-canvas div.rounded-xl {
+      background: transparent !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    /* Preserve left accent border callouts in Reading Mode */
+    body.reading-mode .border-l-4 {
+      padding-left: 0.85rem !important;
+    }
+    body.reading-mode #notes-canvas > .toggle-block {
+      border-bottom: 1px solid var(--border-color) !important;
+      padding-top: 0.75rem !important;
+      padding-bottom: 1.2rem !important;
+      margin-bottom: 0.75rem !important;
+    }
+    body.reading-mode .toggle-body {
+      padding-left: 1.35rem !important;
+    }
+
+    /* Top-right floating Reading Mode controls */
+    #reading-mode-dock {
+      display: none;
+    }
+    body.reading-mode #reading-mode-dock {
+      display: flex;
+    }
+
+    /* =====================================================================
+       PRINTABLE PDF EXPORT STYLESHEET (@media print)
+       ===================================================================== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 14mm 14mm 16mm 14mm;
+      }
+      html, body {
+        background: #ffffff !important;
+        color: #111111 !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+      }
+      #top-toolbar,
+      #chapter-sidebar,
+      #sidebar-backdrop,
+      #search-filter-bar,
+      #bottom-quick-add,
+      #cursor-quick-bar,
+      #reading-mode-dock,
+      #mindmap-modal,
+      #history-modal,
+      #gdrive-modal,
+      #toast-banner,
+      .edit-only,
+      .no-print,
+      .table-toolbar,
+      .table-edge-resizer,
+      .col-resizer,
+      .img-controls,
+      .img-resize-handle {
+        display: none !important;
+      }
+      #main-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .toggle-block.collapsed > .toggle-body {
+        display: block !important;
+      }
+      .toggle-arrow {
+        transform: none !important;
+        color: #444444 !important;
+      }
+      .theme-panel, .theme-nested, section, div {
+        background-color: transparent !important;
+        box-shadow: none !important;
+      }
+      .toggle-block {
+        border: none !important;
+        border-bottom: 1px solid #d4d4d8 !important;
+        border-radius: 0 !important;
+        padding: 8px 0 !important;
+        margin-bottom: 10px !important;
+        page-break-inside: auto;
+      }
+      h1, h2, h3, strong, b { color: #000000 !important; }
+      p, li, td, th, span, div { color: #1a1a1a !important; }
+      .cloze,
+      .cloze.cloze-hidden {
+        border: none !important;
+        border-bottom: 1.5px solid #111111 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        padding: 0 2px !important;
+      }
+      .cloze.cloze-hidden * { color: #000000 !important; }
+      .notion-table { border: 1px solid #444444 !important; page-break-inside: avoid; }
+      .notion-table th { background-color: #eeeeee !important; color: #000000 !important; border: 1px solid #666666 !important; }
+      .notion-table td { background-color: #ffffff !important; color: #111111 !important; border: 1px solid #888888 !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-sky-500/30">
+
+  <!-- Mobile / Portrait Sidebar Backdrop -->
+  <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden"></div>
+
+  <!-- 4. MULTI-CHAPTER NCERT LIBRARY SIDEBAR (ALL ORIENTATIONS) -->
+  <aside id="chapter-sidebar" class="fixed top-0 left-0 bottom-0 w-72 theme-panel border-r z-50 flex flex-col shadow-2xl lg:shadow-none">
+    <div class="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+        <span class="font-bold text-sm theme-heading tracking-tight">NCERT Bio Library</span>
+      </div>
+      <button onclick="toggleSidebar(false)" class="p-1.5 rounded-md hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] text-xs font-bold" title="Close Chapter Drawer">✕</button>
+    </div>
+
+    <div class="p-3 flex-1 overflow-y-auto space-y-1.5">
+      <div class="text-[11px] font-semibold uppercase tracking-wider theme-muted px-2 pb-1">Saved Chapters</div>
+      <div id="chapter-list" class="space-y-1"></div>
+    </div>
+
+    <!-- 5. Internal Storage Backup, Restore & Cross-Device Transfer -->
+    <div class="p-3 border-t border-[var(--border-color)] space-y-2">
+      <button onclick="createNewChapter()" class="w-full py-2 px-3 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+        <span>+</span> New Blank Chapter
+      </button>
+
+      <div class="grid grid-cols-2 gap-1.5">
+        <button onclick="document.getElementById('chapter-import-input').click()" class="py-1.5 px-2 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[11px] font-medium text-sky-400 transition" title="Merge a single chapter JSON into your library without overwriting other chapters">
+          📥 Import Chapter
+        </button>
+        <button onclick="exportCurrentChapterJSON()" class="py-1.5 px-2 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[11px] font-medium text-purple-400 transition" title="Export only the currently open chapter as a .json file">
+          📤 Export Chapter
+        </button>
+      </div>
+
+      <button onclick="openGDriveModal()" class="w-full py-1.5 px-3 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+        <span>☁️</span> Google Drive Cloud Sync
+      </button>
+
+      <div class="grid grid-cols-2 gap-1.5">
+        <button onclick="exportFullBackupJSON()" class="py-1.5 px-2 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[11px] font-medium text-emerald-400 transition" title="Download complete backup of all chapters, images & settings to internal storage">
+          💾 Full Backup
+        </button>
+        <button onclick="document.getElementById('backup-import-input').click()" class="py-1.5 px-2 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[11px] font-medium text-amber-400 transition" title="Restore full multi-chapter backup JSON">
+          📂 Restore All
+        </button>
+      </div>
+
+      <button onclick="openVersionHistoryModal()" class="w-full py-1.5 px-2 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[11px] theme-muted hover:text-[var(--text-heading)] flex items-center justify-center gap-1.5 transition">
+        <span>🕒</span> Snapshot Recovery / Undo History
+      </button>
+
+      <input type="file" id="chapter-import-input" accept=".json" class="hidden" onchange="importSingleChapterJSON(event)" />
+      <input type="file" id="backup-import-input" accept=".json" class="hidden" onchange="importBackupJSON(event)" />
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div id="main-wrapper" class="min-h-screen flex flex-col">
+
+    <!-- Top Sticky Action & Active Recall Toolbar -->
+    <header id="top-toolbar" class="sticky top-0 z-30 theme-panel/95 backdrop-blur-md border-b px-3 sm:px-5 py-2">
+      <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        
+        <!-- Left: Persistent Hamburger Button (Portrait & Landscape) + Mode Switch + Cloze Controls -->
+        <div class="flex items-center gap-2">
+          <button id="hamburger-btn" onclick="toggleSidebar()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--border-strong)] hover:bg-[var(--bg-hover)] text-xs font-semibold theme-heading transition" title="Toggle Chapter Library (Portrait & Landscape)">
+            <span class="text-sm leading-none">☰</span>
+            <span class="hidden sm:inline">Chapters</span>
+          </button>
+
+          <button id="btn-mode-switch" onclick="toggleEditMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition" title="Switch between Active Recall Study Mode and Content Edit Mode">
+            <span id="mode-icon">🧠</span>
+            <span id="mode-text">Recall Mode</span>
+          </button>
+
+          <!-- Active Recall Cloze Controls -->
+          <div id="recall-controls" class="flex items-center gap-1 bg-[var(--bg-nested)] border border-[var(--border-color)] rounded-lg p-1">
+            <button onclick="hideAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition" title="Mask all cloze keywords">
+              🙈 Hide
+            </button>
+            <button onclick="revealAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-sky-400 transition" title="Reveal all cloze keywords">
+              👁️ Reveal
+            </button>
+            <span id="cloze-counter" class="px-2 py-0.5 text-[11px] font-mono theme-muted border-l border-[var(--border-color)]">
+              0/0
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Mind Map, Reading Mode, Toggles, Theme & Export PDF -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="openGDriveModal()" id="header-sync-btn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 hover:bg-blue-500/25 transition" title="Sync or Backup all chapters to Google Drive">
+            <span>☁️</span>
+            <span class="hidden lg:inline">Drive Sync</span>
+          </button>
+
+          <button onclick="openMindMapModal()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/35 hover:bg-purple-500/25 transition" title="Generate Interactive Chapter Mind Map">
+            <span>🕸️</span>
+            <span class="hidden md:inline">Mind Map</span>
+          </button>
+
+          <button onclick="enterReadingMode()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition" title="Enter Theme-Preserving Fullscreen Reading Mode">
+            <span>📖</span>
+            <span class="hidden sm:inline">Reading</span>
+          </button>
+
+          <button onclick="expandAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Expand All Sections">▼</button>
+          <button onclick="collapseAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Collapse All Sections">▶</button>
+
+          <button onclick="cycleColorTheme()" id="theme-toggle-btn" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition font-medium" title="Cycle Theme: Dark / Light / Sepia">
+            🌙 Dark
+          </button>
+
+          <button onclick="exportPrintablePDF()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/35 hover:bg-rose-500/25 transition" title="Export clean printable PDF">
+            <span>🖨️</span>
+            <span class="hidden sm:inline">PDF</span>
+          </button>
+
+          <div class="relative">
+            <button onclick="toggleMoreMenu()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)]" title="Backup, Snapshots & Offline Export">⋮</button>
+            <div id="more-dropdown" class="hidden absolute right-0 mt-1.5 w-64 rounded-lg theme-panel border border-[var(--border-strong)] shadow-2xl py-1.5 z-50 text-xs">
+              <button onclick="openGDriveModal(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] text-blue-400 flex items-center gap-2">
+                <span>☁️</span> Google Drive Cloud Sync
+              </button>
+              <button onclick="exportCurrentChapterJSON(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] text-purple-400 flex items-center gap-2">
+                <span>📤</span> Export Active Chapter (.json)
+              </button>
+              <button onclick="document.getElementById('chapter-import-input').click(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] text-sky-400 flex items-center gap-2">
+                <span>📥</span> Import Single Chapter (.json)
+              </button>
+              <button onclick="exportFullBackupJSON(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] text-emerald-400 flex items-center gap-2">
+                <span>💾</span> Export All Data (.json Backup)
+              </button>
+              <button onclick="document.getElementById('backup-import-input').click(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] text-amber-400 flex items-center gap-2">
+                <span>📂</span> Import Full Backup (.json)
+              </button>
+              <button onclick="openVersionHistoryModal(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] flex items-center gap-2">
+                <span>🕒</span> Version History / Undo Deleted
+              </button>
+              <div class="my-1 border-t border-[var(--border-color)]"></div>
+              <button onclick="exportStandaloneHTML(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] flex items-center gap-2">
+                <span>🌐</span> Download Standalone App (.html)
+              </button>
+              <button onclick="promptResetChapter15(); toggleMoreMenu()" class="w-full text-left px-3.5 py-2 hover:bg-red-500/15 text-red-400 flex items-center gap-2">
+                <span>↺</span> Restore Ch. 15 Default Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. COMPREHENSIVE EDIT MODE FORMATTING, FONT & SENTENCE-TO-BULLETS RIBBON -->
+      <div id="edit-toolbar-group" class="hidden max-w-5xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs">
+        <!-- Cloze Tools -->
+        <button onmousedown="event.preventDefault(); wrapSelectionInCloze()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition" title="Turn selected text into Cloze blank (Alt+C)">
+          [+ Cloze]
+        </button>
+        <button onmousedown="event.preventDefault(); unwrapSelectionCloze()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] theme-muted" title="Remove Cloze from selection">
+          −Uncloze
+        </button>
+        <button onclick="autoClozeNumbersAndTerms()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] text-sky-400 font-medium" title="Auto-cloze numbers & units">
+          ⚡ Auto-Cloze
+        </button>
+
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
+
+        <!-- Dedicated Image Insert Button in Top Edit Ribbon -->
+        <button onmousedown="event.preventDefault(); triggerToolbarImageUpload()" class="px-2.5 py-1 rounded font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition flex items-center gap-1" title="Insert NCERT Diagram / Image at cursor or active section">
+          <span>🖼️ + Image</span>
+        </button>
+
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
+
+        <!-- Universal Font Family Selector -->
+        <select id="font-selector" onchange="applyFontFamilyUniversal(this.value)" class="theme-nested border border-[var(--border-strong)] text-xs px-2 py-1 rounded focus:outline-none cursor-pointer" title="Change Font Family (Applies globally & to selected text)">
+          <option value="'Inter', system-ui, sans-serif">Inter (Sans)</option>
+          <option value="'Source Serif 4', Georgia, serif">Source Serif</option>
+          <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+          <option value="system-ui, -apple-system, sans-serif">System UI</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+
+        <!-- Granular Font Size Controls -->
+        <div class="flex items-center theme-nested border border-[var(--border-strong)] rounded overflow-hidden">
+          <button onmousedown="event.preventDefault(); adjustFontSize(-1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold" title="Decrease Text Size">A−</button>
+          <span id="font-size-label" class="px-1.5 text-[11px] font-mono theme-muted">15px</span>
+          <button onmousedown="event.preventDefault(); adjustFontSize(1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold" title="Increase Text Size">A+</button>
+        </div>
+
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
+
+        <!-- Rich Text Formatting -->
+        <button onmousedown="event.preventDefault(); execFormat('bold')" class="px-2 py-1 font-bold rounded hover:bg-[var(--bg-hover)]" title="Bold (Ctrl+B)">B</button>
+        <button onmousedown="event.preventDefault(); execFormat('italic')" class="px-2 py-1 italic font-serif rounded hover:bg-[var(--bg-hover)]" title="Italic (Ctrl+I)">I</button>
+        <button onmousedown="event.preventDefault(); execFormat('underline')" class="px-2 py-1 underline rounded hover:bg-[var(--bg-hover)]" title="Underline (Ctrl+U)">U</button>
+        <button onmousedown="event.preventDefault(); execFormat('strikeThrough')" class="px-2 py-1 line-through rounded hover:bg-[var(--bg-hover)]" title="Strikethrough">S</button>
+
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
+
+        <!-- Text Color Swatches -->
+        <div class="flex items-center gap-1 px-1" title="Text Color">
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#38bdf8')" class="w-3.5 h-3.5 rounded-full bg-sky-400 border border-white/20" title="Sky Blue Text"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#34d399')" class="w-3.5 h-3.5 rounded-full bg-emerald-400 border border-white/20" title="Emerald Green Text"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fbbf24')" class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-white/20" title="Amber Gold Text"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fb7185')" class="w-3.5 h-3.5 rounded-full bg-rose-400 border border-white/20" title="Rose Red Text"></button>
+          <button onmousedown="event.preventDefault(); execFormat('removeFormat')" class="text-[10px] px-1 rounded hover:bg-[var(--bg-hover)] theme-muted" title="Clear Formatting">Tx</button>
+        </div>
+
+        <!-- Highlight Swatches -->
+        <div class="flex items-center gap-1 px-1 border-l border-[var(--border-strong)]" title="Highlight Color">
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(250, 204, 21, 0.28)')" class="w-3.5 h-3.5 rounded bg-yellow-400/70" title="Yellow Highlight"></button>
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(56, 189, 248, 0.25)')" class="w-3.5 h-3.5 rounded bg-sky-400/70" title="Blue Highlight"></button>
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(52, 211, 153, 0.25)')" class="w-3.5 h-3.5 rounded bg-emerald-400/70" title="Green Highlight"></button>
+        </div>
+
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
+
+        <!-- Alignment & Lists -->
+        <button onmousedown="event.preventDefault(); execFormat('justifyLeft')" class="px-1.5 py-1 rounded hover:bg-[var(--bg-hover)]" title="Align Left">⫷</button>
+        <button onmousedown="event.preventDefault(); execFormat('justifyCenter')" class="px-1.5 py-1 rounded hover:bg-[var(--bg-hover)]" title="Align Center">⫸</button>
+        <button onmousedown="event.preventDefault(); execFormat('insertUnorderedList')" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] font-semibold" title="Bulleted List">• List</button>
+        <button onmousedown="event.preventDefault(); execFormat('insertOrderedList')" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] font-semibold" title="Numbered List">1. List</button>
+
+        <!-- Dedicated Sentence -> Bullets Converter -->
+        <button onmousedown="event.preventDefault(); convertSelectionToBullets()" class="px-2.5 py-1 rounded font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition flex items-center gap-1" title="Select any long NCERT paragraph or sentence and convert it into concise bullet points">
+          <span>✨ Sentence → Bullets</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- FLOATING CURSOR SYMBOL QUICK-INSERT BAR (Edit Mode) -->
+    <div id="cursor-quick-bar" onmousedown="event.preventDefault()">
+      <button onclick="insertAtCursor('text')" title="Insert Bullet Point (•)">•</button>
+      <button onclick="insertAtCursor('toggle')" title="Insert Collapsible Toggle (▸)">▸</button>
+      <button onclick="insertAtCursor('image')" title="Insert Image (🖼️)">🖼️</button>
+      <button onclick="insertAtCursor('table')" title="Insert Resizable Table (⊞)">⊞</button>
+      <button onclick="insertAtCursor('flowchart')" title="Insert Arrow Flowchart (⇄)">⇄</button>
+      <button onclick="insertAtCursor('mindmap')" title="Insert Chapter Mind Map Snapshot (🕸️)">🕸️</button>
+    </div>
+
+    <!-- 1. TOP-RIGHT FLOATING READING MODE DOCK (THEME-PRESERVING) -->
+    <div id="reading-mode-dock" class="fixed top-4 right-4 z-50 items-center gap-1.5 theme-panel/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-[var(--border-strong)] text-xs">
+      <button onclick="hideAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition" title="Mask all cloze blanks">🙈 Hide</button>
+      <button onclick="revealAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] text-sky-400 font-semibold transition" title="Reveal all cloze blanks">👁️ Reveal</button>
+      <span class="w-[1px] h-3.5 bg-[var(--border-strong)] mx-0.5"></span>
+      <button onclick="cycleColorTheme()" id="reading-theme-btn" class="px-2.5 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-heading font-medium transition" title="Switch Theme in Reading Mode">
+        🌙 Dark
+      </button>
+      <button onclick="exitReadingMode()" class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 font-semibold transition">✕ Exit</button>
+    </div>
+
+    <!-- Non-blocking Toast Banner -->
+    <div id="toast-banner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 theme-panel border border-[var(--border-strong)] px-4 py-2.5 rounded-xl shadow-2xl text-xs max-w-md">
+      <span id="toast-msg">Message</span>
+      <div id="toast-actions" class="flex items-center gap-2"></div>
+    </div>
+
+    <!-- Main Study & Edit Document Canvas -->
+    <main class="max-w-4xl w-full mx-auto px-4 sm:px-8 py-7 sm:py-10 flex-1">
+      
+      <!-- Chapter Header -->
+      <div class="mb-6 pb-4 border-b border-[var(--border-color)]">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 no-print">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">NEET UG Biology</span>
+            <span id="chapter-badge" class="px-2.5 py-0.5 rounded text-[11px] font-medium theme-panel border">NCERT Class XI</span>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] theme-muted">
+            <span id="save-indicator">✓ Saved locally</span>
+            <button onclick="openVersionHistoryModal()" class="underline hover:text-sky-400 transition" title="Recover accidentally deleted content">History</button>
+          </div>
+        </div>
+
+        <h1 id="chapter-title" contenteditable="false" class="text-2xl sm:text-3xl font-bold theme-heading tracking-tight mb-1.5">
+          Chapter 15: Body Fluids and Circulation
+        </h1>
+        <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
+          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.
+        </p>
+      </div>
+
+      <!-- Search & Quick Action Strip -->
+      <div id="search-filter-bar" class="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
+        <div class="relative flex-1">
+          <input id="keyword-search" type="text" oninput="filterNotes(this.value)" placeholder="Filter sections by keyword (e.g., Pacemaker, Erythroblastosis, Lub, Tunica media)..." class="w-full theme-panel border rounded-lg pl-9 pr-4 py-2 text-xs focus:border-sky-500/60 focus:outline-none" />
+          <svg class="w-4 h-4 theme-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="addNewMainToggle()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-sky-400 transition whitespace-nowrap">
+            + Toggle Block
+          </button>
+          <button onclick="openMindMapModal()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-purple-400 transition whitespace-nowrap">
+            🕸️ Chapter Mind Map
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes Canvas Container -->
+      <div id="notes-canvas" class="space-y-4"></div>
+
+      <!-- Hidden File Input for Image Insertion (Supports multiple diagrams at once) -->
+      <input type="file" id="image-file-input" accept="image/*" multiple class="hidden" onchange="handleImageFileSelected(event)" />
+
+      <!-- Bottom Quick Builder & Storage Bar -->
+      <div id="bottom-quick-add" class="mt-10 pt-5 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-3 text-xs theme-muted no-print">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="addNewMainToggle()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Toggle Section</button>
+          <button onclick="addNewTableBlock()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Resizable Table</button>
+          <button onclick="addNewFlowchartBlock()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Flowchart</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportFullBackupJSON()" class="px-2.5 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] text-emerald-400 transition">💾 Backup All (.json)</button>
+          <button onclick="document.getElementById('backup-import-input').click()" class="px-2.5 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] text-amber-400 transition">📂 Import Backup</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =====================================================================
+       5. VERSION HISTORY / SNAPSHOT RECOVERY MODAL
+       ===================================================================== -->
+  <div id="history-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="theme-panel border border-[var(--border-strong)] rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden flex flex-col max-h-[82vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-color)] flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-bold theme-heading">🕒 Local Snapshot Recovery (Last 10 Edits)</h3>
+          <p class="text-[11px] theme-muted">Accidentally deleted a section, table, or chapter? Restore any previous state below.</p>
+        </div>
+        <button onclick="closeVersionHistoryModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
+      </div>
+      <div id="snapshot-list" class="p-4 overflow-y-auto space-y-2 flex-1 text-xs"></div>
+      <div class="px-5 py-3 border-t border-[var(--border-color)] flex items-center justify-between text-[11px] theme-muted">
+        <span>Stored in IndexedDB + LocalStorage</span>
+        <button onclick="createManualSnapshot()" class="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/35 font-semibold hover:bg-sky-500/30">
+          + Save Manual Snapshot Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       INTERACTIVE CHAPTER MIND MAP MODAL
+       ===================================================================== -->
+  <div id="mindmap-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="theme-panel border border-[var(--border-strong)] rounded-2xl w-full max-w-6xl h-[86vh] shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-4 sm:px-5 py-3 border-b border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🕸️</span>
+          <h3 id="mindmap-title" class="text-sm font-bold theme-heading">Chapter Mind Map</h3>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+          <label class="flex items-center gap-1 theme-muted mr-1">
+            <span>Depth:</span>
+            <select id="mindmap-depth" onchange="renderMindMapSVG()" class="theme-nested border border-[var(--border-strong)] rounded px-2 py-1 text-xs">
+              <option value="1">1 — Main Topics</option>
+              <option value="2">2 — Subtopics</option>
+              <option value="3" selected>3 — Full Keywords</option>
+            </select>
+          </label>
+          <button onclick="zoomMindMap(1.15)" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]" title="Zoom In">+</button>
+          <button onclick="zoomMindMap(0.85)" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]" title="Zoom Out">−</button>
+          <button onclick="resetMindMapView()" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]">Reset</button>
+          <button onclick="insertMindMapIntoNotes()" class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/30 font-semibold">+ Insert into Notes</button>
+          <button onclick="exportMindMapSVG()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 border border-sky-500/35 hover:bg-sky-500/30 font-semibold">⬇ SVG</button>
+          <button onclick="closeMindMapModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold ml-1">✕</button>
+        </div>
+      </div>
+      <div id="mindmap-viewport" class="flex-1 overflow-hidden bg-[#101014] cursor-grab active:cursor-grabbing relative">
+        <svg id="mindmap-svg" class="w-full h-full"></svg>
+        <div class="absolute bottom-3 left-3 text-[11px] text-zinc-400 bg-black/60 px-2.5 py-1 rounded-md pointer-events-none">
+          Drag to pan • Scroll or +/− to zoom
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       GOOGLE DRIVE CLOUD SYNC MODAL (OAUTH2 + APPS SCRIPT BRIDGE)
+       ===================================================================== -->
+  <div id="gdrive-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="theme-panel border border-[var(--border-strong)] rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="px-5 py-3.5 border-b border-[var(--border-color)] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">☁️</span>
+          <div>
+            <h3 class="text-sm font-bold theme-heading">Google Drive Cloud Sync</h3>
+            <p class="text-[11px] theme-muted">Back up all chapters, images &amp; cloze states to your personal Google Drive.</p>
+          </div>
+        </div>
+        <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <!-- Sync Status Banner -->
+        <div class="p-3 rounded-xl theme-nested border border-[var(--border-color)] flex items-center justify-between gap-2">
+          <div>
+            <div class="font-semibold theme-heading" id="gdrive-status-text">Not connected to Google Drive</div>
+            <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last cloud sync: Never</div>
+          </div>
+          <label class="flex items-center gap-1.5 cursor-pointer select-none">
+            <input type="checkbox" id="gdrive-autosync-toggle" onchange="toggleGDriveAutoSync(this.checked)" class="rounded accent-sky-400" />
+            <span class="text-[11px] font-medium">Auto-Sync</span>
+          </label>
+        </div>
+
+        <!-- Method Switch Tabs -->
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-lg theme-nested border border-[var(--border-color)]">
+          <button type="button" id="tab-btn-appsscript" onclick="switchGDriveTab('appsscript')" class="py-1.5 px-2 rounded-md font-semibold bg-sky-500/20 text-sky-400 transition">
+            ⚡ Easy Apps Script URL (Recommended)
+          </button>
+          <button type="button" id="tab-btn-oauth" onclick="switchGDriveTab('oauth')" class="py-1.5 px-2 rounded-md font-semibold theme-muted hover:text-[var(--text-heading)] transition">
+            🔑 Google OAuth Client ID
+          </button>
+        </div>
+
+        <!-- Tab 1: Zero-Setup Google Apps Script Web App Bridge -->
+        <div id="gdrive-panel-appsscript" class="space-y-3">
+          <div>
+            <label class="block font-semibold theme-heading mb-1">Google Apps Script Web App URL</label>
+            <input id="gdrive-script-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
+          </div>
+
+          <details class="rounded-lg theme-nested border border-[var(--border-color)] p-3">
+            <summary class="cursor-pointer font-semibold text-sky-400">How to get your free personal Drive Sync URL in 60 seconds</summary>
+            <ol class="list-decimal pl-4 mt-2 space-y-1 theme-muted text-[11px]">
+              <li>Open <strong>script.google.com</strong> in your browser and click <strong>New Project</strong>.</li>
+              <li>Paste the code below, click <strong>Deploy → New deployment → Web app</strong>.</li>
+              <li>Set <em>Execute as:</em> <strong>Me</strong> and <em>Who has access:</em> <strong>Anyone</strong>, then copy the Web App URL above.</li>
+            </ol>
+            <div class="mt-2 relative">
+              <pre id="apps-script-snippet" class="p-2.5 rounded bg-black/50 text-[10px] font-mono overflow-x-auto text-emerald-300 select-all">function doPost(e) {
+  var file = getOrCreateFile_();
+  file.setContent(e.postData.contents);
+  return ContentService.createTextOutput(JSON.stringify({ok:true, updated:new Date().toISOString()})).setMimeType(ContentService.MimeType.JSON);
+}
+function doGet(e) {
+  var file = getOrCreateFile_();
+  return ContentService.createTextOutput(file.getBlob().getDataAsString() || "{}").setMimeType(ContentService.MimeType.JSON);
+}
+function getOrCreateFile_() {
+  var name = "NEET_BioNotes_Cloud_Backup.json";
+  var files = DriveApp.getFilesByName(name);
+  return files.hasNext() ? files.next() : DriveApp.createFile(name, "{}", MimeType.PLAIN_TEXT);
+}</pre>
+              <button type="button" onclick="copyAppsScriptCode()" class="mt-1.5 px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 text-[11px] font-semibold hover:bg-sky-500/30">
+                📋 Copy Apps Script Code
+              </button>
+            </div>
+          </details>
+        </div>
+
+        <!-- Tab 2: Direct Google Identity Services OAuth2 -->
+        <div id="gdrive-panel-oauth" class="hidden space-y-3">
+          <div>
+            <label class="block font-semibold theme-heading mb-1">Google Cloud OAuth 2.0 Client ID (Web Application)</label>
+            <input id="gdrive-client-id" type="text" placeholder="1234567890-abcdefg.apps.googleusercontent.com" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
+            <p class="text-[11px] theme-muted mt-1">Uses official <code>drive.file</code> scope — only accesses the backup file created by this app.</p>
+          </div>
+          <button type="button" onclick="connectGoogleOAuth()" class="px-3.5 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 font-semibold">
+            🔐 Sign in with Google
+          </button>
+        </div>
+
+        <!-- Push & Pull Cloud Action Buttons -->
+        <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-[var(--border-color)]">
+          <button type="button" onclick="pushBackupToGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
+            <span>⬆️</span> Push Backup to Drive
+          </button>
+          <button type="button" onclick="pullBackupFromGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/40 hover:bg-sky-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
+            <span>⬇️</span> Pull / Restore from Drive
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       PRE-LOADED CHAPTER 15 TEMPLATE (CLEAN BLANK-UNDERLINE CLOZES)
+       ===================================================================== -->
+  <template id="default-chapter-15-template">
+
+    <!-- 1. BLOOD & COMPOSITION -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Blood &amp; Its Composition (15.1)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false">
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li><strong>Blood:</strong> Special <span class="cloze cloze-hidden">connective tissue</span> = <strong>Fluid matrix (<span class="cloze cloze-hidden">Plasma, 55%</span>)</strong> + <strong>Formed elements (<span class="cloze cloze-hidden">45%</span>)</strong>.</li>
+            <li><em>Lower organisms transport:</em> <span class="cloze cloze-hidden">Sponges</span> &amp; <span class="cloze cloze-hidden">coelenterates</span> circulate water from surroundings through body cavities.</li>
+          </ul>
+        </div>
+
+        <!-- 15.1.1 Plasma -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="false" class="font-semibold text-sky-400">15.1.1 Plasma (55% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          </div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div contenteditable="false" class="space-y-1">
+              <p>• <strong>Appearance:</strong> <span class="cloze cloze-hidden">Straw-coloured</span>, viscous fluid.</p>
+              <p>• <strong>Composition:</strong> <span class="cloze cloze-hidden">90–92%</span> Water | <span class="cloze cloze-hidden">6–8%</span> Proteins | Small minerals (<span class="font-mono text-xs">Na⁺, Ca²⁺, Mg²⁺, HCO₃⁻, Cl⁻</span>) | Transit glucose, amino acids, lipids | Inactive clotting factors.</p>
+            </div>
+
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 34%;">Major Plasma Protein</th>
+                      <th contenteditable="false" style="width: 66%;">Primary Function (NCERT Keywords)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Fibrinogen</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Clotting or coagulation</span> of blood</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Globulins</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Defense mechanisms</span> of the body</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Albumins</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Osmotic balance</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div contenteditable="false" class="px-3.5 py-2 rounded-lg border-l-4 border-amber-400 bg-amber-500/10 font-mono text-xs sm:text-sm">
+              <strong>Formula:</strong> Serum = Plasma − <span class="cloze cloze-hidden">Clotting factors</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 15.1.2 Formed Elements -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="false" class="font-semibold text-rose-400">15.1.2 Formed Elements (45% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          </div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 22%;">Formed Element</th>
+                      <th contenteditable="false" style="width: 20%;">Count (mm⁻³)</th>
+                      <th contenteditable="false" style="width: 28%;">Lifespan / Formation</th>
+                      <th contenteditable="false" style="width: 30%;">Key Features &amp; Function</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-rose-400">Erythrocytes (RBC)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">5 – 5.5 million</span><br><span class="theme-muted">(Most abundant)</span></td>
+                      <td contenteditable="false">• Avg lifespan: <span class="cloze cloze-hidden">120 days</span><br>• Formed: <span class="cloze cloze-hidden">Red bone marrow</span><br>• Destroyed: <span class="cloze cloze-hidden">Spleen</span> (graveyard)</td>
+                      <td contenteditable="false">• Biconcave, <span class="cloze cloze-hidden">devoid of nucleus</span><br>• Hb: <span class="cloze cloze-hidden">12–16 g / 100 mL</span> blood<br>• Respiratory gas transport</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-sky-400">Leucocytes (WBC)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">6000 – 8000</span></td>
+                      <td contenteditable="false">• Generally <span class="cloze cloze-hidden">short-lived</span></td>
+                      <td contenteditable="false">• <span class="cloze cloze-hidden">Nucleated</span>, colourless (lack Hb)<br>• Immunity &amp; defense</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-purple-400">Platelets (Thrombocytes)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">1,50,000 – 3,50,000</span></td>
+                      <td contenteditable="false">• Fragments of <span class="cloze cloze-hidden">megakaryocytes</span> (bone marrow)</td>
+                      <td contenteditable="false">• Release factors for <span class="cloze cloze-hidden">coagulation/clotting</span><br>• Reduction → clotting disorders</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- WBC Classification Sub-table -->
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 20%;">WBC Type</th>
+                      <th contenteditable="false" style="width: 18%;">% of WBC</th>
+                      <th contenteditable="false" style="width: 22%;">Category</th>
+                      <th contenteditable="false" style="width: 40%;">Key NCERT Function / Secretion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Neutrophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">60–65%</span> (Max)</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Lymphocytes</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">20–25%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">'B' and 'T' forms</span> → <span class="cloze cloze-hidden">Immune responses</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Monocytes</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">6–8%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Eosinophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">2–3%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Resist infections</span>; associated with <span class="cloze cloze-hidden">allergic reactions</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Basophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">0.5–1%</span> (Min)</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false">Secrete <span class="cloze cloze-hidden">histamine, serotonin, heparin</span> → <span class="cloze cloze-hidden">Inflammatory reactions</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BLOOD GROUPING (ABO & Rh) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">2. Blood Grouping: ABO &amp; Rh Systems (15.1.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 28%;">Blood Group</th>
+                  <th contenteditable="false" style="width: 24%;">Antigens on RBCs</th>
+                  <th contenteditable="false" style="width: 24%;">Antibodies in Plasma</th>
+                  <th contenteditable="false" style="width: 24%;">Donor's Group</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-bold">A</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold">B</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-A</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-emerald-400">AB (Universal Recipient)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A, B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">AB, A, B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-sky-400">O (Universal Donor)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-A, B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">O</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rh Grouping & Erythroblastosis Foetalis Flowchart -->
+        <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2.5 text-center text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400 uppercase tracking-wider text-xs">Rh Incompatibility &amp; Erythroblastosis Foetalis</div>
+          <p class="text-left text-xs theme-muted">• Rh antigen (from Rhesus monkey) present in <span class="cloze cloze-hidden">~80%</span> humans (Rh⁺ᵛᵉ); absent in <span class="cloze cloze-hidden">~20%</span> (Rh⁻ᵛᵉ).</p>
+          <div class="pt-1">
+            <strong><span class="cloze cloze-hidden">Rh⁻ᵛᵉ Mother</span></strong> + <strong><span class="cloze cloze-hidden">Rh⁺ᵛᵉ Foetus</span></strong> (1st Pregnancy) ⟶ Separated by <span class="cloze cloze-hidden">placenta</span> (1st child normal)
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>During 1st Delivery</strong> ⟶ Maternal blood exposed to foetal Rh⁺ᵛᵉ blood ⟶ Mother forms <span class="cloze cloze-hidden">anti-Rh antibodies</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>Subsequent Rh⁺ᵛᵉ Pregnancy</strong> ⟶ Maternal antibodies leak into foetal blood ⟶ Destroy <span class="cloze cloze-hidden">foetal RBCs</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div class="text-rose-400 font-semibold">
+            Causes: Severe <span class="cloze cloze-hidden">anaemia and jaundice</span> or fatal (<span class="cloze cloze-hidden">Erythroblastosis foetalis</span>)
+          </div>
+          <div class="pt-2 border-t border-[var(--border-color)] text-emerald-400 text-xs">
+            <strong>Prevention:</strong> Administer <span class="cloze cloze-hidden">anti-Rh antibodies</span> to mother immediately after 1st delivery.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BLOOD CLOTTING CASCADE & LYMPH -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">3. Blood Clotting Cascade &amp; Lymph (15.1.4 &amp; 15.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="space-y-2">
+          <h3 contenteditable="false" class="font-semibold theme-heading">Coagulation Cascade</h3>
+          <div contenteditable="false" class="p-5 rounded-lg theme-nested border text-center space-y-5">
+            <div>
+              Injury / Trauma <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Platelets / Tissues</span> release clotting factors
+            </div>
+            <div>
+              Series of linked enzymatic reactions (Cascade process) <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Thrombokinase complex</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Prothrombin</span> (inactive)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombokinase</span></span>
+                <span class="theme-muted tracking-tighter">─────────→</span>
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Ca²⁺</span></span>
+              </span>
+              <span><span class="cloze cloze-hidden">Thrombin</span> (active)</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Fibrinogen</span> (soluble)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombin</span></span>
+                <span class="theme-muted tracking-tighter">───────→</span>
+                <span class="text-[11px] opacity-0">.</span>
+              </span>
+              <span><span class="cloze cloze-hidden">Fibrin</span> (insoluble threads)</span>
+            </div>
+            <div class="pt-1">
+              <strong>Clot / Coagulam</strong> = <span class="cloze cloze-hidden">Fibrin meshwork</span> trapping dead &amp; damaged formed elements
+            </div>
+          </div>
+        </div>
+
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1.5">
+          <div class="font-semibold text-teal-400">15.2 Lymph (Tissue / Interstitial Fluid)</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Blood in tissue capillaries → water + small water-soluble substances enter interstitial spaces (leaves <span class="cloze cloze-hidden">larger proteins &amp; most formed elements</span> in vessels).</li>
+            <li>Same <span class="cloze cloze-hidden">mineral distribution</span> as plasma; colourless fluid with specialised <span class="cloze cloze-hidden">lymphocytes</span> (immune response).</li>
+            <li><strong>Fats</strong> are absorbed through lymph in the <span class="cloze cloze-hidden">lacteals</span> present in <span class="cloze cloze-hidden">intestinal villi</span>; drains back into <span class="cloze cloze-hidden">major veins</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CIRCULATORY PATHWAYS & VERTEBRATE HEART EVOLUTION -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">4. Circulatory Pathways &amp; Vertebrate Heart Evolution (15.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-amber-400 mb-1">Open Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Arthropods, Molluscs</span></p>
+            <p>• Blood pumped into open spaces / cavities called <span class="cloze cloze-hidden">sinuses</span>.</p>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-emerald-400 mb-1">Closed Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Annelids, Chordates</span></p>
+            <p>• Advantageous: fluid flow is <span class="cloze cloze-hidden">more precisely regulated</span>.</p>
+          </div>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 24%;">Heart Chambers</th>
+                  <th contenteditable="false" style="width: 24%;">Animals</th>
+                  <th contenteditable="false" style="width: 24%;">Circulation Type</th>
+                  <th contenteditable="false" style="width: 28%;">Pathway</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false"><strong>2 Chambers</strong><br>(<span class="cloze cloze-hidden">1 Atrium, 1 Ventricle</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Fishes</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Single Circulation</span></td>
+                  <td contenteditable="false">Heart (deoxygenated) → <span class="cloze cloze-hidden">Gills</span> (oxygenated) → Body → Heart</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false"><strong>3 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 1 Ventricle</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Amphibians, Reptiles</span> <em>(except <span class="cloze cloze-hidden">crocodiles</span>)</em></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Incomplete Double Circulation</span></td>
+                  <td contenteditable="false">Left Atrium (O₂) + Right Atrium (de-O₂) <span class="cloze cloze-hidden">mix in single ventricle</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false"><strong>4 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 2 Ventricles</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Crocodiles, Birds, Mammals</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Complete Double Circulation</span></td>
+                  <td contenteditable="false">Independent pulmonary &amp; systemic circuits (<span class="cloze cloze-hidden">no mixing</span>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. HUMAN HEART, CONDUCTING SYSTEM & CARDIAC CYCLE -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">5. Human Heart, Conducting System &amp; Cardiac Cycle (15.3.1 – 15.3.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="space-y-1">
+          <p>• <strong>Origin &amp; Protection:</strong> <span class="cloze cloze-hidden">Mesodermally</span> derived; thoracic cavity between lungs, tilted to <span class="cloze cloze-hidden">left</span>; double-walled <span class="cloze cloze-hidden">pericardium</span> enclosing pericardial fluid.</p>
+          <p>• <strong>Valves:</strong> RA → RV guarded by <span class="cloze cloze-hidden">Tricuspid valve</span> (3 muscular flaps/cusps); LA → LV guarded by <span class="cloze cloze-hidden">Bicuspid / Mitral valve</span>; RV → Pulmonary artery &amp; LV → Aorta guarded by <span class="cloze cloze-hidden">Semilunar valves</span>.</p>
+        </div>
+
+        <!-- Nodal Conduction Pathway Flowchart -->
+        <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2 text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400">Autoexcitable Nodal Conduction Pathway</div>
+          <div class="flex flex-wrap items-center justify-center gap-2 text-center pt-1">
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong>SAN</strong> (Right upper corner of RA; <span class="cloze cloze-hidden">70–75 min⁻¹</span> = <span class="cloze cloze-hidden">Pacemaker</span>)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AVN</span></strong> (Lower left corner of RA)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AV Bundle / Bundle of His</span></strong></span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">Purkinje Fibres</span></strong> (Ventricular walls)</span>
+          </div>
+        </div>
+
+        <!-- Cardiac Cycle & Metrics -->
+        <div contenteditable="false" class="space-y-3">
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Joint Diastole:</strong> All 4 chambers relaxed; Tricuspid &amp; Bicuspid <span class="cloze cloze-hidden">open</span>; Semilunar <span class="cloze cloze-hidden">closed</span>.</li>
+            <li><strong>Atrial Systole:</strong> SAN action potential → both atria contract → increases blood flow into ventricles by <span class="cloze cloze-hidden">30%</span>.</li>
+            <li><strong>Ventricular Systole:</strong> Ventricles contract (atria relax) → closure of <span class="cloze cloze-hidden">tricuspid &amp; bicuspid valves</span> produces 1st sound <span class="cloze cloze-hidden">"LUB"</span> → semilunar valves forced open.</li>
+            <li><strong>Ventricular Diastole:</strong> Ventricular pressure falls → closure of <span class="cloze cloze-hidden">semilunar valves</span> produces 2nd sound <span class="cloze cloze-hidden">"DUB"</span> → AV valves pushed open.</li>
+          </ol>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Cycle Duration</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">0.8 seconds</span> (at 72 bpm)</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Stroke Volume (SV)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~70 mL</span> / ventricle</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Output (SV × HR)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~5000 mL (5 L/min)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ELECTROCARDIOGRAPH (ECG) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">6. Electrocardiograph (ECG) (15.3.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="false">
+          • <strong>Standard ECG Leads:</strong> <span class="cloze cloze-hidden">3 electrical leads</span> — one to <span class="cloze cloze-hidden">each wrist</span> and to the <span class="cloze cloze-hidden">left ankle</span>.
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 22%;">ECG Wave</th>
+                  <th contenteditable="false" style="width: 34%;">Electrical Event</th>
+                  <th contenteditable="false" style="width: 44%;">Mechanical / Clinical Significance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-sky-400">P-wave</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Depolarisation</span> (excitation) of <span class="cloze cloze-hidden">atria</span></td>
+                  <td contenteditable="false">Leads to contraction of both atria</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-emerald-400">QRS complex</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Depolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="false">Initiates ventricular contraction; counting <span class="cloze cloze-hidden">QRS complexes</span> gives heartbeat rate</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-amber-400">T-wave</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Repolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="false">End of T-wave marks the <span class="cloze cloze-hidden">end of systole</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. DOUBLE CIRCULATION & BLOOD VESSELS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">7. Double Circulation &amp; Blood Vessels (15.4)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold theme-heading">3 Layers of Arteries &amp; Veins:</div>
+          <p>1. <strong>Tunica intima:</strong> Inner lining of <span class="cloze cloze-hidden">squamous endothelium</span>.</p>
+          <p>2. <strong>Tunica media:</strong> Middle layer of <span class="cloze cloze-hidden">smooth muscle &amp; elastic fibres</span> (comparatively thin in <span class="cloze cloze-hidden">veins</span>).</p>
+          <p>3. <strong>Tunica externa:</strong> External layer of <span class="cloze cloze-hidden">fibrous connective tissue with collagen fibres</span>.</p>
+        </div>
+
+        <div contenteditable="false" class="space-y-2 text-xs sm:text-sm">
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-sky-400">
+            <strong class="text-sky-400">Pulmonary Circulation:</strong> <span class="cloze cloze-hidden">Right Ventricle</span> → Pulmonary artery → <span class="cloze cloze-hidden">Lungs</span> → Pulmonary veins → <span class="cloze cloze-hidden">Left Atrium</span>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-rose-400">
+            <strong class="text-rose-400">Systemic Circulation:</strong> <span class="cloze cloze-hidden">Left Ventricle</span> → <span class="cloze cloze-hidden">Aorta</span> → Arteries → Arterioles → Capillaries → Tissues → Venules → Veins → <span class="cloze cloze-hidden">Vena cava</span> → <span class="cloze cloze-hidden">Right Atrium</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-amber-400">Hepatic Portal System:</strong> <span class="cloze cloze-hidden">Hepatic portal vein</span> carries blood from <span class="cloze cloze-hidden">intestine to liver</span> before systemic circulation.
+            </div>
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-emerald-400">Coronary System:</strong> Exclusive blood vessels supplying blood to and from <span class="cloze cloze-hidden">cardiac musculature</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. REGULATION OF CARDIAC ACTIVITY & DISORDERS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">8. Regulation of Cardiac Activity &amp; Disorders (15.5 &amp; 15.6)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold text-purple-400">15.5 Regulation (Myogenic Heart)</div>
+          <p>• Neural centre in <span class="cloze cloze-hidden">Medulla oblongata</span> moderates cardiac function via <span class="cloze cloze-hidden">ANS</span>:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Sympathetic nerves:</strong> <span class="cloze cloze-hidden">Increases</span> heart rate, strength of ventricular contraction &amp; cardiac output.</li>
+            <li><strong>Parasympathetic nerves:</strong> <span class="cloze cloze-hidden">Decreases</span> heart rate, speed of conduction of action potential &amp; cardiac output.</li>
+            <li><strong>Adrenal medullary hormones:</strong> <span class="cloze cloze-hidden">Increases</span> cardiac output.</li>
+          </ul>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 26%;">Disorder</th>
+                  <th contenteditable="false" style="width: 74%;">NCERT Key Facts &amp; Clinical Distinctions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Hypertension (High BP)</td>
+                  <td contenteditable="false">Normal = <span class="cloze cloze-hidden">120/80 mm Hg</span> (120 = systolic, 80 = diastolic). Repeated checks <span class="cloze cloze-hidden">≥ 140/90 mm Hg</span> = hypertension; affects <span class="cloze cloze-hidden">brain &amp; kidney</span>.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">CAD (Atherosclerosis)</td>
+                  <td contenteditable="false">Deposits of <span class="cloze cloze-hidden">calcium, fat, cholesterol and fibrous tissues</span> make lumen of coronary arteries narrower.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Angina (Angina pectoris)</td>
+                  <td contenteditable="false">Symptom of <span class="cloze cloze-hidden">acute chest pain</span> when insufficient <span class="cloze cloze-hidden">O₂</span> reaches heart muscle (more common in middle-aged &amp; elderly).</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Heart Failure</td>
+                  <td contenteditable="false">Heart not pumping blood effectively enough; main symptom: <span class="cloze cloze-hidden">congestion of the lungs</span>.<br>• <span class="cloze cloze-hidden">Cardiac arrest</span> = heart stops beating | <span class="cloze cloze-hidden">Heart attack</span> = heart muscle suddenly damaged by inadequate blood supply.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </template>
+
+  <script>
+    /* =====================================================================
+       5. INDEXEDDB + LOCALSTORAGE PERSISTENCE & ROLLING SNAPSHOT RECOVERY
+       ===================================================================== */
+    const DB_KEY = 'NEET_BioNotes_DB';
+    const PREFS_KEY = 'NEET_BioNotes_Prefs';
+    const SNAPSHOTS_KEY = 'NEET_BioNotes_Snapshots';
+    const FALLBACK_KEY = 'NEET_BioNotes_StorageFallback';
+    const IDB_NAME = 'NEET_BioNotes_IDB';
+    const IDB_STORE = 'library_store';
+
+    let library = {
+      activeChapterId: 'ch-15',
+      chapters: {}
+    };
+
+    let snapshots = [];
+    let isEditMode = false;
+    let isReadingMode = false;
+    let currentFontSize = 15;
+    let currentFontFamily = "'Inter', system-ui, sans-serif";
+    let currentTheme = 'dark'; // 'dark' | 'light' | 'sepia'
+    let activeInsertTarget = null;
+    let lastCaretRange = null;
+    let lastActiveBlock = null;
+    let saveTimer = null;
+    let lastSnapshotTime = 0;
+    // Serialize writes so a slower earlier save cannot overwrite a newer edit.
+    let persistQueue = Promise.resolve();
+
+    // Google Drive Cloud Sync State
+    const GDRIVE_PREFS_KEY = 'NEET_BioNotes_GDrive';
+    let gdriveConfig = {
+      mode: 'appsscript',
+      scriptUrl: '',
+      clientId: '',
+      autoSync: false,
+      lastSync: ''
+    };
+    let gdriveAccessToken = null;
+    let gdriveAutoSyncTimer = null;
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadPreferences();
+      loadGDriveConfig();
+      await loadLibraryFromStorage();
+      loadSnapshots();
+      renderSidebar();
+      loadActiveChapterIntoDOM();
+      setupEventListeners();
+      updateClozeCounter();
+    });
+
+    /* --- IndexedDB Helper for large image-rich notes --- */
+    function openIDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject('No IDB');
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveToIDB(key, val) {
+      const db = await openIDB();
+      return new Promise((resolve, reject) => {
+        let tx;
+        try {
+          tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(val, key);
+        } catch (err) {
+          db.close();
+          reject(err);
+          return;
+        }
+        tx.oncomplete = () => { db.close(); resolve(true); };
+        tx.onerror = () => { const err = tx.error || new Error('IndexedDB write failed'); db.close(); reject(err); };
+        tx.onabort = () => { const err = tx.error || new Error('IndexedDB transaction aborted'); db.close(); reject(err); };
+      });
+    }
+
+    async function readFromIDB(key) {
+      try {
+        const db = await openIDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, 'readonly');
+          const req = tx.objectStore(IDB_STORE).get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function loadPreferences() {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(PREFS_KEY));
+        if (!prefs) return;
+        if (prefs.fontSize) {
+          currentFontSize = prefs.fontSize;
+          document.documentElement.style.setProperty('--note-size', currentFontSize + 'px');
+          const lbl = document.getElementById('font-size-label');
+          if (lbl) lbl.textContent = currentFontSize + 'px';
+        }
+        if (prefs.fontFamily) {
+          currentFontFamily = prefs.fontFamily;
+          document.documentElement.style.setProperty('--note-font', currentFontFamily);
+          const sel = document.getElementById('font-selector');
+          if (sel) sel.value = currentFontFamily;
+        }
+        if (prefs.theme && ['dark', 'light', 'sepia'].includes(prefs.theme)) {
+          applyColorTheme(prefs.theme);
+        }
+      } catch (e) {}
+    }
+
+    function savePreferences() {
+      try {
+        localStorage.setItem(PREFS_KEY, JSON.stringify({
+          fontSize: currentFontSize,
+          fontFamily: currentFontFamily,
+          theme: currentTheme
+        }));
+      } catch (e) {}
+    }
+
+    async function loadLibraryFromStorage() {
+      // If the previous session had to use the LocalStorage fallback, prefer
+      // that newer copy over an older IndexedDB record on the next launch.
+      let parsed = null;
+      let fallbackWasActive = false;
+      try {
+        fallbackWasActive = localStorage.getItem(FALLBACK_KEY) === '1';
+        if (fallbackWasActive) {
+          const fallbackRaw = localStorage.getItem(DB_KEY);
+          if (fallbackRaw) parsed = JSON.parse(fallbackRaw);
+        }
+      } catch (e) {}
+
+      if (!parsed) parsed = await readFromIDB(DB_KEY);
+      if (!parsed) {
+        try {
+          const raw = localStorage.getItem(DB_KEY);
+          if (raw) parsed = JSON.parse(raw);
+        } catch (e) {}
+      }
+
+      if (parsed && parsed.chapters && Object.keys(parsed.chapters).length > 0) {
+        library = parsed;
+        return;
+      }
+
+      const defaultHtml = document.getElementById('default-chapter-15-template').innerHTML;
+      library = {
+        activeChapterId: 'ch-15',
+        chapters: {
+          'ch-15': {
+            id: 'ch-15',
+            badge: 'NCERT Class XI • Ch. 15',
+            title: 'Chapter 15: Body Fluids and Circulation',
+            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.',
+            html: defaultHtml,
+            updatedAt: Date.now()
+          }
+        }
+      };
+      await persistLibrary();
+    }
+
+    function captureActiveChapterFromDOM() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return false;
+      const title = document.getElementById('chapter-title');
+      const subtitle = document.getElementById('chapter-subtitle');
+      const canvas = document.getElementById('notes-canvas');
+      if (!title || !subtitle || !canvas) return false;
+      ch.title = title.innerHTML;
+      ch.subtitle = subtitle.innerHTML;
+      ch.html = canvas.innerHTML;
+      ch.updatedAt = Date.now();
+      return true;
+    }
+
+    async function persistLibrary() {
+      const writeTask = persistQueue.then(async () => {
+        // Take the snapshot only when this queued write begins, so it includes
+        // the latest in-memory edits and writes remain in the correct order.
+        const payload = JSON.parse(JSON.stringify(library));
+        let idbError = null;
+        try {
+          await saveToIDB(DB_KEY, payload);
+          // Keep the legacy copy as a best-effort recovery fallback. Large
+          // image-rich chapters may exceed LocalStorage quota; that is OK
+          // when the IndexedDB transaction has completed successfully.
+          try {
+            localStorage.setItem(DB_KEY, JSON.stringify(payload));
+            localStorage.removeItem(FALLBACK_KEY);
+          } catch (e) {
+            // IndexedDB is already committed; a failed mirror does not affect it.
+            try { localStorage.removeItem(FALLBACK_KEY); } catch (_) {}
+          }
+          const ind = document.getElementById('save-indicator');
+          if (ind) ind.textContent = '✓ Saved locally';
+          return true;
+        } catch (err) {
+          idbError = err;
+        }
+
+        // Last-resort fallback for browsers where IndexedDB is unavailable.
+        try {
+          // Set the marker first so the next launch knows this copy is newer
+          // than any stale IndexedDB value. Roll it back if the payload write fails.
+          localStorage.setItem(FALLBACK_KEY, '1');
+          localStorage.setItem(DB_KEY, JSON.stringify(payload));
+          const ind = document.getElementById('save-indicator');
+          if (ind) ind.textContent = '⚠ Saved using limited browser storage';
+          return true;
+        } catch (fallbackError) {
+          try { localStorage.removeItem(FALLBACK_KEY); } catch (_) {}
+          const ind = document.getElementById('save-indicator');
+          if (ind) ind.textContent = '✕ Save failed — export a backup';
+          const error = new Error('Could not save to IndexedDB or browser fallback storage.');
+          error.cause = idbError || fallbackError;
+          throw error;
+        }
+      });
+
+      // Keep the queue usable after a failed write, while still returning the
+      // current write's rejection to its caller.
+      persistQueue = writeTask.catch(() => {});
+      return writeTask;
+    }
+
+    async function flushNow() {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      captureActiveChapterFromDOM();
+      return await persistLibrary();
+    }
+
+    function scheduleAutoSave(forceSnapshot = false) {
+      const ind = document.getElementById('save-indicator');
+      if (ind) ind.textContent = 'Saving...';
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        saveTimer = null;
+        try {
+          await flushNow();
+          renderSidebar();
+          updateClozeCounter();
+
+          // Record rolling snapshot every 20s or on structural deletions
+          if (forceSnapshot || Date.now() - lastSnapshotTime > 20000) {
+            recordRollingSnapshot(forceSnapshot ? 'Before deletion / structural change' : 'Auto-checkpoint');
+          }
+
+          // Trigger background Google Drive Auto-Sync only after local save succeeds.
+          if (gdriveConfig.autoSync && (gdriveConfig.scriptUrl || gdriveAccessToken)) {
+            clearTimeout(gdriveAutoSyncTimer);
+            gdriveAutoSyncTimer = setTimeout(() => {
+              pushBackupToGoogleDrive(true);
+            }, 3000);
+          }
+        } catch (err) {
+          console.error('NEET BioNotes save failed:', err);
+          const status = document.getElementById('save-indicator');
+          if (status) status.textContent = '✕ Save failed — keep this page open and export a backup';
+          showToast('Local save failed. Your current notes are still on screen; export a backup before closing.');
+        }
+      }, 300);
+    }
+
+    // Best-effort flush when the app is backgrounded or the page is leaving.
+    // Browser lifecycle events do not guarantee that asynchronous work finishes.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushNow().catch(err => console.error('Background save failed:', err));
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (saveTimer !== null) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        captureActiveChapterFromDOM();
+        persistLibrary().catch(err => console.error('Page-exit save failed:', err));
+      }
+    });
+
+    /* --- Rolling Snapshots (Last 10 Edits/Deletions) --- */
+    function loadSnapshots() {
+      try {
+        const raw = localStorage.getItem(SNAPSHOTS_KEY);
+        if (raw) snapshots = JSON.parse(raw) || [];
+      } catch (e) {
+        snapshots = [];
+      }
+    }
+
+    function recordRollingSnapshot(reason = 'Auto-checkpoint') {
+      try {
+        lastSnapshotTime = Date.now();
+        const snap = {
+          id: 'snap-' + Date.now(),
+          timestamp: Date.now(),
+          reason,
+          chapterCount: Object.keys(library.chapters).length,
+          data: JSON.parse(JSON.stringify(library))
+        };
+        snapshots.unshift(snap);
+        if (snapshots.length > 10) snapshots = snapshots.slice(0, 10);
+        localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+      } catch (e) {}
+    }
+
+    function createManualSnapshot() {
+      const ch = library.chapters[library.activeChapterId];
+      if (ch) {
+        ch.title = document.getElementById('chapter-title').innerHTML;
+        ch.subtitle = document.getElementById('chapter-subtitle').innerHTML;
+        ch.html = document.getElementById('notes-canvas').innerHTML;
+      }
+      recordRollingSnapshot('Manual snapshot');
+      renderSnapshotList();
+      showToast('Snapshot saved!');
+    }
+
+    function openVersionHistoryModal() {
+      renderSnapshotList();
+      document.getElementById('history-modal').classList.remove('hidden');
+    }
+
+    function closeVersionHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+    }
+
+    function renderSnapshotList() {
+      const list = document.getElementById('snapshot-list');
+      if (!snapshots.length) {
+        list.innerHTML = `<div class="text-center py-8 theme-muted">No snapshots recorded yet. Any edits or deletions automatically save checkpoints here.</div>`;
+        return;
+      }
+      list.innerHTML = snapshots.map((snap, idx) => {
+        const dt = new Date(snap.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const activeTitle = (snap.data.chapters[snap.data.activeChapterId]?.title || 'Notes').replace(/<[^>]*>/g, '');
+        return `
+          <div class="p-3 rounded-lg theme-nested border border-[var(--border-color)] flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold theme-heading truncate">${activeTitle}</div>
+              <div class="text-[11px] theme-muted">${dt} • ${snap.reason} • ${snap.chapterCount} chapter(s)</div>
+            </div>
+            <button onclick="restoreSnapshot(${idx})" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 border border-sky-500/35 hover:bg-sky-500/30 font-semibold whitespace-nowrap">
+              ↺ Restore
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function restoreSnapshot(index) {
+      const snap = snapshots[index];
+      if (!snap || !snap.data) return;
+      library = JSON.parse(JSON.stringify(snap.data));
+      await persistLibrary();
+      renderSidebar();
+      loadActiveChapterIntoDOM();
+      closeVersionHistoryModal();
+      showToast('Restored notes from snapshot!');
+    }
+
+    /* =====================================================================
+       4. PERSISTENT HAMBURGER CHAPTER SIDEBAR (PORTRAIT & LANDSCAPE)
+       ===================================================================== */
+    function toggleSidebar(forceState) {
+      const body = document.body;
+      const backdrop = document.getElementById('sidebar-backdrop');
+      const shouldOpen = typeof forceState === 'boolean' ? forceState : !body.classList.contains('sidebar-open');
+
+      if (shouldOpen) {
+        body.classList.add('sidebar-open');
+        backdrop.classList.remove('hidden');
+      } else {
+        body.classList.remove('sidebar-open');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function renderSidebar() {
+      const list = document.getElementById('chapter-list');
+      list.innerHTML = '';
+
+      Object.values(library.chapters).forEach(ch => {
+        const isActive = ch.id === library.activeChapterId;
+        const plainTitle = ch.title.replace(/<[^>]*>/g, '').trim() || 'Untitled Chapter';
+        const item = document.createElement('div');
+        item.className = `group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition ${
+          isActive
+            ? 'bg-sky-500/15 text-sky-400 font-semibold border border-sky-500/30'
+            : 'hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)]'
+        }`;
+
+        item.innerHTML = `
+          <div onclick="switchChapter('${ch.id}')" class="truncate flex-1 py-0.5" title="${plainTitle}">
+            ${plainTitle}
+          </div>
+          ${Object.keys(library.chapters).length > 1 ? `
+            <button onclick="deleteChapter('${ch.id}', event)" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 px-1" title="Delete Chapter">✕</button>
+          ` : ''}
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function switchChapter(chapterId) {
+      if (!library.chapters[chapterId]) return false;
+      const previousChapterId = library.activeChapterId;
+      if (chapterId === previousChapterId) {
+        try { await flushNow(); return true; }
+        catch (err) { showToast('Could not save the current chapter. Export a backup before closing.'); return false; }
+      }
+
+      try {
+        // Cancel the debounce and commit the currently visible chapter before
+        // changing the active chapter. Do not navigate if that save fails.
+        await flushNow();
+        library.activeChapterId = chapterId;
+        await persistLibrary();
+      } catch (err) {
+        library.activeChapterId = previousChapterId;
+        const ind = document.getElementById('save-indicator');
+        if (ind) ind.textContent = '✕ Save failed — chapter switch cancelled';
+        showToast('Could not safely save this chapter. Chapter switch cancelled. Export a backup before closing.');
+        return false;
+      }
+
+      renderSidebar();
+      loadActiveChapterIntoDOM();
+      // Auto-close overlay on portrait/narrow screens
+      if (window.innerWidth < 1024) toggleSidebar(false);
+      return true;
+    }
+
+    function loadActiveChapterIntoDOM() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return;
+
+      document.getElementById('chapter-badge').textContent = ch.badge || 'NCERT Biology';
+      document.getElementById('chapter-title').innerHTML = ch.title;
+      document.getElementById('chapter-subtitle').innerHTML = ch.subtitle;
+      document.getElementById('notes-canvas').innerHTML = ch.html;
+
+      syncEditableAttributes();
+      enhanceAllTables();
+      rebindInsertedImages();
+      updateClozeCounter();
+    }
+
+    async function createNewChapter() {
+      recordRollingSnapshot('Before creating new chapter');
+      const count = Object.keys(library.chapters).length + 1;
+      const newId = 'ch-' + Date.now();
+      library.chapters[newId] = {
+        id: newId,
+        badge: 'NCERT Biology • New Chapter',
+        title: `Chapter ${count}: New NCERT Chapter Title`,
+        subtitle: 'Paste an NCERT paragraph and click ✨ Sentence → Bullets, or highlight keywords to create Cloze active recall blanks.',
+        html: `
+          <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+            <div class="toggle-header flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 flex-1">
+                <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+                <h2 contenteditable="${isEditMode}" class="text-lg font-bold theme-heading tracking-tight">1. Subtopic Heading</h2>
+              </div>
+              <div class="edit-only items-center gap-1">
+                <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+                <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+              </div>
+            </div>
+            <div contenteditable="${isEditMode}" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-1.5">
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Keyword:</strong> Add NCERT short notes here, or select a long paragraph and click <strong>✨ Sentence → Bullets</strong>.</li>
+              </ul>
+            </div>
+          </section>
+        `,
+        updatedAt: Date.now()
+      };
+      const switched = await switchChapter(newId);
+      if (!switched) {
+        renderSidebar();
+        showToast('The new chapter is retained in the library, but could not be opened yet.');
+        return;
+      }
+      if (!isEditMode) toggleEditMode();
+      showToast('Created new blank chapter!');
+    }
+
+    async function deleteChapter(chapterId, event) {
+      event.stopPropagation();
+      if (Object.keys(library.chapters).length <= 1) return;
+      captureActiveChapterFromDOM();
+      recordRollingSnapshot('Before deleting chapter');
+      const deletedChapter = library.chapters[chapterId];
+      const previousActiveChapterId = library.activeChapterId;
+      delete library.chapters[chapterId];
+      if (library.activeChapterId === chapterId) {
+        library.activeChapterId = Object.keys(library.chapters)[0];
+      }
+      try {
+        await persistLibrary();
+      } catch (err) {
+        library.chapters[chapterId] = deletedChapter;
+        library.activeChapterId = previousActiveChapterId;
+        renderSidebar();
+        loadActiveChapterIntoDOM();
+        showToast('Chapter deletion was not saved. Your chapter has been restored.');
+        return;
+      }
+      renderSidebar();
+      loadActiveChapterIntoDOM();
+      showToast('Chapter deleted (Recoverable in History).');
+    }
+
+    /* =====================================================================
+       3. UNIVERSAL FONT FAMILY, SIZE & SENTENCE -> BULLETS CONVERTER
+       ===================================================================== */
+    function applyFontFamilyUniversal(fontVal) {
+      // 1. Update global CSS custom property so every block, heading, table, and flowchart updates
+      currentFontFamily = fontVal;
+      document.documentElement.style.setProperty('--note-font', fontVal);
+      savePreferences();
+
+      // 2. If user has text selected in Edit Mode, also apply inline fontName override
+      if (isEditMode) {
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.rangeCount) {
+          document.execCommand('fontName', false, fontVal);
+        }
+        scheduleAutoSave();
+      }
+    }
+
+    function adjustFontSize(delta) {
+      currentFontSize = Math.min(24, Math.max(12, currentFontSize + delta));
+      document.documentElement.style.setProperty('--note-size', currentFontSize + 'px');
+      const lbl = document.getElementById('font-size-label');
+      if (lbl) lbl.textContent = currentFontSize + 'px';
+      savePreferences();
+    }
+
+    function convertSelectionToBullets() {
+      if (!isEditMode) return;
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) {
+        showToast('Select a long sentence or paragraph first!');
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas.contains(range.commonAncestorContainer)) {
+        showToast('Place your cursor or select text inside the notes area.');
+        return;
+      }
+
+      let rawText = sel.toString().trim();
+      // If nothing is highlighted, grab the current paragraph/block under the cursor
+      let targetBlock = null;
+      if (!rawText) {
+        let node = range.commonAncestorContainer;
+        if (node.nodeType === 3) node = node.parentElement;
+        targetBlock = node.closest('p, div:not(.toggle-body):not(.toggle-block):not(.toggle-header), li');
+        if (targetBlock) {
+          rawText = targetBlock.innerText.trim();
+        }
+      }
+
+      if (!rawText) {
+        showToast('Select a long sentence or paragraph to split into bullets.');
+        return;
+      }
+
+      // Split by sentence boundaries, semicolons, or clause connectors while preserving decimals (e.g., 5.5, 0.8)
+      const parts = rawText
+        .replace(/([a-zA-Z\)])\.\s+(?=[A-Z0-9])/g, '$1.|')
+        .replace(/;\s+/g, ';|')
+        .replace(/,\s+(?=(?:whereas|while|which|however|therefore|hence)\b)/gi, ',|')
+        .split('|')
+        .map(s => s.trim().replace(/^[•\-–]\s*/, ''))
+        .filter(s => s.length > 0);
+
+      const finalItems = parts.length > 1
+        ? parts
+        : rawText.split(/,\s+/).map(s => s.trim()).filter(Boolean);
+
+      const ul = document.createElement('ul');
+      ul.className = 'list-disc pl-5 space-y-1 my-1.5';
+
+      finalItems.forEach(itemText => {
+        const li = document.createElement('li');
+        // Automatically bold the lead term if a colon exists (e.g., "Fibrinogen: needed for clotting")
+        const colonIdx = itemText.indexOf(':');
+        if (colonIdx > 1 && colonIdx < 35) {
+          const lead = itemText.slice(0, colonIdx + 1);
+          const rest = itemText.slice(colonIdx + 1);
+          li.innerHTML = `<strong>${escapeHTML(lead)}</strong>${escapeHTML(rest)}`;
+        } else {
+          li.textContent = itemText;
+        }
+        ul.appendChild(li);
+      });
+
+      recordRollingSnapshot('Before Sentence → Bullets');
+      if (!sel.isCollapsed) {
+        range.deleteContents();
+        range.insertNode(ul);
+        sel.removeAllRanges();
+      } else if (targetBlock) {
+        targetBlock.replaceWith(ul);
+      }
+
+      scheduleAutoSave();
+      showToast(`Converted into ${finalItems.length} concise bullet points!`);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /* =====================================================================
+       1. THEME CYCLING (DARK / LIGHT / SEPIA) & THEME-PRESERVING READING MODE
+       ===================================================================== */
+    function applyColorTheme(themeName) {
+      currentTheme = themeName;
+      const html = document.documentElement;
+      html.classList.remove('dark', 'light', 'sepia');
+      html.classList.add(themeName);
+
+      const labelMap = {
+        dark: '🌙 Dark',
+        light: '☀️ Light',
+        sepia: '📜 Sepia'
+      };
+      const label = labelMap[themeName] || '🌙 Dark';
+      const topBtn = document.getElementById('theme-toggle-btn');
+      const readBtn = document.getElementById('reading-theme-btn');
+      if (topBtn) topBtn.textContent = label;
+      if (readBtn) readBtn.textContent = label;
+      savePreferences();
+    }
+
+    function cycleColorTheme() {
+      const order = ['dark', 'light', 'sepia'];
+      const next = order[(order.indexOf(currentTheme) + 1) % order.length];
+      applyColorTheme(next);
+    }
+
+    function enterReadingMode() {
+      if (isEditMode) toggleEditMode();
+      isReadingMode = true;
+      document.body.classList.add('reading-mode');
+      document.getElementById('cursor-quick-bar').style.display = 'none';
+
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen && !document.fullscreenElement) {
+        docEl.requestFullscreen().catch(() => {});
+      }
+      showToast('Reading Mode active — Theme & colors preserved. Tap blank underlines to reveal.', 2600);
+    }
+
+    function exitReadingMode() {
+      isReadingMode = false;
+      document.body.classList.remove('reading-mode');
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && isReadingMode) {
+        isReadingMode = false;
+        document.body.classList.remove('reading-mode');
+      }
+    });
+
+    /* =====================================================================
+       5. FULL BACKUP EXPORT & CROSS-DEVICE IMPORT (.JSON)
+       ===================================================================== */
+    function exportFullBackupJSON() {
+      const ch = library.chapters[library.activeChapterId];
+      if (ch) {
+        ch.title = document.getElementById('chapter-title').innerHTML;
+        ch.subtitle = document.getElementById('chapter-subtitle').innerHTML;
+        ch.html = document.getElementById('notes-canvas').innerHTML;
+      }
+
+      const payload = {
+        app: 'NEET_BioNotes',
+        version: 4,
+        exportedAt: new Date().toISOString(),
+        preferences: {
+          fontSize: currentFontSize,
+          fontFamily: currentFontFamily,
+          theme: currentTheme
+        },
+        library
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateTag = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `NEET_BioNotes_FullBackup_${dateTag}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Full backup saved to internal storage Downloads!');
+    }
+
+    async function importBackupJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          recordRollingSnapshot('Before importing backup');
+
+          // Case A: Full multi-chapter backup payload
+          if (parsed && parsed.library && parsed.library.chapters) {
+            let importedCount = 0;
+            Object.entries(parsed.library.chapters).forEach(([id, chData]) => {
+              library.chapters[id] = chData;
+              importedCount++;
+            });
+            if (parsed.library.activeChapterId && library.chapters[parsed.library.activeChapterId]) {
+              library.activeChapterId = parsed.library.activeChapterId;
+            }
+            if (parsed.preferences) {
+              if (parsed.preferences.theme) applyColorTheme(parsed.preferences.theme);
+              if (parsed.preferences.fontFamily) applyFontFamilyUniversal(parsed.preferences.fontFamily);
+            }
+            await persistLibrary();
+            renderSidebar();
+            loadActiveChapterIntoDOM();
+            showToast(`Restored ${importedCount} chapter(s) from backup!`);
+          }
+          // Case B: Single-chapter JSON export
+          else if (parsed && parsed.html) {
+            const newId = parsed.id || ('ch-' + Date.now());
+            library.chapters[newId] = {
+              id: newId,
+              badge: parsed.badge || 'Imported NCERT Chapter',
+              title: parsed.title || 'Imported Chapter',
+              subtitle: parsed.subtitle || '',
+              html: parsed.html,
+              updatedAt: Date.now()
+            };
+            const switched = await switchChapter(newId);
+            if (switched) showToast('Imported chapter into library!');
+          } else {
+            showToast('Unrecognized backup JSON format.');
+          }
+        } catch (err) {
+          showToast('Failed to parse backup JSON file.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function exportCurrentChapterJSON() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return;
+      ch.title = document.getElementById('chapter-title').innerHTML;
+      ch.subtitle = document.getElementById('chapter-subtitle').innerHTML;
+      ch.html = document.getElementById('notes-canvas').innerHTML;
+
+      const plainName = ch.title.replace(/<[^>]*>/g, '').trim().replace(/[^a-z0-9]+/gi, '_') || ch.id;
+      const payload = {
+        app: 'NEET_BioNotes_Chapter',
+        exportedAt: new Date().toISOString(),
+        id: ch.id,
+        badge: ch.badge,
+        title: ch.title,
+        subtitle: ch.subtitle,
+        html: ch.html
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${plainName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Chapter exported as .json!');
+    }
+
+    async function importSingleChapterJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          recordRollingSnapshot('Before importing single chapter');
+
+          if (parsed && parsed.html) {
+            const newId = 'ch-' + Date.now();
+            library.chapters[newId] = {
+              id: newId,
+              badge: parsed.badge || 'NCERT Biology',
+              title: parsed.title || file.name.replace(/\.json$/i, ''),
+              subtitle: parsed.subtitle || '',
+              html: parsed.html,
+              updatedAt: Date.now()
+            };
+            const switched = await switchChapter(newId);
+            if (switched) showToast(`Added "${library.chapters[newId].title.replace(/<[^>]*>/g, '')}" to Chapter Library!`);
+          } else if (parsed && parsed.library && parsed.library.chapters) {
+            const entries = Object.values(parsed.library.chapters);
+            entries.forEach((chData, i) => {
+              const id = 'ch-' + (Date.now() + i);
+              library.chapters[id] = { ...chData, id, updatedAt: Date.now() };
+            });
+            await persistLibrary();
+            renderSidebar();
+            showToast(`Merged ${entries.length} chapter(s) into library!`);
+          } else {
+            showToast('Invalid chapter .json file.');
+          }
+        } catch (err) {
+          showToast('Could not read chapter .json file.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    /* =====================================================================
+       GOOGLE DRIVE CLOUD SYNC (APPS SCRIPT BRIDGE + GIS OAUTH2)
+       ===================================================================== */
+    function loadGDriveConfig() {
+      try {
+        const raw = localStorage.getItem(GDRIVE_PREFS_KEY);
+        if (raw) {
+          gdriveConfig = { ...gdriveConfig, ...JSON.parse(raw) };
+        }
+      } catch (e) {}
+      updateGDriveUI();
+    }
+
+    function saveGDriveConfig() {
+      const urlInput = document.getElementById('gdrive-script-url');
+      const clientInput = document.getElementById('gdrive-client-id');
+      if (urlInput) gdriveConfig.scriptUrl = urlInput.value.trim();
+      if (clientInput) gdriveConfig.clientId = clientInput.value.trim();
+      try {
+        localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig));
+      } catch (e) {}
+      updateGDriveUI();
+    }
+
+    function toggleGDriveAutoSync(checked) {
+      gdriveConfig.autoSync = checked;
+      saveGDriveConfig();
+      showToast(checked ? 'Google Drive Auto-Sync enabled!' : 'Google Drive Auto-Sync paused.');
+    }
+
+    function switchGDriveTab(mode) {
+      gdriveConfig.mode = mode;
+      saveGDriveConfig();
+      const isScript = mode === 'appsscript';
+      document.getElementById('gdrive-panel-appsscript').classList.toggle('hidden', !isScript);
+      document.getElementById('gdrive-panel-oauth').classList.toggle('hidden', isScript);
+      document.getElementById('tab-btn-appsscript').className = isScript
+        ? 'py-1.5 px-2 rounded-md font-semibold bg-sky-500/20 text-sky-400 transition'
+        : 'py-1.5 px-2 rounded-md font-semibold theme-muted hover:text-[var(--text-heading)] transition';
+      document.getElementById('tab-btn-oauth').className = !isScript
+        ? 'py-1.5 px-2 rounded-md font-semibold bg-sky-500/20 text-sky-400 transition'
+        : 'py-1.5 px-2 rounded-md font-semibold theme-muted hover:text-[var(--text-heading)] transition';
+    }
+
+    function updateGDriveUI() {
+      const urlInput = document.getElementById('gdrive-script-url');
+      const clientInput = document.getElementById('gdrive-client-id');
+      const autoCheck = document.getElementById('gdrive-autosync-toggle');
+      const statusText = document.getElementById('gdrive-status-text');
+      const lastSyncText = document.getElementById('gdrive-last-sync');
+
+      if (urlInput && urlInput.value !== gdriveConfig.scriptUrl) urlInput.value = gdriveConfig.scriptUrl || '';
+      if (clientInput && clientInput.value !== gdriveConfig.clientId) clientInput.value = gdriveConfig.clientId || '';
+      if (autoCheck) autoCheck.checked = !!gdriveConfig.autoSync;
+
+      if (statusText) {
+        if (gdriveAccessToken) {
+          statusText.textContent = 'Connected via Google OAuth2';
+          statusText.className = 'font-semibold text-emerald-400';
+        } else if (gdriveConfig.scriptUrl) {
+          statusText.textContent = 'Configured via Personal Apps Script URL';
+          statusText.className = 'font-semibold text-emerald-400';
+        } else {
+          statusText.textContent = 'Not connected — Add Apps Script URL or Client ID below';
+          statusText.className = 'font-semibold theme-heading';
+        }
+      }
+      if (lastSyncText) {
+        lastSyncText.textContent = gdriveConfig.lastSync
+          ? `Last cloud sync: ${new Date(gdriveConfig.lastSync).toLocaleString()}`
+          : 'Last cloud sync: Never';
+      }
+    }
+
+    function openGDriveModal() {
+      updateGDriveUI();
+      switchGDriveTab(gdriveConfig.mode || 'appsscript');
+      document.getElementById('gdrive-modal').classList.remove('hidden');
+    }
+
+    function closeGDriveModal() {
+      document.getElementById('gdrive-modal').classList.add('hidden');
+    }
+
+    function copyAppsScriptCode() {
+      const code = document.getElementById('apps-script-snippet').textContent;
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('Apps Script code copied to clipboard!');
+    }
+
+    function connectGoogleOAuth() {
+      const clientId = gdriveConfig.clientId;
+      if (!clientId) {
+        showToast('Enter your Google OAuth Client ID first.');
+        return;
+      }
+      if (!window.google || !google.accounts || !google.accounts.oauth2) {
+        showToast('Google Identity script still loading — check internet connection.');
+        return;
+      }
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (resp) => {
+          if (resp && resp.access_token) {
+            gdriveAccessToken = resp.access_token;
+            updateGDriveUI();
+            showToast('Signed in to Google Drive!');
+          } else {
+            showToast('Google sign-in cancelled or failed.');
+          }
+        }
+      });
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function buildFullBackupPayload() {
+      const ch = library.chapters[library.activeChapterId];
+      if (ch) {
+        ch.title = document.getElementById('chapter-title').innerHTML;
+        ch.subtitle = document.getElementById('chapter-subtitle').innerHTML;
+        ch.html = document.getElementById('notes-canvas').innerHTML;
+      }
+      return {
+        app: 'NEET_BioNotes',
+        version: 5,
+        exportedAt: new Date().toISOString(),
+        preferences: {
+          fontSize: currentFontSize,
+          fontFamily: currentFontFamily,
+          theme: currentTheme
+        },
+        library
+      };
+    }
+
+    async function pushBackupToGoogleDrive(silent = false) {
+      const payload = buildFullBackupPayload();
+      const jsonStr = JSON.stringify(payload);
+
+      // Option A: Google Apps Script Web App URL
+      if (gdriveConfig.mode === 'appsscript' && gdriveConfig.scriptUrl) {
+        if (!silent) showToast('Uploading backup to Google Drive...');
+        try {
+          await fetch(gdriveConfig.scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: jsonStr
+          });
+          gdriveConfig.lastSync = new Date().toISOString();
+          saveGDriveConfig();
+          if (!silent) showToast('☁️ Backup pushed to Google Drive!');
+        } catch (err) {
+          if (!silent) showToast('Drive sync failed — verify your Web App URL & internet.');
+        }
+        return;
+      }
+
+      // Option B: Google Drive REST API v3 with OAuth2 Access Token
+      if (gdriveAccessToken) {
+        if (!silent) showToast('Syncing with Google Drive API...');
+        try {
+          const searchRes = await fetch(
+            "https://www.googleapis.com/drive/v3/files?q=name='NEET_BioNotes_Cloud_Backup.json' and trashed=false&fields=files(id,name)",
+            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
+          );
+          const searchData = await searchRes.json();
+          const existingFile = searchData.files && searchData.files[0];
+
+          const metadata = {
+            name: 'NEET_BioNotes_Cloud_Backup.json',
+            mimeType: 'application/json'
+          };
+          const boundary = '-------neetbionotes314159';
+          const multipartBody =
+            `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+            `--${boundary}\r\nContent-Type: application/json\r\n\r\n${jsonStr}\r\n--${boundary}--`;
+
+          const uploadUrl = existingFile
+            ? `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`
+            : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+          const upRes = await fetch(uploadUrl, {
+            method: existingFile ? 'PATCH' : 'POST',
+            headers: {
+              Authorization: 'Bearer ' + gdriveAccessToken,
+              'Content-Type': `multipart/related; boundary="${boundary}"`
+            },
+            body: multipartBody
+          });
+
+          if (!upRes.ok) throw new Error('Drive upload failed');
+          gdriveConfig.lastSync = new Date().toISOString();
+          saveGDriveConfig();
+          if (!silent) showToast('☁️ Backup synced to Google Drive!');
+        } catch (err) {
+          if (!silent) showToast('OAuth Drive sync error — try signing in again.');
+        }
+        return;
+      }
+
+      if (!silent) {
+        showToast('Configure Apps Script URL or Sign in with Google first.');
+      }
+    }
+
+    async function pullBackupFromGoogleDrive() {
+      // Option A: Google Apps Script Web App URL
+      if (gdriveConfig.mode === 'appsscript' && gdriveConfig.scriptUrl) {
+        showToast('Fetching latest notes from Google Drive...');
+        try {
+          const res = await fetch(gdriveConfig.scriptUrl);
+          const parsed = await res.json();
+          if (parsed && parsed.library && parsed.library.chapters) {
+            recordRollingSnapshot('Before Google Drive Pull');
+            library = parsed.library;
+            await persistLibrary();
+            renderSidebar();
+            loadActiveChapterIntoDOM();
+            gdriveConfig.lastSync = new Date().toISOString();
+            saveGDriveConfig();
+            closeGDriveModal();
+            showToast('☁️ Restored all chapters from Google Drive!');
+          } else {
+            showToast('No backup data found in Google Drive yet.');
+          }
+        } catch (err) {
+          showToast('Could not fetch from Apps Script URL (check "Who has access: Anyone").');
+        }
+        return;
+      }
+
+      // Option B: Google Drive REST API v3
+      if (gdriveAccessToken) {
+        showToast('Downloading backup from Google Drive...');
+        try {
+          const searchRes = await fetch(
+            "https://www.googleapis.com/drive/v3/files?q=name='NEET_BioNotes_Cloud_Backup.json' and trashed=false&fields=files(id,name)",
+            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
+          );
+          const searchData = await searchRes.json();
+          const existingFile = searchData.files && searchData.files[0];
+          if (!existingFile) {
+            showToast('No backup file found on Google Drive.');
+            return;
+          }
+          const fileRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`,
+            { headers: { Authorization: 'Bearer ' + gdriveAccessToken } }
+          );
+          const parsed = await fileRes.json();
+          if (parsed && parsed.library && parsed.library.chapters) {
+            recordRollingSnapshot('Before Google Drive Pull');
+            library = parsed.library;
+            await persistLibrary();
+            renderSidebar();
+            loadActiveChapterIntoDOM();
+            gdriveConfig.lastSync = new Date().toISOString();
+            saveGDriveConfig();
+            closeGDriveModal();
+            showToast('☁️ Restored all chapters from Google Drive!');
+          }
+        } catch (err) {
+          showToast('Failed to download backup from Google Drive.');
+        }
+        return;
+      }
+
+      showToast('Configure Apps Script URL or Sign in with Google first.');
+    }
+
+    /* =====================================================================
+       EDIT MODE TOGGLE & INTERACTIVE RESIZABLE TABLE ENGINE
+       ===================================================================== */
+    function toggleEditMode() {
+      if (isReadingMode) exitReadingMode();
+      isEditMode = !isEditMode;
+
+      const body = document.body;
+      const btn = document.getElementById('btn-mode-switch');
+      const icon = document.getElementById('mode-icon');
+      const text = document.getElementById('mode-text');
+      const editToolbar = document.getElementById('edit-toolbar-group');
+      const recallControls = document.getElementById('recall-controls');
+
+      if (isEditMode) {
+        body.classList.add('edit-mode');
+        if (btn) btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition';
+        if (icon) icon.textContent = '✏️';
+        if (text) text.textContent = 'Edit Mode';
+        if (editToolbar) {
+          editToolbar.classList.remove('hidden');
+          editToolbar.classList.add('flex');
+        }
+        if (recallControls) recallControls.classList.add('opacity-50');
+      } else {
+        body.classList.remove('edit-mode');
+        if (btn) btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition';
+        if (icon) icon.textContent = '🧠';
+        if (text) text.textContent = 'Recall Mode';
+        if (editToolbar) {
+          editToolbar.classList.add('hidden');
+          editToolbar.classList.remove('flex');
+        }
+        if (recallControls) recallControls.classList.remove('opacity-50');
+        const qBar = document.getElementById('cursor-quick-bar');
+        if (qBar) qBar.style.display = 'none';
+      }
+
+      syncEditableAttributes();
+      enhanceAllTables();
+      rebindInsertedImages();
+      updateClozeCounter();
+      if (!isEditMode) scheduleAutoSave();
+    }
+
+    function enhanceAllTables() {
+      document.querySelectorAll('#notes-canvas table').forEach(table => {
+        if (!table.classList.contains('notion-table')) {
+          table.classList.add('notion-table');
+        }
+
+        let wrapper = table.closest('.table-wrapper');
+        if (!wrapper) {
+          wrapper = document.createElement('div');
+          wrapper.className = 'table-wrapper';
+          wrapper.style.width = '100%';
+          const scrollBox = document.createElement('div');
+          scrollBox.className = 'overflow-x-auto';
+          table.parentNode.insertBefore(wrapper, table);
+          scrollBox.appendChild(table);
+          wrapper.appendChild(scrollBox);
+        }
+
+        if (!wrapper.querySelector('.table-toolbar')) {
+          const toolbar = document.createElement('div');
+          toolbar.className = 'table-toolbar no-print';
+          toolbar.contentEditable = 'false';
+          toolbar.innerHTML = `
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          `;
+          wrapper.insertBefore(toolbar, wrapper.firstChild);
+        }
+
+        if (!wrapper.querySelector('.table-edge-resizer')) {
+          const edgeResizer = document.createElement('div');
+          edgeResizer.className = 'table-edge-resizer no-print';
+          edgeResizer.title = 'Drag left/right to resize table width';
+          edgeResizer.contentEditable = 'false';
+          attachTableEdgeResize(edgeResizer, wrapper);
+          wrapper.appendChild(edgeResizer);
+        }
+
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((th, idx) => {
+          if (idx === headers.length - 1) return;
+          if (!th.querySelector('.col-resizer')) {
+            const resizer = document.createElement('div');
+            resizer.className = 'col-resizer no-print';
+            resizer.contentEditable = 'false';
+            resizer.title = 'Drag to resize column width';
+            attachColumnResize(resizer, th, table);
+            th.appendChild(resizer);
+          }
+        });
+      });
+    }
+
+    function setTableWidth(btn, widthVal) {
+      const wrapper = btn.closest('.table-wrapper');
+      if (wrapper) {
+        wrapper.style.width = widthVal;
+        scheduleAutoSave();
+      }
+    }
+
+    function modifyTableRows(btn, delta) {
+      const table = btn.closest('.table-wrapper').querySelector('table');
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      if (delta > 0) {
+        const colCount = table.querySelectorAll('thead th').length || 2;
+        const tr = document.createElement('tr');
+        for (let i = 0; i < colCount; i++) {
+          const td = document.createElement('td');
+          td.setAttribute('contenteditable', isEditMode ? 'true' : 'false');
+          td.innerHTML = 'New cell';
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      } else if (tbody.rows.length > 1) {
+        tbody.deleteRow(tbody.rows.length - 1);
+      }
+      scheduleAutoSave();
+    }
+
+    function modifyTableCols(btn, delta) {
+      const table = btn.closest('.table-wrapper').querySelector('table');
+      const theadRow = table.querySelector('thead tr');
+      const tbodyRows = table.querySelectorAll('tbody tr');
+      if (!theadRow) return;
+
+      if (delta > 0) {
+        const th = document.createElement('th');
+        th.setAttribute('contenteditable', isEditMode ? 'true' : 'false');
+        th.textContent = 'New Header';
+        theadRow.appendChild(th);
+
+        tbodyRows.forEach(tr => {
+          const td = document.createElement('td');
+          td.setAttribute('contenteditable', isEditMode ? 'true' : 'false');
+          td.textContent = 'Data';
+          tr.appendChild(td);
+        });
+        const count = theadRow.children.length;
+        Array.from(theadRow.children).forEach(cell => {
+          cell.style.width = (100 / count).toFixed(1) + '%';
+        });
+        enhanceAllTables();
+      } else if (theadRow.children.length > 1) {
+        theadRow.deleteCell(theadRow.children.length - 1);
+        tbodyRows.forEach(tr => {
+          if (tr.children.length > 1) tr.deleteCell(tr.children.length - 1);
+        });
+      }
+      scheduleAutoSave();
+    }
+
+    function attachColumnResize(resizer, th, table) {
+      resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        resizer.classList.add('resizing');
+        const startX = e.clientX;
+        const startWidth = th.offsetWidth;
+        const nextTh = th.nextElementSibling;
+        const nextStartWidth = nextTh ? nextTh.offsetWidth : 0;
+        const tableWidth = table.offsetWidth;
+
+        const onMove = (me) => {
+          const dx = me.clientX - startX;
+          const newW = Math.max(60, startWidth + dx);
+          th.style.width = ((newW / tableWidth) * 100).toFixed(1) + '%';
+          if (nextTh) {
+            const nextNewW = Math.max(60, nextStartWidth - dx);
+            nextTh.style.width = ((nextNewW / tableWidth) * 100).toFixed(1) + '%';
+          }
+        };
+        const onUp = () => {
+          resizer.classList.remove('resizing');
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          scheduleAutoSave();
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+    }
+
+    function attachTableEdgeResize(handle, wrapper) {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const startX = e.clientX;
+        const startW = wrapper.offsetWidth;
+        const parentW = wrapper.parentElement.offsetWidth || 750;
+
+        const onMove = (me) => {
+          const newW = Math.min(parentW, Math.max(280, startW + (me.clientX - startX)));
+          wrapper.style.width = Math.round((newW / parentW) * 100) + '%';
+        };
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          scheduleAutoSave();
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+    }
+
+    /* =====================================================================
+       INTERACTIVE CHAPTER MIND MAP GENERATOR (SVG TREE ENGINE)
+       ===================================================================== */
+    let mmScale = 1;
+    let mmTranslateX = 40;
+    let mmTranslateY = 40;
+    let mmDragging = false;
+    let mmDragStart = { x: 0, y: 0 };
+
+    function extractChapterTree() {
+      const rootTitle = document.getElementById('chapter-title').innerText.replace(/^Chapter\s*\d+:\s*/i, '').trim() || 'NCERT Chapter';
+      const maxDepth = parseInt(document.getElementById('mindmap-depth').value || '3', 10);
+      const tree = { label: rootTitle, color: '#38bdf8', children: [] };
+
+      document.querySelectorAll('#notes-canvas > .toggle-block').forEach((sec, idx) => {
+        const palette = ['#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf', '#60a5fa'];
+        const branchColor = palette[idx % palette.length];
+        const h2 = sec.querySelector(':scope > .toggle-header h2');
+        if (!h2) return;
+
+        const topicNode = {
+          label: h2.innerText.replace(/^\d+\.\s*/, '').trim(),
+          color: branchColor,
+          children: []
+        };
+
+        if (maxDepth >= 2) {
+          const subToggles = sec.querySelectorAll(':scope > .toggle-body > .toggle-block');
+          if (subToggles.length > 0) {
+            subToggles.forEach(sub => {
+              const h3 = sub.querySelector(':scope > .toggle-header h3');
+              const subNode = {
+                label: h3 ? h3.innerText.trim() : 'Subtopic',
+                color: branchColor,
+                children: []
+              };
+              if (maxDepth >= 3) {
+                const keywords = extractKeywordsFromContainer(sub.querySelector('.toggle-body'), 6);
+                keywords.forEach(kw => subNode.children.push({ label: kw, color: branchColor, children: [] }));
+              }
+              topicNode.children.push(subNode);
+            });
+          } else {
+            const keywords = extractKeywordsFromContainer(sec.querySelector(':scope > .toggle-body'), 7);
+            keywords.forEach(kw => topicNode.children.push({ label: kw, color: branchColor, children: [] }));
+          }
+        }
+
+        tree.children.push(topicNode);
+      });
+
+      return tree;
+    }
+
+    function extractKeywordsFromContainer(container, limit = 6) {
+      if (!container) return [];
+      const items = [];
+      container.querySelectorAll('li, p, tr').forEach(el => {
+        if (items.length >= limit) return;
+        if (el.closest('thead')) return;
+        const text = el.innerText.replace(/\s+/g, ' ').trim();
+        if (text && text.length > 3 && text.length < 68) {
+          items.push(text.length > 48 ? text.slice(0, 46) + '…' : text);
+        }
+      });
+      return items.slice(0, limit);
+    }
+
+    function openMindMapModal() {
+      const modal = document.getElementById('mindmap-modal');
+      modal.classList.remove('hidden');
+      const title = document.getElementById('chapter-title').innerText.trim();
+      document.getElementById('mindmap-title').textContent = `Mind Map — ${title}`;
+      mmScale = 1;
+      mmTranslateX = 50;
+      mmTranslateY = 40;
+      renderMindMapSVG();
+    }
+
+    function closeMindMapModal() {
+      document.getElementById('mindmap-modal').classList.add('hidden');
+    }
+
+    function renderMindMapSVG() {
+      const svg = document.getElementById('mindmap-svg');
+      const tree = extractChapterTree();
+
+      const levelX = [40, 290, 560, 840];
+      const nodeHeight = 36;
+      let currentY = 30;
+
+      function layoutNode(node, depth) {
+        node.depth = depth;
+        node.x = levelX[depth] || depth * 260;
+        if (!node.children || node.children.length === 0) {
+          node.y = currentY;
+          currentY += nodeHeight;
+        } else {
+          node.children.forEach(c => layoutNode(c, depth + 1));
+          const firstY = node.children[0].y;
+          const lastY = node.children[node.children.length - 1].y;
+          node.y = (firstY + lastY) / 2;
+        }
+      }
+
+      layoutNode(tree, 0);
+      const totalHeight = Math.max(600, currentY + 60);
+      const totalWidth = 1220;
+
+      svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+      let pathsSVG = '';
+      let nodesSVG = '';
+
+      function drawRecursive(node) {
+        const boxW = node.depth === 0 ? 205 : node.depth === 1 ? 225 : node.depth === 2 ? 235 : 310;
+        const boxH = node.depth === 0 ? 44 : 28;
+
+        if (node.children) {
+          node.children.forEach(child => {
+            const startX = node.x + boxW;
+            const startY = node.y;
+            const endX = child.x;
+            const endY = child.y;
+            const midX = (startX + endX) / 2;
+            pathsSVG += `<path d="M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}" fill="none" stroke="${child.color}" stroke-width="${node.depth === 0 ? 2.4 : 1.6}" stroke-opacity="0.65" />`;
+            drawRecursive(child);
+          });
+        }
+
+        const fill = node.depth === 0 ? '#0ea5e9' : node.depth === 1 ? '#1e293b' : '#18181b';
+        const stroke = node.color;
+        const textColor = node.depth === 0 ? '#ffffff' : '#f4f4f5';
+        const fontSize = node.depth === 0 ? 13 : node.depth === 1 ? 12 : 11;
+        const fontWeight = node.depth <= 1 ? '700' : '500';
+        const safeLabel = escapeXML(node.label.length > 42 ? node.label.slice(0, 40) + '…' : node.label);
+
+        nodesSVG += `
+          <g transform="translate(${node.x}, ${node.y - boxH / 2})">
+            <rect width="${boxW}" height="${boxH}" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="${node.depth <= 1 ? 1.8 : 1.2}" />
+            <text x="11" y="${boxH / 2 + 4}" fill="${textColor}" font-family="Inter, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}">${safeLabel}</text>
+          </g>
+        `;
+      }
+
+      drawRecursive(tree);
+
+      svg.innerHTML = `
+        <g id="mindmap-stage" transform="translate(${mmTranslateX}, ${mmTranslateY}) scale(${mmScale})">
+          ${pathsSVG}
+          ${nodesSVG}
+        </g>
+      `;
+    }
+
+    function escapeXML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function zoomMindMap(factor) {
+      mmScale = Math.min(2.5, Math.max(0.4, mmScale * factor));
+      updateMindMapTransform();
+    }
+
+    function resetMindMapView() {
+      mmScale = 1;
+      mmTranslateX = 40;
+      mmTranslateY = 30;
+      updateMindMapTransform();
+    }
+
+    function updateMindMapTransform() {
+      const stage = document.getElementById('mindmap-stage');
+      if (stage) {
+        stage.setAttribute('transform', `translate(${mmTranslateX}, ${mmTranslateY}) scale(${mmScale})`);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const vp = document.getElementById('mindmap-viewport');
+      if (!vp) return;
+      vp.addEventListener('mousedown', (e) => {
+        mmDragging = true;
+        mmDragStart = { x: e.clientX - mmTranslateX, y: e.clientY - mmTranslateY };
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!mmDragging) return;
+        mmTranslateX = e.clientX - mmDragStart.x;
+        mmTranslateY = e.clientY - mmDragStart.y;
+        updateMindMapTransform();
+      });
+      window.addEventListener('mouseup', () => { mmDragging = false; });
+      vp.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        zoomMindMap(e.deltaY < 0 ? 1.08 : 0.92);
+      }, { passive: false });
+    });
+
+    function exportMindMapSVG() {
+      const svg = document.getElementById('mindmap-svg');
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${library.activeChapterId}_mindmap.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Mind Map SVG downloaded!');
+    }
+
+    function insertMindMapIntoNotes() {
+      const svg = document.getElementById('mindmap-svg');
+      const clone = svg.cloneNode(true);
+      const stage = clone.querySelector('#mindmap-stage');
+      if (stage) stage.setAttribute('transform', 'translate(10, 10) scale(1)');
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(clone);
+      const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+      closeMindMapModal();
+      insertImageElement(dataUrl, null);
+      showToast('Chapter Mind Map inserted into notes!');
+    }
+
+    /* =====================================================================
+       FLOATING CURSOR SYMBOL QUICK-INSERT BAR
+       ===================================================================== */
+    function captureActiveEditorLocation() {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas.contains(range.commonAncestorContainer)) return;
+
+      lastCaretRange = range.cloneRange();
+      let node = range.commonAncestorContainer;
+      if (node.nodeType === 3) node = node.parentElement;
+      const block = node.closest('.toggle-body') || node.closest('.toggle-block');
+      if (block) lastActiveBlock = block;
+    }
+
+    function updateCursorQuickBar() {
+      const bar = document.getElementById('cursor-quick-bar');
+      if (!isEditMode || isReadingMode) {
+        bar.style.display = 'none';
+        return;
+      }
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) {
+        bar.style.display = 'none';
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas.contains(range.commonAncestorContainer)) {
+        bar.style.display = 'none';
+        return;
+      }
+
+      captureActiveEditorLocation();
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0 && rect.top === 0) {
+        bar.style.display = 'none';
+        return;
+      }
+
+      const left = Math.min(window.innerWidth - 220, Math.max(12, rect.left));
+      const top = Math.max(96, rect.top - 6);
+      bar.style.left = left + 'px';
+      bar.style.top = top + 'px';
+      bar.style.display = 'flex';
+    }
+
+    function insertAtCursor(type) {
+      if (!isEditMode) return;
+      captureActiveEditorLocation();
+      const bar = document.getElementById('cursor-quick-bar');
+      bar.style.display = 'none';
+
+      let targetContainer = lastActiveBlock;
+      if (lastCaretRange) {
+        let node = lastCaretRange.commonAncestorContainer;
+        if (node.nodeType === 3) node = node.parentElement;
+        targetContainer = node.closest('.toggle-body') || node.closest('.toggle-block') || lastActiveBlock;
+      }
+
+      if (type === 'text') {
+        if (lastCaretRange) {
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(lastCaretRange);
+          const p = document.createElement('p');
+          p.innerHTML = '• <strong>Keyword:</strong> Concise NCERT point...';
+          lastCaretRange.insertNode(p);
+          scheduleAutoSave();
+        }
+      } else if (type === 'toggle') {
+        const sub = document.createElement('div');
+        sub.className = 'toggle-block rounded-lg theme-nested border p-3.5 my-2';
+        sub.innerHTML = `
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="true" class="font-semibold text-sky-400">Subtopic Heading</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          </div>
+          <div contenteditable="true" class="toggle-body mt-2 pl-5 space-y-1">
+            <p>• Add concise notes here...</p>
+          </div>
+        `;
+        (targetContainer || document.getElementById('notes-canvas')).appendChild(sub);
+        scheduleAutoSave();
+      } else if (type === 'image') {
+        activeInsertTarget = targetContainer;
+        const input = document.getElementById('image-file-input');
+        input.value = '';
+        input.click();
+      } else if (type === 'table') {
+        const wrap = document.createElement('div');
+        wrap.className = 'table-wrapper';
+        wrap.style.width = '100%';
+        wrap.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="true" style="width: 50%;">Column 1</th>
+                  <th contenteditable="true" style="width: 50%;">Column 2</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Fact 1</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Fact 2</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+        (targetContainer || document.getElementById('notes-canvas')).appendChild(wrap);
+        enhanceAllTables();
+        scheduleAutoSave();
+      } else if (type === 'flowchart') {
+        const flow = document.createElement('div');
+        flow.setAttribute('contenteditable', 'true');
+        flow.className = 'p-4 my-2 rounded-lg theme-nested border text-center space-y-2.5';
+        flow.innerHTML = `
+          <div>Step 1 ⟶ <span class="cloze cloze-hidden">Enzyme / Factor</span></div>
+          <div class="theme-muted">↓</div>
+          <div>Step 2 ⟶ <span class="cloze cloze-hidden">Final Outcome</span></div>
+        `;
+        (targetContainer || document.getElementById('notes-canvas')).appendChild(flow);
+        scheduleAutoSave();
+      } else if (type === 'mindmap') {
+        openMindMapModal();
+      }
+    }
+
+    /* =====================================================================
+       CLOZE DELETION & EVENT DELEGATION
+       ===================================================================== */
+    function setupEventListeners() {
+      const canvas = document.getElementById('notes-canvas');
+      const title = document.getElementById('chapter-title');
+      const subtitle = document.getElementById('chapter-subtitle');
+
+      canvas.addEventListener('click', (e) => {
+        const clozeEl = e.target.closest('.cloze');
+        if (clozeEl && !isEditMode) {
+          e.stopPropagation();
+          clozeEl.classList.toggle('cloze-hidden');
+          updateClozeCounter();
+          scheduleAutoSave();
+          return;
+        }
+        if (isEditMode) {
+          setTimeout(updateCursorQuickBar, 10);
+        }
+      });
+
+      canvas.addEventListener('keyup', () => {
+        if (isEditMode) updateCursorQuickBar();
+      });
+
+      canvas.addEventListener('focusin', () => {
+        if (isEditMode) captureActiveEditorLocation();
+      });
+
+      canvas.addEventListener('mouseup', () => {
+        if (isEditMode) {
+          captureActiveEditorLocation();
+          setTimeout(updateCursorQuickBar, 10);
+        }
+      });
+
+      // Drag & Drop Image Files directly onto any Toggle Section
+      canvas.addEventListener('dragover', (e) => {
+        if (!isEditMode) return;
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          e.preventDefault();
+          const sec = e.target.closest('.toggle-block');
+          if (sec) sec.classList.add('drag-over-img');
+        }
+      });
+
+      canvas.addEventListener('dragleave', (e) => {
+        const sec = e.target.closest('.toggle-block');
+        if (sec) sec.classList.remove('drag-over-img');
+      });
+
+      canvas.addEventListener('drop', (e) => {
+        const sec = e.target.closest('.toggle-block');
+        if (sec) sec.classList.remove('drag-over-img');
+        if (!isEditMode || !e.dataTransfer || !e.dataTransfer.files.length) return;
+        const imageFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        if (!imageFiles.length) return;
+        e.preventDefault();
+        const dropTarget = sec ? (sec.querySelector('.toggle-body') || sec) : null;
+        imageFiles.forEach(file => compressAndInsertImage(file, dropTarget));
+      });
+
+      [canvas, title, subtitle].forEach(el => {
+        el.addEventListener('input', () => scheduleAutoSave(false));
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (isEditMode && e.altKey && (e.key === 'c' || e.key === 'C')) {
+          e.preventDefault();
+          wrapSelectionInCloze();
+        }
+        if (e.key === 'Escape' && isReadingMode) {
+          exitReadingMode();
+        }
+      });
+
+      document.addEventListener('paste', (e) => {
+        if (!isEditMode) return;
+        const items = (e.clipboardData || e.originalEvent.clipboardData)?.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.type.indexOf('image') === 0) {
+            e.preventDefault();
+            captureActiveEditorLocation();
+            compressAndInsertImage(item.getAsFile(), lastActiveBlock);
+            break;
+          }
+        }
+      });
+    }
+
+    function wrapSelectionInCloze() {
+      if (!isEditMode) {
+        showToast('Switch to Edit Mode first to create Cloze blanks.');
+        return;
+      }
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        showToast('Highlight any word, number, or flowchart step first!');
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas.contains(range.commonAncestorContainer)) return;
+
+      const selectedText = range.toString().trim();
+      if (!selectedText) return;
+
+      const span = document.createElement('span');
+      span.className = 'cloze cloze-hidden';
+      try {
+        range.surroundContents(span);
+      } catch (err) {
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+      }
+
+      sel.removeAllRanges();
+      scheduleAutoSave();
+      showToast(`Cloze blank created for "${selectedText.slice(0, 26)}"`);
+    }
+
+    function unwrapSelectionCloze() {
+      if (!isEditMode) return;
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+
+      let node = sel.anchorNode;
+      if (node && node.nodeType === 3) node = node.parentElement;
+      const clozeEl = node ? node.closest('.cloze') : null;
+
+      if (clozeEl) {
+        const textNode = document.createTextNode(clozeEl.textContent);
+        clozeEl.replaceWith(textNode);
+        scheduleAutoSave();
+        showToast('Cloze removed.');
+      } else {
+        showToast('Place cursor inside a dotted-underlined Cloze word to uncloze it.');
+      }
+    }
+
+    function autoClozeNumbersAndTerms() {
+      if (!isEditMode) return;
+      const canvas = document.getElementById('notes-canvas');
+      const walker = document.createTreeWalker(canvas, NodeFilter.SHOW_TEXT, null);
+      const nodesToProcess = [];
+
+      let currentNode;
+      while ((currentNode = walker.nextNode())) {
+        const parent = currentNode.parentElement;
+        if (!parent || parent.closest('.cloze') || parent.closest('button') || parent.closest('h2') || parent.closest('.table-toolbar')) continue;
+        if (/\b\d+([–-]\d+)?(\.\d+)?\s*(%|mm|mL|L|g|days|sec|min⁻¹|bpm)?\b/.test(currentNode.nodeValue)) {
+          nodesToProcess.push(currentNode);
+        }
+      }
+
+      let createdCount = 0;
+      nodesToProcess.forEach(textNode => {
+        const html = textNode.nodeValue.replace(
+          /(\b\d+(?:[–-]\d+)?(?:\.\d+)?(?:\s*(?:%|million|mm⁻³|mm Hg|mL|L\/min|L|g|days|seconds|sec|min⁻¹|bpm))?\b)/g,
+          (match) => {
+            createdCount++;
+            return `<span class="cloze cloze-hidden">${match}</span>`;
+          }
+        );
+        const temp = document.createElement('span');
+        temp.innerHTML = html;
+        textNode.replaceWith(...temp.childNodes);
+      });
+
+      scheduleAutoSave();
+      showToast(createdCount > 0 ? `Auto-clozed ${createdCount} numerical facts!` : 'All numerical facts are already clozed.');
+    }
+
+    function hideAllClozes() {
+      document.querySelectorAll('#notes-canvas .cloze').forEach(el => el.classList.add('cloze-hidden'));
+      updateClozeCounter();
+      scheduleAutoSave();
+    }
+
+    function revealAllClozes() {
+      document.querySelectorAll('#notes-canvas .cloze').forEach(el => el.classList.remove('cloze-hidden'));
+      updateClozeCounter();
+      scheduleAutoSave();
+    }
+
+    function updateClozeCounter() {
+      const all = document.querySelectorAll('#notes-canvas .cloze');
+      const hidden = document.querySelectorAll('#notes-canvas .cloze.cloze-hidden');
+      const revealed = all.length - hidden.length;
+      const counter = document.getElementById('cloze-counter');
+      if (counter) counter.textContent = `${revealed}/${all.length}`;
+    }
+
+    /* =====================================================================
+       IMAGE INSERTION, CANVAS COMPRESSION, ALIGNMENT & RESIZING
+       ===================================================================== */
+    function triggerToolbarImageUpload() {
+      if (!isEditMode) toggleEditMode();
+      captureActiveEditorLocation();
+      activeInsertTarget = lastActiveBlock;
+      const input = document.getElementById('image-file-input');
+      input.value = '';
+      input.click();
+    }
+
+    function insertImageInsideBlock(btn) {
+      if (!isEditMode) toggleEditMode();
+      const sec = btn.closest('.toggle-block');
+      activeInsertTarget = sec ? (sec.querySelector('.toggle-body') || sec) : null;
+      lastActiveBlock = activeInsertTarget;
+      const input = document.getElementById('image-file-input');
+      input.value = '';
+      input.click();
+    }
+
+    function handleImageFileSelected(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const target = activeInsertTarget || lastActiveBlock;
+      files.forEach(file => compressAndInsertImage(file, target));
+      e.target.value = '';
+    }
+
+    function compressAndInsertImage(file, target) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Please select a valid image file (PNG, JPG, WebP).');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_WIDTH = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = width;
+          offCanvas.height = height;
+          const ctx = offCanvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to JPEG/WebP so large phone photos fit cleanly in IndexedDB & Cloud Backup
+          const compressedDataUrl = offCanvas.toDataURL('image/jpeg', 0.84);
+          insertImageElement(compressedDataUrl, target);
+        };
+        img.onerror = () => {
+          insertImageElement(ev.target.result, target);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function insertImageElement(dataUrl, target = null) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'inserted-img-wrapper align-center';
+      wrapper.style.width = '440px';
+      wrapper.contentEditable = 'false';
+      wrapper.innerHTML = `
+        <img src="${dataUrl}" alt="NCERT Diagram" class="w-full h-auto block" />
+        <div class="img-controls flex items-center gap-1 bg-black/85 border border-white/20 rounded-lg px-2 py-1 shadow-lg">
+          <button type="button" onclick="setImageAlign(this, 'left')" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded" title="Align Left">⫷</button>
+          <button type="button" onclick="setImageAlign(this, 'center')" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded" title="Align Center">⫸</button>
+          <span class="w-[1px] h-3 bg-white/25"></span>
+          <button type="button" onclick="this.closest('.inserted-img-wrapper').style.width='260px'; scheduleAutoSave();" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded">S</button>
+          <button type="button" onclick="this.closest('.inserted-img-wrapper').style.width='440px'; scheduleAutoSave();" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded">M</button>
+          <button type="button" onclick="this.closest('.inserted-img-wrapper').style.width='100%'; scheduleAutoSave();" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded">Full</button>
+          <button type="button" onclick="recordRollingSnapshot('Before deleting image'); this.closest('.inserted-img-wrapper').remove(); scheduleAutoSave(true);" class="text-[10px] px-1.5 py-0.5 bg-red-600 text-white rounded ml-0.5">✕</button>
+        </div>
+        <div contenteditable="${isEditMode}" class="img-caption">Figure: Click in Edit Mode to add diagram label</div>
+        <div class="img-resize-handle" title="Drag to resize"></div>
+      `;
+      attachResizeHandler(wrapper);
+
+      const canvas = document.getElementById('notes-canvas');
+      let resolvedTarget = target && document.body.contains(target) ? target : null;
+      if (!resolvedTarget) {
+        const firstSection = canvas.querySelector('.toggle-block');
+        if (firstSection) {
+          firstSection.classList.remove('collapsed');
+          resolvedTarget = firstSection.querySelector('.toggle-body') || firstSection;
+        } else {
+          resolvedTarget = canvas;
+        }
+      }
+
+      if (resolvedTarget.classList.contains('toggle-block')) {
+        resolvedTarget.classList.remove('collapsed');
+        const body = resolvedTarget.querySelector('.toggle-body');
+        (body || resolvedTarget).appendChild(wrapper);
+      } else {
+        resolvedTarget.appendChild(wrapper);
+      }
+
+      wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scheduleAutoSave();
+      showToast('Diagram inserted! Drag bottom-right corner to resize.');
+    }
+
+    function setImageAlign(btn, align) {
+      const wrapper = btn.closest('.inserted-img-wrapper');
+      if (!wrapper) return;
+      wrapper.classList.remove('align-left', 'align-center');
+      wrapper.classList.add(align === 'left' ? 'align-left' : 'align-center');
+      scheduleAutoSave();
+    }
+
+    function attachResizeHandler(wrapper) {
+      const handle = wrapper.querySelector('.img-resize-handle');
+      if (!handle) return;
+      const startResize = (clientX) => {
+        const startX = clientX;
+        const startW = wrapper.offsetWidth;
+        const onMove = (moveX) => {
+          wrapper.style.width = Math.max(140, startW + (moveX - startX)) + 'px';
+        };
+        const mouseMove = (me) => onMove(me.clientX);
+        const touchMove = (te) => {
+          if (te.touches[0]) onMove(te.touches[0].clientX);
+        };
+        const endResize = () => {
+          window.removeEventListener('mousemove', mouseMove);
+          window.removeEventListener('mouseup', endResize);
+          window.removeEventListener('touchmove', touchMove);
+          window.removeEventListener('touchend', endResize);
+          scheduleAutoSave();
+        };
+        window.addEventListener('mousemove', mouseMove);
+        window.addEventListener('mouseup', endResize);
+        window.addEventListener('touchmove', touchMove, { passive: true });
+        window.addEventListener('touchend', endResize);
+      };
+
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startResize(e.clientX);
+      });
+      handle.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        if (e.touches[0]) startResize(e.touches[0].clientX);
+      }, { passive: true });
+    }
+
+    function rebindInsertedImages() {
+      document.querySelectorAll('.inserted-img-wrapper').forEach(wrapper => {
+        attachResizeHandler(wrapper);
+        const cap = wrapper.querySelector('.img-caption');
+        if (cap) cap.setAttribute('contenteditable', isEditMode ? 'true' : 'false');
+      });
+    }
+
+    /* =====================================================================
+       TOGGLE COLLAPSE / EXPAND, FORMATTING & PRINTABLE PDF
+       ===================================================================== */
+    function toggleBlock(arrowEl) {
+      const block = arrowEl.closest('.toggle-block');
+      if (!block) return;
+      block.classList.toggle('collapsed');
+      if (!isReadingMode) scheduleAutoSave();
+    }
+
+    function expandAllToggles() {
+      document.querySelectorAll('#notes-canvas .toggle-block').forEach(b => b.classList.remove('collapsed'));
+      scheduleAutoSave();
+    }
+
+    function collapseAllToggles() {
+      document.querySelectorAll('#notes-canvas > .toggle-block').forEach(b => b.classList.add('collapsed'));
+      scheduleAutoSave();
+    }
+
+    function execFormat(cmd, val = null) {
+      if (!isEditMode) return;
+      document.execCommand(cmd, false, val);
+      scheduleAutoSave();
+    }
+
+    function applyHighlight(bg) {
+      if (!isEditMode) return;
+      document.execCommand('hiliteColor', false, bg);
+      scheduleAutoSave();
+    }
+
+    function exportPrintablePDF() {
+      showToast('Preparing clean printable PDF (all toggles expanded & clozes revealed)...', 2200);
+      setTimeout(() => window.print(), 250);
+    }
+
+    function syncEditableAttributes() {
+      const val = isEditMode ? 'true' : 'false';
+      document.getElementById('chapter-title').setAttribute('contenteditable', val);
+      document.getElementById('chapter-subtitle').setAttribute('contenteditable', val);
+
+      document.querySelectorAll('#notes-canvas [contenteditable]').forEach(el => {
+        if (!el.closest('.inserted-img-wrapper') && !el.closest('.table-toolbar') && !el.classList.contains('col-resizer') && !el.classList.contains('table-edge-resizer')) {
+          el.setAttribute('contenteditable', val);
+        }
+      });
+
+      document.querySelectorAll('.inserted-img-wrapper .img-caption').forEach(cap => {
+        cap.setAttribute('contenteditable', val);
+      });
+    }
+
+    /* =====================================================================
+       DYNAMIC BLOCK BUILDERS
+       ===================================================================== */
+    function addNewMainToggle() {
+      if (!isEditMode) toggleEditMode();
+      const canvas = document.getElementById('notes-canvas');
+      const sec = document.createElement('section');
+      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      sec.innerHTML = `
+        <div class="toggle-header flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-1">
+            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">New Topic Heading</h2>
+          </div>
+          <div class="edit-only items-center gap-1">
+            <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+            <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+          </div>
+        </div>
+        <div contenteditable="true" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-1.5">
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>NCERT Fact:</strong> Paste a paragraph and click <strong>✨ Sentence → Bullets</strong>, or highlight words and press <strong>[+ Cloze]</strong>.</li>
+          </ul>
+        </div>
+      `;
+      canvas.appendChild(sec);
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scheduleAutoSave();
+    }
+
+    function addNewTableBlock() {
+      if (!isEditMode) toggleEditMode();
+      const canvas = document.getElementById('notes-canvas');
+      const sec = document.createElement('section');
+      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      sec.innerHTML = `
+        <div class="toggle-header flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-1">
+            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Comparison Table</h2>
+          </div>
+          <button onclick="deleteBlock(this)" class="edit-only px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+        <div class="toggle-body mt-3 pl-2 sm:pl-6">
+          <div class="table-wrapper" style="width: 100%;">
+            <div class="overflow-x-auto">
+              <table class="notion-table">
+                <thead>
+                  <tr>
+                    <th contenteditable="true" style="width: 34%;">Parameter</th>
+                    <th contenteditable="true" style="width: 33%;">Category A</th>
+                    <th contenteditable="true" style="width: 33%;">Category B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td contenteditable="true" class="font-semibold">Feature 1</td>
+                    <td contenteditable="true"><span class="cloze cloze-hidden">Keyword A</span></td>
+                    <td contenteditable="true"><span class="cloze cloze-hidden">Keyword B</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      canvas.appendChild(sec);
+      enhanceAllTables();
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scheduleAutoSave();
+    }
+
+    function addNewFlowchartBlock() {
+      if (!isEditMode) toggleEditMode();
+      const canvas = document.getElementById('notes-canvas');
+      const sec = document.createElement('section');
+      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      sec.innerHTML = `
+        <div class="toggle-header flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-1">
+            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Interactive Cloze Flowchart</h2>
+          </div>
+          <button onclick="deleteBlock(this)" class="edit-only px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+        <div contenteditable="true" class="toggle-body mt-3 pl-2 sm:pl-6">
+          <div class="p-4 rounded-lg theme-nested border text-center space-y-3">
+            <div>Initial Stimulus ⟶ <span class="cloze cloze-hidden">Intermediate Enzyme</span></div>
+            <div class="theme-muted">↓</div>
+            <div>Substrate ⟶ <span class="cloze cloze-hidden">Final Product</span></div>
+          </div>
+        </div>
+      `;
+      canvas.appendChild(sec);
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      scheduleAutoSave();
+    }
+
+    function deleteBlock(btn) {
+      const block = btn.closest('.toggle-block');
+      if (block) {
+        recordRollingSnapshot('Before deleting section');
+        block.remove();
+        scheduleAutoSave(true);
+        showToast('Section deleted (Recoverable via History).');
+      }
+    }
+
+    /* =====================================================================
+       SEARCH FILTER, OFFLINE HTML EXPORT & RESET HELPERS
+       ===================================================================== */
+    function filterNotes(query) {
+      const q = query.trim().toLowerCase();
+      document.querySelectorAll('#notes-canvas > .toggle-block').forEach(block => {
+        if (!q) {
+          block.style.display = '';
+          return;
+        }
+        if (block.innerText.toLowerCase().includes(q)) {
+          block.style.display = '';
+          block.classList.remove('collapsed');
+        } else {
+          block.style.display = 'none';
+        }
+      });
+    }
+
+    function toggleMoreMenu() {
+      document.getElementById('more-dropdown').classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('more-dropdown');
+      if (menu && !menu.contains(e.target) && !e.target.closest('button[onclick*="toggleMoreMenu"]')) {
+        menu.classList.add('hidden');
+      }
+    });
+
+    function exportStandaloneHTML() {
+      const clone = document.documentElement.cloneNode(true);
+      const toast = clone.querySelector('#toast-banner');
+      if (toast) toast.classList.add('hidden');
+      const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'neet_bionotes_offline.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Standalone HTML exported!');
+    }
+
+    function promptResetChapter15() {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-msg').textContent = 'Restore Chapter 15 back to default NCERT Cloze notes?';
+      document.getElementById('toast-actions').innerHTML = `
+        <button onclick="executeResetChapter15()" class="px-2.5 py-1 rounded bg-red-600 text-white font-semibold">Restore</button>
+        <button onclick="hideToast()" class="px-2.5 py-1 rounded bg-neutral-600 text-white">Cancel</button>
+      `;
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+    }
+
+    async function executeResetChapter15() {
+      // Capture the current editor before replacing the chapter so the history
+      // checkpoint contains the user's latest edits.
+      captureActiveChapterFromDOM();
+      recordRollingSnapshot('Before resetting Chapter 15');
+      const defaultHtml = document.getElementById('default-chapter-15-template').innerHTML;
+      library.chapters['ch-15'] = {
+        id: 'ch-15',
+        badge: 'NCERT Class XI • Ch. 15',
+        title: 'Chapter 15: Body Fluids and Circulation',
+        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.',
+        html: defaultHtml,
+        updatedAt: Date.now()
+      };
+
+      try {
+        if (library.activeChapterId === 'ch-15') {
+          loadActiveChapterIntoDOM();
+          await persistLibrary();
+        } else {
+          const switched = await switchChapter('ch-15');
+          if (!switched) return;
+        }
+      } catch (err) {
+        showToast('Chapter 15 reset could not be saved. Your backup/history is still available.');
+        return;
+      }
+      hideToast();
+      showToast('Chapter 15 restored!');
+    }
+
+    let toastTimer = null;
+    function showToast(msg, duration = 3000) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-msg').textContent = msg;
+      document.getElementById('toast-actions').innerHTML = '';
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, duration);
+    }
+
+    function hideToast() {
+      const banner = document.getElementById('toast-banner');
+      banner.classList.add('hidden');
+      banner.classList.remove('flex');
+    }
+  </script>
+  <script>
+    // PWA registration is available only on HTTPS or localhost.
+    // The standalone HTML export continues to work without a service worker.
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(registration => console.info('[NEET BioNotes] Offline support ready.', registration.scope))
+          .catch(error => console.warn('[NEET BioNotes] Service worker registration failed:', error));
+      });
+    }
+  </script>
+</body>
+</html>
