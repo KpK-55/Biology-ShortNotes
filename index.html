@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>NEET BioNotes — Active Recall, Mind Map &amp; Fullscreen Reader</title>
+  <title>NEET BioNotes — Active Recall &amp; Fullscreen Reader</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -115,6 +115,18 @@
       font-size: calc(var(--note-size) * 0.93);
     }
 
+
+    /* Wider Notion-like toggle sections: use the available reading column. */
+    #notes-canvas { width: 100%; max-width: 100%; }
+    #notes-canvas > .toggle-block { width: 100%; max-width: 100%; }
+    #notes-canvas .toggle-body { width: 100%; max-width: 100%; }
+    #notes-canvas .toggle-body > * { max-width: 100%; }
+    #drive-sync-icon.sync-online { color: #10b981; }
+    #drive-sync-icon.sync-pending { color: #f59e0b; }
+    #drive-sync-icon.sync-offline { color: #94a3b8; }
+    .cloze.cloze-hidden { text-decoration-thickness: 1px; }
+    #notes-canvas .user-font-style { font-family: inherit; }
+
     .theme-panel { background-color: var(--bg-panel); border-color: var(--border-color); }
     .theme-nested { background-color: var(--bg-nested); border-color: var(--border-color); }
     .theme-heading { color: var(--text-heading); }
@@ -179,7 +191,7 @@
     /* Hidden Cloze State: Pure clean proportional blank underline, zero '?' */
     body:not(.edit-mode) .cloze.cloze-hidden {
       color: transparent !important;
-      border-bottom: 2px solid var(--cloze-line);
+      border-bottom: 1px solid var(--cloze-line);
       padding: 0 4px;
     }
     body:not(.edit-mode) .cloze.cloze-hidden * {
@@ -440,7 +452,7 @@
       margin-left: 0 !important;
     }
     body.reading-mode main {
-      max-width: 820px !important;
+      max-width: min(96vw, 1500px) !important;
       padding-top: 3.25rem !important;
       padding-bottom: 5rem !important;
     }
@@ -619,7 +631,7 @@
 
     <!-- Top Sticky Action & Active Recall Toolbar -->
     <header id="top-toolbar" class="sticky top-0 z-30 theme-panel/95 backdrop-blur-md border-b px-3 sm:px-5 py-2">
-      <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
         
         <!-- Left: Persistent Hamburger Button (Portrait & Landscape) + Mode Switch + Cloze Controls -->
         <div class="flex items-center gap-2">
@@ -628,6 +640,10 @@
             <span class="hidden sm:inline">Chapters</span>
           </button>
 
+          <div class="flex items-center gap-0.5" aria-label="Undo and redo">
+            <button type="button" onclick="noteUndo()" class="px-2 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-sm" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+            <button type="button" onclick="noteRedo()" class="px-2 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-sm" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+          </div>
           <button id="btn-mode-switch" onclick="toggleEditMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition" title="Switch between Active Recall Study Mode and Content Edit Mode">
             <span id="mode-icon">🧠</span>
             <span id="mode-text">Recall Mode</span>
@@ -650,13 +666,8 @@
         <!-- Right: Mind Map, Reading Mode, Toggles, Theme & Export PDF -->
         <div class="flex items-center gap-1.5">
           <button onclick="openGDriveModal()" id="header-sync-btn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 hover:bg-blue-500/25 transition" title="Sync or Backup all chapters to Google Drive">
-            <span>☁️</span>
+            <span id="drive-sync-icon" class="text-sm">☁️</span>
             <span class="hidden lg:inline">Drive Sync</span>
-          </button>
-
-          <button onclick="openMindMapModal()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/35 hover:bg-purple-500/25 transition" title="Generate Interactive Chapter Mind Map">
-            <span>🕸️</span>
-            <span class="hidden md:inline">Mind Map</span>
           </button>
 
           <button onclick="enterReadingMode()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition" title="Enter Theme-Preserving Fullscreen Reading Mode">
@@ -710,7 +721,7 @@
       </div>
 
       <!-- 3. COMPREHENSIVE EDIT MODE FORMATTING, FONT & SENTENCE-TO-BULLETS RIBBON -->
-      <div id="edit-toolbar-group" class="hidden max-w-5xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs">
+      <div id="edit-toolbar-group" class="hidden max-w-7xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs">
         <!-- Cloze Tools -->
         <button onmousedown="event.preventDefault(); wrapSelectionInCloze()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition" title="Turn selected text into Cloze blank (Alt+C)">
           [+ Cloze]
@@ -732,7 +743,7 @@
         <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
 
         <!-- Universal Font Family Selector -->
-        <select id="font-selector" onchange="applyFontFamilyUniversal(this.value)" class="theme-nested border border-[var(--border-strong)] text-xs px-2 py-1 rounded focus:outline-none cursor-pointer" title="Change Font Family (Applies globally & to selected text)">
+        <select id="font-selector" onchange="applyFontFamilyUniversal(this.value)" class="theme-nested border border-[var(--border-strong)] text-xs px-2 py-1 rounded focus:outline-none cursor-pointer" title="Change font family of selected text only">
           <option value="'Inter', system-ui, sans-serif">Inter (Sans)</option>
           <option value="'Source Serif 4', Georgia, serif">Source Serif</option>
           <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
@@ -795,7 +806,6 @@
       <button onclick="insertAtCursor('image')" title="Insert Image (🖼️)">🖼️</button>
       <button onclick="insertAtCursor('table')" title="Insert Resizable Table (⊞)">⊞</button>
       <button onclick="insertAtCursor('flowchart')" title="Insert Arrow Flowchart (⇄)">⇄</button>
-      <button onclick="insertAtCursor('mindmap')" title="Insert Chapter Mind Map Snapshot (🕸️)">🕸️</button>
     </div>
 
     <!-- 1. TOP-RIGHT FLOATING READING MODE DOCK (THEME-PRESERVING) -->
@@ -835,7 +845,7 @@
           Chapter 15: Body Fluids and Circulation
         </h1>
         <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
-          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.
+          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.
         </p>
       </div>
 
@@ -848,9 +858,6 @@
         <div class="flex items-center gap-2">
           <button onclick="addNewMainToggle()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-sky-400 transition whitespace-nowrap">
             + Toggle Block
-          </button>
-          <button onclick="openMindMapModal()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-purple-400 transition whitespace-nowrap">
-            🕸️ Chapter Mind Map
           </button>
         </div>
       </div>
@@ -898,45 +905,7 @@
       </div>
     </div>
   </div>
-
-  <!-- =====================================================================
-       INTERACTIVE CHAPTER MIND MAP MODAL
-       ===================================================================== -->
-  <div id="mindmap-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-    <div class="theme-panel border border-[var(--border-strong)] rounded-2xl w-full max-w-6xl h-[86vh] shadow-2xl overflow-hidden flex flex-col">
-      <div class="px-4 sm:px-5 py-3 border-b border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">🕸️</span>
-          <h3 id="mindmap-title" class="text-sm font-bold theme-heading">Chapter Mind Map</h3>
-        </div>
-        <div class="flex flex-wrap items-center gap-1.5 text-xs">
-          <label class="flex items-center gap-1 theme-muted mr-1">
-            <span>Depth:</span>
-            <select id="mindmap-depth" onchange="renderMindMapSVG()" class="theme-nested border border-[var(--border-strong)] rounded px-2 py-1 text-xs">
-              <option value="1">1 — Main Topics</option>
-              <option value="2">2 — Subtopics</option>
-              <option value="3" selected>3 — Full Keywords</option>
-            </select>
-          </label>
-          <button onclick="zoomMindMap(1.15)" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]" title="Zoom In">+</button>
-          <button onclick="zoomMindMap(0.85)" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]" title="Zoom Out">−</button>
-          <button onclick="resetMindMapView()" class="px-2 py-1 rounded border border-[var(--border-strong)] hover:bg-[var(--bg-hover)]">Reset</button>
-          <button onclick="insertMindMapIntoNotes()" class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/30 font-semibold">+ Insert into Notes</button>
-          <button onclick="exportMindMapSVG()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 border border-sky-500/35 hover:bg-sky-500/30 font-semibold">⬇ SVG</button>
-          <button onclick="closeMindMapModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold ml-1">✕</button>
-        </div>
-      </div>
-      <div id="mindmap-viewport" class="flex-1 overflow-hidden bg-[#101014] cursor-grab active:cursor-grabbing relative">
-        <svg id="mindmap-svg" class="w-full h-full"></svg>
-        <div class="absolute bottom-3 left-3 text-[11px] text-zinc-400 bg-black/60 px-2.5 py-1 rounded-md pointer-events-none">
-          Drag to pan • Scroll or +/− to zoom
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================================
-       GOOGLE DRIVE CLOUD SYNC MODAL (OAUTH2 + APPS SCRIPT BRIDGE)
+  <!-- GOOGLE DRIVE CLOUD SYNC MODAL (OAUTH2 + APPS SCRIPT BRIDGE)
        ===================================================================== -->
   <div id="gdrive-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="theme-panel border border-[var(--border-strong)] rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
@@ -945,7 +914,7 @@
           <span class="text-lg">☁️</span>
           <div>
             <h3 class="text-sm font-bold theme-heading">Google Drive Cloud Sync</h3>
-            <p class="text-[11px] theme-muted">Apps Script two-way sync and dated backups across your devices.</p>
+            <p class="text-[11px] theme-muted">Automatic local-first sync between your devices, with dated Drive backups.</p>
           </div>
         </div>
         <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
@@ -989,7 +958,7 @@
         <!-- Push & Pull Cloud Action Buttons -->
         <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-[var(--border-color)]">
           <button type="button" onclick="syncWithGoogleDrive()" class="col-span-2 py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
-            <span>🔄</span> Sync Now (Two-way)
+            <span>🔄</span> Sync Now (check connection)
           </button>
           <button type="button" onclick="pushBackupToGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
             <span>⬆️</span> Push Backup to Drive
@@ -1621,7 +1590,7 @@
     let gdriveConfig = {
       mode: 'appsscript',
       scriptUrl: '',
-      autoSync: false,
+      autoSync: true,
       lastSync: ''
     };
     let gdriveAutoSyncTimer = null;
@@ -1638,6 +1607,15 @@
       loadActiveChapterIntoDOM();
       setupEventListeners();
       updateClozeCounter();
+      updateDriveSyncIndicator();
+      // Initial background check and subsequent reconnect/foreground checks.
+      if (navigator.onLine && gdriveConfig.scriptUrl && gdriveConfig.autoSync) setTimeout(() => syncWithGoogleDrive(true), 1800);
+      window.addEventListener('online', () => { updateDriveSyncIndicator(); if (gdriveConfig.autoSync && gdriveConfig.scriptUrl) setTimeout(() => syncWithGoogleDrive(true), 900); });
+      window.addEventListener('offline', updateDriveSyncIndicator);
+      window.addEventListener('focus', () => { if (navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); });
+      // Poll for edits made on the other device while this app remains open.
+      setInterval(() => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); }, 45000);
     });
 
     /* --- IndexedDB Helper for large image-rich notes --- */
@@ -1694,13 +1672,11 @@
         if (!prefs) return;
         if (prefs.fontSize) {
           currentFontSize = prefs.fontSize;
-          document.documentElement.style.setProperty('--note-size', currentFontSize + 'px');
           const lbl = document.getElementById('font-size-label');
           if (lbl) lbl.textContent = currentFontSize + 'px';
         }
         if (prefs.fontFamily) {
           currentFontFamily = prefs.fontFamily;
-          document.documentElement.style.setProperty('--note-font', currentFontFamily);
           const sel = document.getElementById('font-selector');
           if (sel) sel.value = currentFontFamily;
         }
@@ -1754,7 +1730,7 @@
             id: 'ch-15',
             badge: 'NCERT Class XI • Ch. 15',
             title: 'Chapter 15: Body Fluids and Circulation',
-            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.',
+            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.',
             html: defaultHtml,
             updatedAt: Date.now()
           }
@@ -1853,9 +1829,10 @@
 
           // Trigger background Google Drive Auto-Sync only after local save succeeds.
           if (gdriveConfig.autoSync && gdriveConfig.scriptUrl) {
+            updateDriveSyncIndicator('pending');
             clearTimeout(gdriveAutoSyncTimer);
             gdriveAutoSyncTimer = setTimeout(() => {
-              pushBackupToGoogleDrive(true);
+              if (navigator.onLine) syncWithGoogleDrive(true); else updateDriveSyncIndicator();
             }, 3000);
           }
         } catch (err) {
@@ -2120,28 +2097,51 @@
     /* =====================================================================
        3. UNIVERSAL FONT FAMILY, SIZE & SENTENCE -> BULLETS CONVERTER
        ===================================================================== */
+    function wrapSelectedTextStyle(styleName, styleValue) {
+      const sel = window.getSelection();
+      const canvas = document.getElementById('notes-canvas');
+      if (!isEditMode || !sel || !sel.rangeCount || sel.isCollapsed) {
+        showToast('Select text in Edit Mode first.'); return false;
+      }
+      const range = sel.getRangeAt(0);
+      if (!canvas.contains(range.commonAncestorContainer)) {
+        showToast('Select text inside the notes area.'); return false;
+      }
+      const span = document.createElement('span');
+      span.className = 'user-font-style';
+      span.style[styleName] = styleValue;
+      try {
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+        sel.removeAllRanges();
+        const next = document.createRange(); next.selectNodeContents(span); sel.addRange(next);
+        scheduleAutoSave(); return true;
+      } catch (e) { showToast('Could not format this selection.'); return false; }
+    }
     function applyFontFamilyUniversal(fontVal) {
-      // 1. Update global CSS custom property so every block, heading, table, and flowchart updates
-      currentFontFamily = fontVal;
-      document.documentElement.style.setProperty('--note-font', fontVal);
-      savePreferences();
-
-      // 2. If user has text selected in Edit Mode, also apply inline fontName override
-      if (isEditMode) {
-        const sel = window.getSelection();
-        if (sel && !sel.isCollapsed && sel.rangeCount) {
-          document.execCommand('fontName', false, fontVal);
-        }
-        scheduleAutoSave();
+      if (wrapSelectedTextStyle('fontFamily', fontVal)) {
+        currentFontFamily = fontVal; savePreferences();
       }
     }
-
     function adjustFontSize(delta) {
-      currentFontSize = Math.min(24, Math.max(12, currentFontSize + delta));
-      document.documentElement.style.setProperty('--note-size', currentFontSize + 'px');
-      const lbl = document.getElementById('font-size-label');
-      if (lbl) lbl.textContent = currentFontSize + 'px';
-      savePreferences();
+      const sel = window.getSelection();
+      const current = sel && !sel.isCollapsed ? (parseFloat((sel.anchorNode.parentElement || {}).style?.fontSize) || 15) : currentFontSize;
+      const next = Math.min(36, Math.max(9, current + delta));
+      if (wrapSelectedTextStyle('fontSize', next + 'px')) {
+        const lbl = document.getElementById('font-size-label');
+        if (lbl) lbl.textContent = next + 'px';
+      }
+    }
+    function noteUndo() {
+      const canvas = document.getElementById('notes-canvas');
+      if (!isEditMode) { showToast('Switch to Edit Mode to undo note edits.'); return; }
+      canvas.focus(); document.execCommand('undo'); scheduleAutoSave();
+    }
+    function noteRedo() {
+      const canvas = document.getElementById('notes-canvas');
+      if (!isEditMode) { showToast('Switch to Edit Mode to redo note edits.'); return; }
+      canvas.focus(); document.execCommand('redo'); scheduleAutoSave();
     }
 
     function convertSelectionToBullets() {
@@ -2334,7 +2334,7 @@
             }
             if (parsed.preferences) {
               if (parsed.preferences.theme) applyColorTheme(parsed.preferences.theme);
-              if (parsed.preferences.fontFamily) applyFontFamilyUniversal(parsed.preferences.fontFamily);
+              // Font family is now applied to selected text only; do not apply backup preferences globally.
             }
             await persistLibrary();
             renderSidebar();
@@ -2521,9 +2521,20 @@
       const urlInput = document.getElementById('gdrive-script-url');
       if (urlInput) gdriveConfig.scriptUrl = urlInput.value.trim();
       gdriveConfig.mode = 'appsscript';
+      if (gdriveConfig.scriptUrl) gdriveConfig.autoSync = true;
       try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
       updateGDriveUI();
     }
+    function updateDriveSyncIndicator(state) {
+      const el = document.getElementById('drive-sync-icon');
+      if (!el) return;
+      const offline = !navigator.onLine;
+      const pending = !!(state === 'pending' || (gdriveConfig && gdriveConfig.scriptUrl && !gdriveConfig.lastSync));
+      el.className = offline ? 'text-sm sync-offline' : pending ? 'text-sm sync-pending' : 'text-sm sync-online';
+      el.textContent = offline ? '☁︎' : pending ? '↻' : '☁️';
+      el.title = offline ? 'Offline — edits are saved locally' : pending ? 'Sync pending / connecting' : 'Connected — automatic sync enabled';
+    }
+
     function toggleGDriveAutoSync(checked) {
       gdriveConfig.autoSync = checked;
       saveGDriveConfig();
@@ -2714,16 +2725,20 @@ function listBackups_() {
         frame.name = target; frame.style.display = 'none';
         form.method = 'POST'; form.action = scriptEndpoint(); form.target = target; form.style.display = 'none';
         input.name = 'payload'; input.value = JSON.stringify(body); form.appendChild(input);
+        frame.src = 'about:blank';
         document.body.append(frame, form);
         const timer = setTimeout(() => { form.remove(); frame.remove(); reject(new Error('Apps Script save timed out.')); }, 25000);
-        frame.onload = () => {
-          // A subsequent JSONP read verifies the committed revision; iframe load alone is not treated as success.
-          setTimeout(async () => {
-            clearTimeout(timer); form.remove(); frame.remove();
-            try { resolve(await scriptGet('get')); } catch (e) { reject(e); }
-          }, 900);
-        };
-        form.submit();
+        // Allow the initial about:blank load to finish before listening for the POST response.
+        setTimeout(() => {
+          frame.onload = () => {
+            // Iframe load alone is not treated as success: verify the committed revision with a fresh JSONP read.
+            setTimeout(async () => {
+              clearTimeout(timer); form.remove(); frame.remove();
+              try { resolve(await scriptGet('get')); } catch (e) { reject(e); }
+            }, 700);
+          };
+          form.submit();
+        }, 120);
       });
     }
     async function getScriptRemote() {
@@ -2753,8 +2768,7 @@ function listBackups_() {
       try {
         library = data.library;
         if (data.preferences) {
-          currentFontSize = Number(data.preferences.fontSize) || currentFontSize;
-          currentFontFamily = data.preferences.fontFamily || currentFontFamily;
+          // Global font preferences are intentionally not applied; formatting lives on selected spans.
           currentTheme = data.preferences.theme || currentTheme;
         }
         await persistLibrary();
@@ -2774,6 +2788,7 @@ function listBackups_() {
       if (gdriveSyncInProgress) return;
       if (!gdriveConfig.scriptUrl) { if (!silent) showToast('Add your Google Apps Script Web App URL first.'); return; }
       gdriveSyncInProgress = true;
+      updateDriveSyncIndicator('pending');
       try {
         await flushNow();
         const localPayload = buildFullBackupPayload();
@@ -2785,7 +2800,7 @@ function listBackups_() {
           const saved = await pushScriptPayload(initial, 0);
           if (!saved.ok) throw new Error('Initial upload conflict. Press Sync Now again to compare copies.');
           localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:localHash, revision:saved.revision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
           if (!silent) showToast('First cloud backup created successfully.');
           return;
         }
@@ -2806,7 +2821,7 @@ function listBackups_() {
             await applyDrivePayload(remotePayload, 'Before adopting first Drive copy');
             const h = await hashBackupPayload(buildFullBackupPayload());
             localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
             if (!silent) showToast('Drive copy loaded.'); return;
           }
           recordRollingSnapshot('Before first Apps Script upload');
@@ -2816,14 +2831,14 @@ function listBackups_() {
             await applyDrivePayload(remotePayload, 'Local copy before conflict resolution');
             const h = await hashBackupPayload(buildFullBackupPayload());
             localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
             if (!silent) showToast('Conflict resolved using Drive copy.'); return;
           }
         } else if (remoteChanged && !localChanged) {
           await applyDrivePayload(remotePayload, 'Before receiving Apps Script updates');
           const h = await hashBackupPayload(buildFullBackupPayload());
           localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
           if (!silent) showToast('Received latest Drive changes.'); return;
         } else if (!localChanged && !remoteChanged && localHash === remoteHash) {
           localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:localHash, revision:remoteRevision}));
@@ -2839,13 +2854,13 @@ function listBackups_() {
         } else {
           const h = await hashBackupPayload(localPayload);
           localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:saved.revision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
           if (!silent) showToast('Two-way sync completed. A dated Drive backup was retained.');
         }
       } catch (err) {
         console.error('Apps Script sync failed:', err);
         if (!silent) showToast('Sync failed: ' + (err.message || 'Check Apps Script deployment.'));
-      } finally { gdriveSyncInProgress = false; }
+      } finally { gdriveSyncInProgress = false; updateDriveSyncIndicator(); }
     }
     async function pushBackupToGoogleDrive(silent = false) { return syncWithGoogleDrive(silent); }
     async function pullBackupFromGoogleDrive() {
@@ -2858,7 +2873,7 @@ function listBackups_() {
         const hash = await hashBackupPayload(buildFullBackupPayload());
         const revision = Number(remote.syncMeta && remote.syncMeta.revision) || 0;
         localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash, revision}));
-        gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig();
+        gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
         closeGDriveModal(); showToast('Drive backup restored successfully.');
       } catch (err) { showToast('Restore failed: ' + (err.message || 'Check Apps Script URL.')); }
     }
@@ -4031,7 +4046,7 @@ function listBackups_() {
         id: 'ch-15',
         badge: 'NCERT Class XI • Ch. 15',
         title: 'Chapter 15: Body Fluids and Circulation',
-        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables, or generate a <strong>Mind Map</strong>.',
+        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.',
         html: defaultHtml,
         updatedAt: Date.now()
       };

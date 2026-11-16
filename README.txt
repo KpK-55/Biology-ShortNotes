@@ -1,17 +1,20 @@
-NEET BioNotes – Apps Script Only Sync (Phase 5)
+NEET BioNotes – Automatic Apps Script Sync + UI Update
 
-1. Upload all files from this folder to the root of your existing GitHub Pages repository.
-2. Keep manifest.json, service-worker.js and icons/ in the same relative locations.
-3. Open the deployed app and open Google Drive Sync.
-4. Expand Setup Google Drive sync. Copy the complete Apps Script code.
-5. Create a new Apps Script project, paste the code into Code.gs and save.
-6. Deploy > New deployment > Web app. Execute as: Me. Who has access: Anyone.
-7. Copy the /exec URL into NEET BioNotes on each device.
-8. Test Sync Now on one device, then enter the same URL on the second device and Sync Now.
-9. Only enable Auto-Sync after successful manual sync on both devices.
+Deploy the contents of this folder to the root of your existing GitHub Pages repository. Keep the icons folder.
 
-Conflict policy: ask before resolving. Choosing Drive restores the remote copy after creating a local recovery snapshot. Choosing local uploads the local copy; Apps Script creates a dated Drive backup before replacement.
+AUTOMATIC SYNC
+- Local IndexedDB remains the immediate source of truth while editing, including offline.
+- With Auto-Sync enabled, saved edits upload after a short debounce when online.
+- The app checks Drive on launch, reconnect, foreground/focus and every 45 seconds while visible.
+- Both devices must use the same deployed Apps Script /exec URL.
+- Conflicts are still asked before replacing either full-library copy.
+- The Drive Sync cloud icon indicates offline / pending / connected state.
 
-Security: the deployed URL is effectively a secret. Anyone who obtains it may be able to access or alter the sync data. Do not publish it or share it. For stronger protection, add an authentication secret to the Apps Script before deploying.
+SETUP
+1. Deploy the Apps Script shown in Drive Sync as Web App (execute as Me; access Anyone).
+2. Paste the /exec URL into both devices.
+3. Keep the app online for the first sync on each device.
+4. Test PC-to-tablet and tablet-to-PC before relying on it.
 
-Important: Apps Script deployment and real Google Drive permissions must be tested using your own Google account. The code has been syntax-checked locally, but this environment cannot verify your Google deployment.
+NOTES
+This build retains the existing single-file HTML/PWA architecture and chapter JSON import/export. Sync currently transfers the library backup payload as a whole; it is not a granular per-keystroke merge. If the same library is edited concurrently on both devices, the app asks before choosing a copy. Verify live Apps Script deployment and Drive backup behavior with your own account.
