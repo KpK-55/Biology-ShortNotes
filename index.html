@@ -914,7 +914,7 @@
           <span class="text-lg">☁️</span>
           <div>
             <h3 class="text-sm font-bold theme-heading">Google Drive Cloud Sync</h3>
-            <p class="text-[11px] theme-muted">Automatic local-first sync between your devices, with dated Drive backups.</p>
+            <p class="text-[11px] theme-muted">Each device uploads its edits automatically. Review and download changes from your other device.</p>
           </div>
         </div>
         <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
@@ -925,6 +925,8 @@
         <div class="p-3 rounded-xl theme-nested border border-[var(--border-color)] flex items-center justify-between gap-2">
           <div>
             <div class="font-semibold theme-heading" id="gdrive-status-text">Not connected to Google Drive</div>
+            <div class="text-[11px] theme-muted" id="gdrive-device-label"></div>
+            <div class="text-[11px] text-sky-400" id="gdrive-remote-changes"></div>
             <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last cloud sync: Never</div>
           </div>
           <label class="flex items-center gap-1.5 cursor-pointer select-none">
@@ -958,14 +960,9 @@
         <!-- Push & Pull Cloud Action Buttons -->
         <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-[var(--border-color)]">
           <button type="button" onclick="syncWithGoogleDrive()" class="col-span-2 py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
-            <span>🔄</span> Sync Now (check connection)
+            <span>🔄</span> Check Drive / Download changes
           </button>
-          <button type="button" onclick="pushBackupToGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
-            <span>⬆️</span> Push Backup to Drive
-          </button>
-          <button type="button" onclick="pullBackupFromGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/40 hover:bg-sky-500/30 font-semibold flex items-center justify-center gap-1.5 transition">
-            <span>⬇️</span> Pull / Restore from Drive
-          </button>
+          <p class="col-span-2 text-[11px] theme-muted">Local edits upload automatically when online. Changes from another device appear here for you to download.</p>
         </div>
       </div>
     </div>
@@ -1609,13 +1606,13 @@
       updateClozeCounter();
       updateDriveSyncIndicator();
       // Initial background check and subsequent reconnect/foreground checks.
-      if (navigator.onLine && gdriveConfig.scriptUrl && gdriveConfig.autoSync) setTimeout(() => syncWithGoogleDrive(true), 1800);
-      window.addEventListener('online', () => { updateDriveSyncIndicator(); if (gdriveConfig.autoSync && gdriveConfig.scriptUrl) setTimeout(() => syncWithGoogleDrive(true), 900); });
+      if (navigator.onLine && gdriveConfig.scriptUrl && gdriveConfig.autoSync) setTimeout(() => { uploadLocalChapterChanges(true); checkDriveChanges(true); }, 1800);
+      window.addEventListener('online', () => { updateDriveSyncIndicator(); if (gdriveConfig.autoSync && gdriveConfig.scriptUrl) setTimeout(() => { uploadLocalChapterChanges(true); checkDriveChanges(true); }, 900); });
       window.addEventListener('offline', updateDriveSyncIndicator);
-      window.addEventListener('focus', () => { if (navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); });
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); });
+      window.addEventListener('focus', () => { if (navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) { uploadLocalChapterChanges(true); checkDriveChanges(true); } });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) { uploadLocalChapterChanges(true); checkDriveChanges(true); } });
       // Poll for edits made on the other device while this app remains open.
-      setInterval(() => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) syncWithGoogleDrive(true); }, 45000);
+      setInterval(() => { if (!document.hidden && navigator.onLine && gdriveConfig.autoSync && gdriveConfig.scriptUrl) { uploadLocalChapterChanges(true); checkDriveChanges(true); } }, 45000);
     });
 
     /* --- IndexedDB Helper for large image-rich notes --- */
@@ -1832,7 +1829,7 @@
             updateDriveSyncIndicator('pending');
             clearTimeout(gdriveAutoSyncTimer);
             gdriveAutoSyncTimer = setTimeout(() => {
-              if (navigator.onLine) syncWithGoogleDrive(true); else updateDriveSyncIndicator();
+              if (navigator.onLine) uploadLocalChapterChanges(true); else updateDriveSyncIndicator();
             }, 3000);
           }
         } catch (err) {
@@ -2627,256 +2624,84 @@
       return 'fnv-' + (h >>> 0).toString(16) + '-' + bytes.length;
     }
 
-    const BIO_APPS_SCRIPT_CODE = `const MAIN_FILE = 'NEET_BioNotes_Cloud_Backup.json';
+    const BIO_APPS_SCRIPT_CODE = `const MAIN_FILE = 'NEET_BioNotes_DeviceSync.json';
 const BACKUP_PREFIX = 'NEET_BioNotes_Backup_';
 function doGet(e) {
   const action = (e.parameter && e.parameter.action) || 'get';
-  let result;
-  if (action === 'ping') result = { ok: true, service: 'NEET BioNotes Sync', time: new Date().toISOString() };
-  else if (action === 'history') result = { ok: true, backups: listBackups_() };
-  else result = { ok: true, payload: readMain_() };
+  let result = action === 'ping' ? {ok:true,service:'NEET BioNotes Chapter Sync',time:new Date().toISOString()} : {ok:true,store:readStore_()};
   const json = JSON.stringify(result);
   const callback = e.parameter && e.parameter.callback;
   return ContentService.createTextOutput(callback ? callback + '(' + json + ');' : json)
     .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
-    const body = JSON.parse(e.parameter.payload || '{}');
-    if (body.action === 'restore') {
-      const source = DriveApp.getFileById(body.fileId);
-      const payload = JSON.parse(source.getBlob().getDataAsString());
-      saveMain_(payload);
-      return output_({ok:true, restored:true});
-    }
-    if (body.action !== 'save' || !body.payload) throw new Error('Invalid request');
-    const current = readMain_();
-    const currentRevision = Number(current.syncMeta && current.syncMeta.revision) || 0;
-    if (Number(body.expectedRevision || 0) !== currentRevision) {
-      return output_({ok:false, conflict:true, revision:currentRevision, payload:current});
-    }
-    if (current && current.app === 'NEET_BioNotes') {
-      createBackup_(current, 'before-update');
-    }
-    const next = body.payload;
-    next.syncMeta = next.syncMeta || {};
-    next.syncMeta.revision = currentRevision + 1;
-    next.syncMeta.updatedAt = new Date().toISOString();
-    saveMain_(next);
-    return output_({ok:true, revision:currentRevision + 1, updated:new Date().toISOString()});
+    const body = JSON.parse((e.parameter && e.parameter.payload) || '{}');
+    if (body.action !== 'saveChapters' || !Array.isArray(body.changes)) throw new Error('Invalid chapter sync request');
+    const store = readStore_(); const accepted=[]; const conflicts=[];
+    body.changes.forEach(change => {
+      if (!change || !change.id || !change.chapter) return;
+      const current = store.chapters[change.id];
+      const currentRev = current ? Number(current.revision)||0 : 0;
+      if (currentRev !== Number(change.baseRevision||0)) { conflicts.push({id:change.id,revision:currentRev,deviceId:current&&current.deviceId,updatedAt:current&&current.updatedAt}); return; }
+      if (current) createBackup_(store, 'before-chapter-update');
+      store.chapters[change.id] = {chapter:change.chapter,revision:currentRev+1,deviceId:String(body.deviceId||'unknown'),updatedAt:new Date().toISOString()};
+      accepted.push({id:change.id,revision:currentRev+1});
+    });
+    store.updatedAt = new Date().toISOString(); saveStore_(store);
+    return output_({ok:true,accepted,conflicts,storeRevision:store.revision||0});
   } finally { lock.releaseLock(); }
 }
-function output_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}
-function mainFile_() {
-  const files = DriveApp.getFilesByName(MAIN_FILE);
-  return files.hasNext() ? files.next() : DriveApp.createFile(MAIN_FILE, '{}', MimeType.PLAIN_TEXT);
-}
-function readMain_() {
-  const file = mainFile_();
-  return JSON.parse(file.getBlob().getDataAsString() || '{}');
-}
-function saveMain_(payload) {
-  mainFile_().setContent(JSON.stringify(payload));
-}
-function createBackup_(payload, label) {
-  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
-  DriveApp.createFile(BACKUP_PREFIX + stamp + '_' + label + '.json', JSON.stringify(payload), MimeType.PLAIN_TEXT);
-}
-function listBackups_() {
-  const it = DriveApp.getFiles();
-  const out = [];
-  while (it.hasNext()) {
-    const f = it.next();
-    if (f.getName().indexOf(BACKUP_PREFIX) === 0) out.push({id:f.getId(), name:f.getName(), updated:f.getLastUpdated().toISOString()});
-  }
-  out.sort((a,b) => b.updated.localeCompare(a.updated));
-  return out.slice(0,50);
-}`;
+function output_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
+function mainFile_() { const it=DriveApp.getFilesByName(MAIN_FILE); return it.hasNext()?it.next():DriveApp.createFile(MAIN_FILE,JSON.stringify({app:'NEET_BioNotes_ChapterSync',chapters:{},revision:0}),MimeType.PLAIN_TEXT); }
+function readStore_() { try { const x=JSON.parse(mainFile_().getBlob().getDataAsString()||'{}'); if(x.app==='NEET_BioNotes_ChapterSync'&&x.chapters)return x; if(x.app==='NEET_BioNotes'&&x.library&&x.library.chapters){const migrated={app:'NEET_BioNotes_ChapterSync',revision:1,updatedAt:new Date().toISOString(),chapters:{}}; Object.keys(x.library.chapters).forEach(id=>migrated.chapters[id]={chapter:x.library.chapters[id],revision:1,deviceId:'legacy-backup',updatedAt:x.exportedAt||new Date().toISOString()}); saveStore_(migrated); return migrated;} return {app:'NEET_BioNotes_ChapterSync',revision:0,chapters:{}};} catch(err){return {app:'NEET_BioNotes_ChapterSync',revision:0,chapters:{}};} }
+function saveStore_(store) { store.revision=(Number(store.revision)||0)+1; mainFile_().setContent(JSON.stringify(store)); }
+function createBackup_(store,label) { const stamp=Utilities.formatDate(new Date(),Session.getScriptTimeZone(),'yyyyMMdd_HHmmss'); DriveApp.createFile(BACKUP_PREFIX+stamp+'_'+label+'.json',JSON.stringify(store),MimeType.PLAIN_TEXT); }`;
+
     function scriptEndpoint() {
       const url = (gdriveConfig.scriptUrl || '').trim();
-      if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(url)) {
-        throw new Error('Enter a valid deployed Apps Script URL ending in /exec.');
-      }
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(url)) throw new Error('Enter a valid deployed Apps Script URL ending in /exec.');
       return url;
     }
-    function scriptGet(action) {
-      return new Promise((resolve, reject) => {
-        const callback = '__bioScript_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        const script = document.createElement('script');
-        const timer = setTimeout(() => { cleanup(); reject(new Error('Apps Script request timed out.')); }, 20000);
-        function cleanup() { clearTimeout(timer); delete window[callback]; script.remove(); }
-        window[callback] = data => { cleanup(); resolve(data); };
-        script.onerror = () => { cleanup(); reject(new Error('Could not reach Apps Script. Check deployment access and URL.')); };
-        script.src = scriptEndpoint() + '?action=' + encodeURIComponent(action) + '&callback=' + callback + '&t=' + Date.now();
-        document.body.appendChild(script);
+    function scriptGet(action='get') {
+      return new Promise((resolve,reject)=>{
+        const cb='__bioScript_'+Date.now()+'_'+Math.random().toString(36).slice(2); const script=document.createElement('script');
+        const timer=setTimeout(()=>{cleanup();reject(new Error('Apps Script request timed out.'));},20000);
+        function cleanup(){clearTimeout(timer);delete window[cb];script.remove();}
+        window[cb]=data=>{cleanup();resolve(data);}; script.onerror=()=>{cleanup();reject(new Error('Could not reach Apps Script. Check deployment URL and access.'));};
+        script.src=scriptEndpoint()+'?action='+encodeURIComponent(action)+'&callback='+cb+'&t='+Date.now(); document.body.appendChild(script);
       });
     }
     async function scriptPost(body) {
-      // HTML form transport avoids browser CORS restrictions on Apps Script redirects.
-      return new Promise((resolve, reject) => {
-        const frame = document.createElement('iframe');
-        const form = document.createElement('form');
-        const input = document.createElement('input');
-        const target = 'bio_sync_' + Date.now();
-        frame.name = target; frame.style.display = 'none';
-        form.method = 'POST'; form.action = scriptEndpoint(); form.target = target; form.style.display = 'none';
-        input.name = 'payload'; input.value = JSON.stringify(body); form.appendChild(input);
-        frame.src = 'about:blank';
-        document.body.append(frame, form);
-        const timer = setTimeout(() => { form.remove(); frame.remove(); reject(new Error('Apps Script save timed out.')); }, 25000);
-        // Allow the initial about:blank load to finish before listening for the POST response.
-        setTimeout(() => {
-          frame.onload = () => {
-            // Iframe load alone is not treated as success: verify the committed revision with a fresh JSONP read.
-            setTimeout(async () => {
-              clearTimeout(timer); form.remove(); frame.remove();
-              try { resolve(await scriptGet('get')); } catch (e) { reject(e); }
-            }, 700);
-          };
-          form.submit();
-        }, 120);
+      return new Promise((resolve,reject)=>{
+        const frame=document.createElement('iframe'),form=document.createElement('form'),input=document.createElement('input'); const target='bio_sync_'+Date.now();
+        frame.name=target;frame.style.display='none';form.method='POST';form.action=scriptEndpoint();form.target=target;form.style.display='none';input.name='payload';input.value=JSON.stringify(body);form.appendChild(input);frame.src='about:blank';document.body.append(frame,form);
+        const timer=setTimeout(()=>{form.remove();frame.remove();reject(new Error('Apps Script save timed out.'));},25000);
+        setTimeout(()=>{frame.onload=()=>setTimeout(async()=>{clearTimeout(timer);form.remove();frame.remove();try{resolve(await scriptGet('get'));}catch(e){reject(e);}},800);form.submit();},120);
       });
     }
-    async function getScriptRemote() {
-      const result = await scriptGet('get');
-      if (!result || !result.ok) throw new Error('Apps Script returned an invalid response.');
-      return result.payload || {};
-    }
-    async function pushScriptPayload(payload, expectedRevision) {
-      const result = await scriptPost({action:'save', payload, expectedRevision});
-      const response = result && result.payload;
-      const actualRevision = Number(response && response.syncMeta && response.syncMeta.revision) || 0;
-      if (actualRevision !== Number(expectedRevision) + 1) {
-        return {ok:false, conflict:true, payload:response, revision:actualRevision};
-      }
-      return {ok:true, revision:actualRevision};
-    }
-
-    function validateDrivePayload(data) {
-      return !!(data && data.app === 'NEET_BioNotes' && data.library && data.library.chapters && typeof data.library.chapters === 'object');
-    }
-
-    async function applyDrivePayload(data, label) {
-      if (!validateDrivePayload(data)) throw new Error('The Drive file is not a valid NEET BioNotes backup.');
-      recordRollingSnapshot(label || 'Before Drive restore');
-      const oldLibrary = JSON.parse(JSON.stringify(library));
-      const oldPrefs = { currentFontSize, currentFontFamily, currentTheme };
-      try {
-        library = data.library;
-        if (data.preferences) {
-          // Global font preferences are intentionally not applied; formatting lives on selected spans.
-          currentTheme = data.preferences.theme || currentTheme;
-        }
-        await persistLibrary();
-        renderSidebar();
-        loadActiveChapterIntoDOM();
-        if (typeof applyTheme === 'function') applyTheme(currentTheme);
-      } catch (err) {
-        library = oldLibrary;
-        currentFontSize = oldPrefs.currentFontSize;
-        currentFontFamily = oldPrefs.currentFontFamily;
-        currentTheme = oldPrefs.currentTheme;
-        throw err;
-      }
-    }
-
-    async function syncWithGoogleDrive(silent = false) {
-      if (gdriveSyncInProgress) return;
-      if (!gdriveConfig.scriptUrl) { if (!silent) showToast('Add your Google Apps Script Web App URL first.'); return; }
-      gdriveSyncInProgress = true;
-      updateDriveSyncIndicator('pending');
-      try {
-        await flushNow();
-        const localPayload = buildFullBackupPayload();
-        const localHash = await hashBackupPayload(localPayload);
-        const state = JSON.parse(localStorage.getItem(GDRIVE_SYNC_STATE_KEY) || '{}');
-        const remotePayload = await getScriptRemote();
-        if (!validateDrivePayload(remotePayload)) {
-          const initial = {...localPayload, syncMeta:{revision:0, deviceId:getGDriveDeviceId(), updatedAt:new Date().toISOString()}};
-          const saved = await pushScriptPayload(initial, 0);
-          if (!saved.ok) throw new Error('Initial upload conflict. Press Sync Now again to compare copies.');
-          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:localHash, revision:saved.revision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-          if (!silent) showToast('First cloud backup created successfully.');
-          return;
-        }
-        const remoteHash = await hashBackupPayload({...remotePayload, syncMeta:undefined});
-        const remoteRevision = Number(remotePayload.syncMeta && remotePayload.syncMeta.revision) || 0;
-        const baseline = state.hash || '';
-        const localChanged = !!baseline && localHash !== baseline;
-        const remoteChanged = !!baseline && remoteHash !== baseline;
-
-        if (!baseline) {
-          if (localHash === remoteHash) {
-            localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:localHash, revision:remoteRevision}));
-            if (!silent) showToast('This device already matches the Drive copy.');
-            return;
-          }
-          const takeRemote = confirm('FIRST SYNC: Your device and Drive contain different notes.\\n\\nOK = Load Drive copy (local copy saved in recovery snapshot).\\nCancel = Keep local copy and upload it (Drive copy will be backed up).');
-          if (takeRemote) {
-            await applyDrivePayload(remotePayload, 'Before adopting first Drive copy');
-            const h = await hashBackupPayload(buildFullBackupPayload());
-            localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-            if (!silent) showToast('Drive copy loaded.'); return;
-          }
-          recordRollingSnapshot('Before first Apps Script upload');
-        } else if (localChanged && remoteChanged && localHash !== remoteHash) {
-          const takeRemote = confirm('SYNC CONFLICT: Both this device and Drive changed since the last sync.\\n\\nOK = Use Drive version; save local version in recovery snapshots.\\nCancel = Keep local version; preserve Drive version as a dated backup.');
-          if (takeRemote) {
-            await applyDrivePayload(remotePayload, 'Local copy before conflict resolution');
-            const h = await hashBackupPayload(buildFullBackupPayload());
-            localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-            gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-            if (!silent) showToast('Conflict resolved using Drive copy.'); return;
-          }
-        } else if (remoteChanged && !localChanged) {
-          await applyDrivePayload(remotePayload, 'Before receiving Apps Script updates');
-          const h = await hashBackupPayload(buildFullBackupPayload());
-          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:remoteRevision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-          if (!silent) showToast('Received latest Drive changes.'); return;
-        } else if (!localChanged && !remoteChanged && localHash === remoteHash) {
-          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:localHash, revision:remoteRevision}));
-          if (!silent) showToast('Already up to date.'); return;
-        }
-
-        const next = {...localPayload, syncMeta:{revision:remoteRevision, deviceId:getGDriveDeviceId(), updatedAt:new Date().toISOString()}};
-        const saved = await pushScriptPayload(next, remoteRevision);
-        if (!saved.ok) {
-          const choose = confirm('Drive changed while this device was syncing.\\n\\nOK = Load latest Drive version (local copy saved first).\\nCancel = Stop and keep both copies unchanged.');
-          if (choose) await applyDrivePayload(saved.payload, 'Local copy before concurrent conflict');
-          else throw new Error('Sync paused. No cloud data was overwritten; try again after reviewing both copies.');
-        } else {
-          const h = await hashBackupPayload(localPayload);
-          localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash:h, revision:saved.revision}));
-          gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-          if (!silent) showToast('Two-way sync completed. A dated Drive backup was retained.');
-        }
-      } catch (err) {
-        console.error('Apps Script sync failed:', err);
-        if (!silent) showToast('Sync failed: ' + (err.message || 'Check Apps Script deployment.'));
-      } finally { gdriveSyncInProgress = false; updateDriveSyncIndicator(); }
-    }
-    async function pushBackupToGoogleDrive(silent = false) { return syncWithGoogleDrive(silent); }
-    async function pullBackupFromGoogleDrive() {
-      try {
-        await flushNow();
-        const remote = await getScriptRemote();
-        if (!validateDrivePayload(remote)) { showToast('No valid BioNotes backup exists in Drive yet.'); return; }
-        if (!confirm('Restore the Drive backup to this device? Your current local library will first be saved in recovery snapshots.')) return;
-        await applyDrivePayload(remote, 'Before manual Apps Script restore');
-        const hash = await hashBackupPayload(buildFullBackupPayload());
-        const revision = Number(remote.syncMeta && remote.syncMeta.revision) || 0;
-        localStorage.setItem(GDRIVE_SYNC_STATE_KEY, JSON.stringify({hash, revision}));
-        gdriveConfig.lastSync = new Date().toISOString(); saveGDriveConfig(); updateDriveSyncIndicator();
-        closeGDriveModal(); showToast('Drive backup restored successfully.');
-      } catch (err) { showToast('Restore failed: ' + (err.message || 'Check Apps Script URL.')); }
-    }
+    function getGDriveDeviceId(){let id=localStorage.getItem(GDRIVE_DEVICE_KEY);if(!id){const kind=/Android|iPhone|iPad/i.test(navigator.userAgent)?'TAB':'PC';id=kind+'-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));localStorage.setItem(GDRIVE_DEVICE_KEY,id);}return id;}
+    function getDeviceSyncState(){let st={};try{st=JSON.parse(localStorage.getItem(GDRIVE_SYNC_STATE_KEY)||'{}')||{};}catch(e){}if(!st.uploadedHashes)st.uploadedHashes={};if(!st.seenRevisions)st.seenRevisions={};return st;}
+    function saveDeviceSyncState(st){localStorage.setItem(GDRIVE_SYNC_STATE_KEY,JSON.stringify(st));}
+    async function chapterHash(ch){const raw=JSON.stringify(ch||{});if(crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}let h=2166136261;for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619);}return 'fnv-'+(h>>>0).toString(16);}
+    function captureCurrentChapterForSync(){const ch=library.chapters[library.activeChapterId];if(ch){ch.title=document.getElementById('chapter-title').innerHTML;ch.subtitle=document.getElementById('chapter-subtitle').innerHTML;ch.html=document.getElementById('notes-canvas').innerHTML;}}
+    async function readRemoteStore(){const r=await scriptGet('get');if(!r||!r.ok||!r.store||!r.store.chapters)throw new Error('Invalid chapter sync response from Apps Script.');return r.store;}
+    async function postChapterChanges(changes){const r=await scriptPost({action:'saveChapters',deviceId:getGDriveDeviceId(),changes});return r&&r.store?r.store:await readRemoteStore();}
+    function updateRemoteChangeNotice(count,items=[]){const el=document.getElementById('gdrive-remote-changes');if(el)el.textContent=count?`${count} chapter change(s) from another device — select Check Drive / Download changes.`:'No pending changes from other devices.';const btn=document.querySelector('#gdrive-modal button[onclick="syncWithGoogleDrive()"]');if(btn&&count)btn.innerHTML='<span>⬇️</span> Download '+count+' chapter change(s)';}
+    function updateDriveSyncIndicator(state){const el=document.getElementById('drive-sync-icon');if(!el)return;const offline=!navigator.onLine;const pending=state==='pending'||(gdriveConfig.scriptUrl&&!gdriveConfig.lastSync);el.className='text-sm '+(offline?'sync-offline':pending?'sync-pending':'sync-online');el.textContent=offline?'☁︎':pending?'↻':'☁️';el.title=offline?'Offline — edits saved locally':pending?'Checking / uploading changes':'Connected — cloud status checked';}
+    function toggleGDriveAutoSync(checked){gdriveConfig.autoSync=checked;saveGDriveConfig();showToast(checked?'Automatic upload enabled.':'Automatic upload paused.');}
+    function switchGDriveTab(){gdriveConfig.mode='appsscript';const panel=document.getElementById('gdrive-panel-appsscript');if(panel)panel.classList.remove('hidden');try{localStorage.setItem(GDRIVE_PREFS_KEY,JSON.stringify(gdriveConfig));}catch(e){}}
+    function updateGDriveUI(){const urlInput=document.getElementById('gdrive-script-url'),autoCheck=document.getElementById('gdrive-autosync-toggle'),status=document.getElementById('gdrive-status-text'),last=document.getElementById('gdrive-last-sync'),device=document.getElementById('gdrive-device-label'),code=document.getElementById('apps-script-snippet');if(urlInput&&urlInput.value!==gdriveConfig.scriptUrl)urlInput.value=gdriveConfig.scriptUrl||'';if(autoCheck)autoCheck.checked=!!gdriveConfig.autoSync;if(status){status.textContent=gdriveConfig.scriptUrl?'Apps Script connected configuration':'Not connected — add your Apps Script URL';status.className=gdriveConfig.scriptUrl?'font-semibold text-emerald-400':'font-semibold theme-heading';}if(last)last.textContent=gdriveConfig.lastSync?'Last cloud activity: '+new Date(gdriveConfig.lastSync).toLocaleString():'Last cloud activity: Never';if(device)device.textContent='This device: '+getGDriveDeviceId();if(code)code.textContent=BIO_APPS_SCRIPT_CODE;}
+    function openGDriveModal(){updateGDriveUI();switchGDriveTab();document.getElementById('gdrive-modal').classList.remove('hidden');if(navigator.onLine&&gdriveConfig.scriptUrl)checkDriveChanges(true);}
+    function closeGDriveModal(){document.getElementById('gdrive-modal').classList.add('hidden');}
+    function copyAppsScriptCode(){const code=document.getElementById('apps-script-snippet').textContent,ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Apps Script code copied.');}
+    function buildFullBackupPayload(){const ch=library.chapters[library.activeChapterId];if(ch){ch.title=document.getElementById('chapter-title').innerHTML;ch.subtitle=document.getElementById('chapter-subtitle').innerHTML;ch.html=document.getElementById('notes-canvas').innerHTML;}return {app:'NEET_BioNotes',version:6,exportedAt:new Date().toISOString(),library};}
+    async function checkDriveChanges(silent=false){if(gdriveSyncInProgress||!gdriveConfig.scriptUrl||!navigator.onLine)return;gdriveSyncInProgress=true;try{await flushNow();const store=await readRemoteStore(),st=getDeviceSyncState(),remote=store.chapters||{},pending=[];for(const id of Object.keys(remote)){const rev=Number(remote[id].revision)||0;if(remote[id].deviceId!==getGDriveDeviceId()&&rev>(Number(st.seenRevisions[id])||0))pending.push({id,rev});}updateRemoteChangeNotice(pending.length,pending);gdriveConfig.lastSync=new Date().toISOString();saveGDriveConfig();updateDriveSyncIndicator();if(!silent&&pending.length)showToast(`${pending.length} chapter update(s) available from another device.`);else if(!silent)showToast('Drive checked. No new chapter changes.');return pending;}catch(e){console.error(e);if(!silent)showToast('Could not check Drive: '+e.message);}finally{gdriveSyncInProgress=false;}}
+    async function uploadLocalChapterChanges(silent=true){if(gdriveSyncInProgress||!gdriveConfig.scriptUrl||!navigator.onLine)return;gdriveSyncInProgress=true;updateDriveSyncIndicator('pending');try{await flushNow();const store=await readRemoteStore(),st=getDeviceSyncState(),changes=[];for(const id of Object.keys(library.chapters)){const ch=library.chapters[id],hash=await chapterHash(ch);if(hash===(st.uploadedHashes[id]||''))continue;const remote=store.chapters[id],remoteRev=remote?Number(remote.revision)||0:0;const seen=Number(st.seenRevisions[id])||0;if(remote&&remote.deviceId!==getGDriveDeviceId()&&remoteRev>seen){continue;}changes.push({id,chapter:ch,baseRevision:remoteRev});}if(changes.length){await postChapterChanges(changes);const latest=await readRemoteStore();for(const item of changes){const r=latest.chapters[item.id];if(r&&r.deviceId===getGDriveDeviceId()){st.uploadedHashes[item.id]=await chapterHash(item.chapter);st.seenRevisions[item.id]=Number(r.revision)||0;}}saveDeviceSyncState(st);}gdriveConfig.lastSync=new Date().toISOString();saveGDriveConfig();if(!silent&&changes.length)showToast(`Uploaded ${changes.length} changed chapter(s) to Drive.`);}catch(e){console.error('Chapter upload failed',e);if(!silent)showToast('Upload pending: '+e.message);}finally{gdriveSyncInProgress=false;updateDriveSyncIndicator();}}
+    async function syncWithGoogleDrive(silent=false){if(!gdriveConfig.scriptUrl){if(!silent)showToast('Add your Google Apps Script URL first.');return;}const pending=await checkDriveChanges(silent);if(!silent&&pending&&pending.length)await pullBackupFromGoogleDrive();}
+    async function pullBackupFromGoogleDrive(){if(gdriveSyncInProgress||!gdriveConfig.scriptUrl)return;gdriveSyncInProgress=true;try{await flushNow();const store=await readRemoteStore(),st=getDeviceSyncState(),remote=store.chapters||{},updates=[],conflicts=[];for(const id of Object.keys(remote)){const r=remote[id],rev=Number(r.revision)||0;if(r.deviceId===getGDriveDeviceId()||rev<=(Number(st.seenRevisions[id])||0))continue;const local=library.chapters[id];if(local){const localHash=await chapterHash(local),uploaded=st.uploadedHashes[id]||'';if(localHash!==await chapterHash(remote[id].chapter)&&( !uploaded || localHash!==uploaded)){conflicts.push(id);continue;}}updates.push(id);}if(!updates.length&&!conflicts.length){showToast('No chapter changes to download.');return;}let take=updates;if(conflicts.length){const choice=confirm(`${conflicts.length} chapter(s) were edited on this device and another device.\n\nOK = Use Drive versions for conflicting chapters (local versions saved in recovery snapshots).\nCancel = Keep local versions and publish them as the next Drive revisions (Drive versions are backed up).`);if(choice){recordRollingSnapshot('Before chapter sync conflict resolution');take=updates.concat(conflicts);}else{for(const id of conflicts){const local=library.chapters[id];await postChapterChanges([{id,chapter:local,baseRevision:Number(remote[id].revision)||0}]);const fresh=await readRemoteStore();const latest=fresh.chapters[id];if(latest&&latest.deviceId===getGDriveDeviceId()){st.seenRevisions[id]=Number(latest.revision)||0;st.uploadedHashes[id]=await chapterHash(local);}}saveDeviceSyncState(st);}}if(take.length){recordRollingSnapshot('Before downloading chapters from Drive');for(const id of take){library.chapters[id]=remote[id].chapter;st.seenRevisions[id]=Number(remote[id].revision)||0;st.uploadedHashes[id]=await chapterHash(remote[id].chapter);}await persistLibrary();renderSidebar();loadActiveChapterIntoDOM();saveDeviceSyncState(st);}updateRemoteChangeNotice(Math.max(0,updates.length+conflicts.length-take.length));showToast(`Downloaded ${take.length} chapter(s) from Drive.`);}catch(e){console.error(e);showToast('Download failed: '+e.message);}finally{gdriveSyncInProgress=false;updateDriveSyncIndicator();}}
+    async function pushBackupToGoogleDrive(silent=false){return uploadLocalChapterChanges(silent);}
 
     /* =====================================================================
        EDIT MODE TOGGLE & INTERACTIVE RESIZABLE TABLE ENGINE
