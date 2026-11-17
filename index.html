@@ -567,6 +567,32 @@
       .notion-table th { background-color: #eeeeee !important; color: #000000 !important; border: 1px solid #666666 !important; }
       .notion-table td { background-color: #ffffff !important; color: #111111 !important; border: 1px solid #888888 !important; }
     }
+
+    /* Paragraph Transformer */
+    #paragraph-transformer { position:fixed; inset:0; z-index:100; display:none; background:rgba(0,0,0,.78); padding:12px; }
+    #paragraph-transformer.open { display:flex; align-items:center; justify-content:center; }
+    #paragraph-transformer .pt-shell { width:min(1400px,100%); height:min(90vh,900px); display:flex; flex-direction:column; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-strong); border-radius:14px; overflow:hidden; box-shadow:0 20px 60px #0008; }
+    #paragraph-transformer .pt-head,#paragraph-transformer .pt-foot { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid var(--border-color); }
+    #paragraph-transformer .pt-foot { border-top:1px solid var(--border-color); border-bottom:0; }
+    #paragraph-transformer .pt-grid { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    #paragraph-transformer .pt-pane { min-width:0; min-height:0; overflow:auto; padding:14px; }
+    #paragraph-transformer .pt-pane + .pt-pane { border-left:1px solid var(--border-color); }
+    #paragraph-transformer .pt-source { white-space:pre-wrap; line-height:1.8; padding:12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--bg-nested); user-select:text; }
+    #paragraph-transformer .pt-node { position:relative; padding:9px 12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--bg-nested); text-align:center; margin:8px auto; max-width:90%; cursor:grab; }
+    #paragraph-transformer .pt-node.selected { outline:2px solid #38bdf8; }
+    #paragraph-transformer .pt-arrow { text-align:center; color:var(--text-muted); line-height:1.1; }
+    #paragraph-transformer .pt-btn { padding:6px 9px; border-radius:7px; border:1px solid var(--border-strong); font-size:12px; }
+    #paragraph-transformer .pt-btn.primary { background:#0369a1; color:white; border-color:#0284c7; }
+    #paragraph-transformer .pt-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    #paragraph-transformer .pt-table td,#paragraph-transformer .pt-table th { border:1px solid var(--border-strong); padding:7px; min-width:70px; vertical-align:top; }
+    #paragraph-transformer .pt-table [contenteditable="true"] { min-height:28px; outline:none; }
+    @media(max-width:700px) {
+      #paragraph-transformer { padding:0; }
+      #paragraph-transformer .pt-shell { height:100dvh; border-radius:0; }
+      #paragraph-transformer .pt-grid { grid-template-columns:1fr; grid-template-rows:42% 58%; }
+      #paragraph-transformer .pt-pane + .pt-pane { border-left:0; border-top:1px solid var(--border-color); }
+    }
+
   </style>
 </head>
 <body class="min-h-screen selection:bg-sky-500/30">
@@ -796,6 +822,8 @@
         <button onmousedown="event.preventDefault(); convertSelectionToBullets()" class="px-2.5 py-1 rounded font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition flex items-center gap-1" title="Select any long NCERT paragraph or sentence and convert it into concise bullet points">
           <span>✨ Sentence → Bullets</span>
         </button>
+        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('flowchart')" class="px-2.5 py-1 rounded font-semibold bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30" title="Transform selected paragraph or text into an editable flowchart">⇩ Flowchart Builder</button>
+        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('table')" class="px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30" title="Transform selected paragraph or text into an editable table">▦ Table Builder</button>
       </div>
     </header>
 
@@ -3686,6 +3714,162 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       canvas.appendChild(sec);
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
+    }
+
+
+    /* =====================================================================
+       PARAGRAPH TRANSFORMER — selected text to editable flowchart / table
+       ===================================================================== */
+    let ptState = { mode:'flowchart', range:null, source:'', nodes:[], activeNode:-1, rows:2, cols:2, nextCell:0 };
+
+    function openParagraphTransformer(mode) {
+      if (!isEditMode) { toggleEditMode(); }
+      const canvas = document.getElementById('notes-canvas');
+      const sel = window.getSelection();
+      let range = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+      if (!range || !canvas.contains(range.commonAncestorContainer) || range.collapsed) {
+        let node = range ? range.commonAncestorContainer : null;
+        if (node && node.nodeType === 3) node = node.parentElement;
+        const block = node && node.closest ? node.closest('p, li') : null;
+        if (block && canvas.contains(block)) {
+          range = document.createRange();
+          range.selectNodeContents(block);
+        }
+      }
+      if (!range || !canvas.contains(range.commonAncestorContainer) || !range.toString().trim()) {
+        showToast('Select the paragraph or exact text inside a note block first.');
+        return;
+      }
+      ptState = { mode, range, source:range.toString().trim(), nodes:[], activeNode:-1, rows:2, cols:2, nextCell:0 };
+      renderParagraphTransformer();
+      document.getElementById('paragraph-transformer').classList.add('open');
+      if (sel) sel.removeAllRanges();
+    }
+
+    function ensureParagraphTransformer() {
+      let modal = document.getElementById('paragraph-transformer');
+      if (modal) return modal;
+      modal = document.createElement('div');
+      modal.id = 'paragraph-transformer';
+      modal.innerHTML = `
+        <div class="pt-shell">
+          <div class="pt-head">
+            <div><div id="pt-title" class="font-bold text-sm">Paragraph Transformer</div><div class="text-[11px] theme-muted">Select source phrases and build your own structure.</div></div>
+            <button class="pt-btn" onclick="closeParagraphTransformer()">✕ Close</button>
+          </div>
+          <div class="pt-grid">
+            <div class="pt-pane">
+              <div class="flex items-center justify-between gap-2 mb-2"><b class="text-xs">Original text</b><span class="text-[10px] theme-muted">Select any phrase</span></div>
+              <div id="pt-source" class="pt-source text-sm"></div>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <button class="pt-btn primary" onclick="ptAddSelection()">＋ Add selected text</button>
+                <button class="pt-btn" onclick="ptAddWholeSource()">＋ Add entire text</button>
+              </div>
+              <p class="text-[10px] theme-muted mt-2">The original paragraph stays unchanged until you press Apply.</p>
+            </div>
+            <div class="pt-pane">
+              <div class="flex items-center justify-between gap-2 mb-3"><b id="pt-work-title" class="text-xs">Flowchart workspace</b><div id="pt-tools" class="flex flex-wrap gap-1"></div></div>
+              <div id="pt-workspace" class="min-h-40"></div>
+            </div>
+          </div>
+          <div class="pt-foot">
+            <span class="text-[10px] theme-muted">Only the selected content will be replaced. Undo/history remains available.</span>
+            <div class="flex gap-2"><button class="pt-btn" onclick="closeParagraphTransformer()">Cancel</button><button class="pt-btn primary" onclick="applyParagraphTransformer()">✓ Apply</button></div>
+          </div>
+        </div>`;
+      modal.addEventListener('mousedown', e => { if (e.target === modal) closeParagraphTransformer(); });
+      document.body.appendChild(modal);
+      return modal;
+    }
+
+    function renderParagraphTransformer() {
+      ensureParagraphTransformer();
+      const flow = ptState.mode === 'flowchart';
+      document.getElementById('pt-title').textContent = flow ? 'Flowchart Builder' : 'Table Builder';
+      document.getElementById('pt-work-title').textContent = flow ? 'Flowchart workspace' : 'Table workspace';
+      document.getElementById('pt-source').textContent = ptState.source;
+      document.getElementById('pt-tools').innerHTML = flow
+        ? `<button class="pt-btn" onclick="ptAddNode()">＋ Node</button><button class="pt-btn" onclick="ptAddArrow()">↓ Arrow</button><button class="pt-btn" onclick="ptMoveNode(-1)">↑ Move</button><button class="pt-btn" onclick="ptMoveNode(1)">↓ Move</button><button class="pt-btn" onclick="ptDeleteNode()">✕ Delete</button>`
+        : `<button class="pt-btn" onclick="ptAddRow()">＋ Row</button><button class="pt-btn" onclick="ptAddColumn()">＋ Column</button><button class="pt-btn" onclick="ptRemoveRow()">− Row</button><button class="pt-btn" onclick="ptRemoveColumn()">− Column</button>`;
+      if (flow) {
+        const ws = document.getElementById('pt-workspace');
+        ws.innerHTML = ptState.nodes.length ? ptState.nodes.map((n,i) =>
+          `${i ? '<div class="pt-arrow">↓</div>' : ''}<div class="pt-node ${ptState.activeNode===i?'selected':''}" draggable="true" onclick="ptSelectNode(${i})" ondragstart="ptDragStart(event,${i})" ondragover="event.preventDefault()" ondrop="ptDropNode(event,${i})"><div contenteditable="true" oninput="ptState.nodes[${i}]=this.innerText" onclick="event.stopPropagation()">${escapeHTML(n)}</div><div class="text-[9px] theme-muted mt-1">Node ${i+1}</div></div>`
+        ).join('') : '<div class="text-xs theme-muted text-center py-12 border border-dashed rounded-lg">Select a phrase on the left and choose “Add selected text”.</div>';
+      } else {
+        let html = '<table class="pt-table"><tbody>';
+        for(let r=0;r<ptState.rows;r++){
+          html += '<tr>';
+          for(let c=0;c<ptState.cols;c++){
+            const tag = r===0 ? 'th' : 'td';
+            html += `<${tag}><div contenteditable="true" data-r="${r}" data-c="${c}" oninput="ptCellChanged(this)">${escapeHTML((ptState.cells?.[r]?.[c]) || (r===0 ? (c===0?'Feature':`Column ${c+1}`) : ''))}</div></${tag}>`;
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table><p class="text-[10px] theme-muted mt-2">Selected phrases are placed into successive body cells; add rows or columns as needed.</p>';
+        document.getElementById('pt-workspace').innerHTML = html;
+      }
+    }
+
+    function ptSelectedSourceText() {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return '';
+      const text = sel.toString().trim();
+      const source = document.getElementById('pt-source');
+      return text && source.contains(sel.getRangeAt(0).commonAncestorContainer) ? text : '';
+    }
+    function ptAddSelection() {
+      const text = ptSelectedSourceText();
+      if (!text) { showToast('Select a phrase in the original text first.'); return; }
+      if (ptState.mode === 'flowchart') { ptState.nodes.push(text); ptState.activeNode=ptState.nodes.length-1; }
+      else {
+        ptEnsureCells();
+        const total = (ptState.rows - 1) * ptState.cols;
+        let idx = ptState.nextCell || 0;
+        if (idx >= total) { ptState.rows++; ptEnsureCells(); }
+        const r = 1 + Math.floor(idx / ptState.cols), c = idx % ptState.cols;
+        ptState.cells[r][c] = (ptState.cells[r][c] ? ptState.cells[r][c] + ' ' : '') + text;
+        ptState.nextCell = idx + 1;
+      }
+      renderParagraphTransformer();
+    }
+    function ptAddWholeSource() {
+      if (ptState.mode === 'flowchart') { ptState.nodes.push(ptState.source); ptState.activeNode=ptState.nodes.length-1; }
+      else { ptEnsureCells(); ptState.cells[1][0] = (ptState.cells[1][0] ? ptState.cells[1][0]+' ' : '') + ptState.source; }
+      renderParagraphTransformer();
+    }
+    function ptAddNode(){ ptState.nodes.push('New node'); ptState.activeNode=ptState.nodes.length-1; renderParagraphTransformer(); }
+    function ptAddArrow(){ if(ptState.nodes.length<2){showToast('Add at least two nodes first.');return;} ptState.nodes.splice(ptState.activeNode<0?ptState.nodes.length:ptState.activeNode+1,0,'↓'); renderParagraphTransformer(); }
+    function ptSelectNode(i){ptState.activeNode=i;renderParagraphTransformer();}
+    function ptMoveNode(dir){const i=ptState.activeNode,j=i+dir;if(i<0||j<0||j>=ptState.nodes.length)return;[ptState.nodes[i],ptState.nodes[j]]=[ptState.nodes[j],ptState.nodes[i]];ptState.activeNode=j;renderParagraphTransformer();}
+    function ptDeleteNode(){if(ptState.activeNode<0)return;ptState.nodes.splice(ptState.activeNode,1);ptState.activeNode=-1;renderParagraphTransformer();}
+    function ptDragStart(e,i){e.dataTransfer.setData('text/plain',String(i));}
+    function ptDropNode(e,to){const from=+e.dataTransfer.getData('text/plain');if(!Number.isInteger(from)||from===to)return;const [n]=ptState.nodes.splice(from,1);ptState.nodes.splice(to,0,n);ptState.activeNode=to;renderParagraphTransformer();}
+    function ptEnsureCells(){if(!ptState.cells)ptState.cells=Array.from({length:ptState.rows},()=>Array(ptState.cols).fill(''));while(ptState.cells.length<ptState.rows)ptState.cells.push(Array(ptState.cols).fill(''));ptState.cells=ptState.cells.map(row=>{while(row.length<ptState.cols)row.push('');return row.slice(0,ptState.cols);});}
+    function ptCellChanged(el){ptEnsureCells();ptState.cells[+el.dataset.r][+el.dataset.c]=el.innerText;}
+    function ptAddRow(){ptState.rows++;ptEnsureCells();renderParagraphTransformer();}
+    function ptAddColumn(){ptState.cols++;ptEnsureCells();renderParagraphTransformer();}
+    function ptRemoveRow(){if(ptState.rows<=2)return;ptState.rows--;ptEnsureCells();renderParagraphTransformer();}
+    function ptRemoveColumn(){if(ptState.cols<=1)return;ptState.cols--;ptEnsureCells();renderParagraphTransformer();}
+    function closeParagraphTransformer(){const m=document.getElementById('paragraph-transformer');if(m)m.classList.remove('open');}
+    function applyParagraphTransformer(){
+      if(!ptState.range || !ptState.range.commonAncestorContainer.isConnected){showToast('Original text is no longer available. Cancel and select it again.');return;}
+      let html='';
+      if(ptState.mode==='flowchart'){
+        if(!ptState.nodes.length){showToast('Add at least one flowchart node first.');return;}
+        html='<div class="pt-generated-flow my-3 p-3 rounded-lg theme-nested border text-center space-y-1">'+ptState.nodes.map((n,i)=>`${i?'<div class="theme-muted leading-none">↓</div>':''}<div class="rounded-lg border border-[var(--border-strong)] px-3 py-2 theme-panel font-medium">${escapeHTML(n)}</div>`).join('')+'</div>';
+      }else{
+        ptEnsureCells();
+        html='<div class="table-wrapper my-3" style="width:100%"><div class="overflow-x-auto"><table class="notion-table"><thead><tr>'+ptState.cells[0].map(v=>`<th contenteditable="true">${escapeHTML(v)}</th>`).join('')+'</tr></thead><tbody>'+ptState.cells.slice(1).map(row=>'<tr>'+row.map(v=>`<td contenteditable="true">${escapeHTML(v)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div></div>';
+      }
+      recordRollingSnapshot('Before paragraph transformation');
+      ptState.range.deleteContents();
+      const holder=document.createElement('div');holder.innerHTML=html;
+      const frag=document.createDocumentFragment();while(holder.firstChild)frag.appendChild(holder.firstChild);
+      ptState.range.insertNode(frag);
+      closeParagraphTransformer();
+      enhanceAllTables(); syncEditableAttributes(); scheduleAutoSave(true);
+      showToast(ptState.mode==='flowchart'?'Selected text converted to flowchart.':'Selected text converted to table.');
     }
 
     function addNewTableBlock() {
