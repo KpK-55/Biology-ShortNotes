@@ -3914,20 +3914,36 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
     function ptToggleDrawArrow(){ptState.drawArrow=!ptState.drawArrow;ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptBindCanvasDrawing(){
-      const canvas=document.getElementById('pt-canvas'),svg=document.getElementById('pt-svg');
-      if(!canvas||!svg)return;
+      const canvas=document.getElementById('pt-canvas');
+      if(!canvas)return;
       const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1800/r.width,y:(ev.clientY-r.top)*1200/r.height};};
+      const distToSegment=(p,a)=>{const dx=a.x2-a.x1,dy=a.y2-a.y1,l=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-a.x1)*dx+(p.y-a.y1)*dy)/l));return Math.hypot(p.x-(a.x1+t*dx),p.y-(a.y1+t*dy));};
       canvas.addEventListener('pointerdown',e=>{
-        if(!ptState.drawArrow)return;
-        e.preventDefault();e.stopPropagation();
-        const p=point(e),preview=svg.querySelector('#pt-preview-arrow');
-        preview.style.display='';preview.setAttribute('x1',p.x);preview.setAttribute('y1',p.y);preview.setAttribute('x2',p.x);preview.setAttribute('y2',p.y);
-        try{canvas.setPointerCapture(e.pointerId);}catch(_){}
-        const move=ev=>{const q=point(ev);preview.setAttribute('x2',q.x);preview.setAttribute('y2',q.y);};
-        const cleanup=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);};
-        const up=ev=>{cleanup();const q=point(ev);if(Math.hypot(q.x-p.x,q.y-p.y)>10){ptState.arrows.push({x1:p.x,y1:p.y,x2:q.x,y2:q.y,width:2,color:'theme'});}ptState.drawArrow=false;renderParagraphTransformer();};
-        const cancel=()=>{cleanup();ptState.drawArrow=false;renderParagraphTransformer();};
-        canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
+        if(e.target.closest('.pt-node'))return;
+        const p=point(e);
+        if(ptState.drawArrow){
+          e.preventDefault();e.stopPropagation();
+          const preview=document.createElementNS('http://www.w3.org/2000/svg','line');
+          preview.setAttribute('x1',p.x);preview.setAttribute('y1',p.y);preview.setAttribute('x2',p.x);preview.setAttribute('y2',p.y);
+          preview.setAttribute('stroke','var(--text-muted)');preview.setAttribute('stroke-width','2');preview.setAttribute('marker-end','url(#pt-arrowhead)');
+          const svg=document.getElementById('pt-svg'); if(svg)svg.appendChild(preview);
+          try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+          const move=ev=>{const q=point(ev);preview.setAttribute('x2',q.x);preview.setAttribute('y2',q.y);};
+          const cleanup=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);};
+          const up=ev=>{cleanup();const q=point(ev);preview.remove();if(Math.hypot(q.x-p.x,q.y-p.y)>12){ptState.arrows.push({x1:p.x,y1:p.y,x2:q.x,y2:q.y,width:2,color:'theme'});ptState.activeArrow=ptState.arrows.length-1;}ptState.drawArrow=false;renderParagraphTransformer();};
+          const cancel=()=>{cleanup();preview.remove();ptState.drawArrow=false;renderParagraphTransformer();};
+          canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);return;
+        }
+        // Select and reposition an existing arrow by dragging near its line.
+        let best=-1,bestD=22;
+        ptState.arrows.forEach((a,i)=>{const d=distToSegment(p,a);if(d<bestD){bestD=d;best=i;}});
+        if(best<0)return;
+        e.preventDefault();e.stopPropagation();ptState.activeArrow=best;ptState.activeNode=-1;
+        const a=ptState.arrows[best],orig={...a},sx=p.x,sy=p.y;
+        try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+        const move=ev=>{const q=point(ev),dx=q.x-sx,dy=q.y-sy;Object.assign(ptState.arrows[best],{x1:orig.x1+dx,y1:orig.y1+dy,x2:orig.x2+dx,y2:orig.y2+dy});const svg=document.getElementById('pt-svg');if(svg){const line=svg.querySelectorAll('line')[best];if(line){line.setAttribute('x1',ptState.arrows[best].x1);line.setAttribute('y1',ptState.arrows[best].y1);line.setAttribute('x2',ptState.arrows[best].x2);line.setAttribute('y2',ptState.arrows[best].y2);}}};
+        const up=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);renderParagraphTransformer();};
+        canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
       });
     }
     function ptSelectArrow(i){ptState.activeArrow=i;ptState.activeNode=-1;renderParagraphTransformer();}
@@ -4221,23 +4237,24 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     ov.addEventListener('click',e=>{const qa=e.target.closest('.cloze-question');if(qa){e.preventDefault();const open=!qa.classList.contains('qa-open');qa.classList.toggle('qa-open',open);const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q)q.style.display=open?'none':'';if(a)a.style.display=open?'inline':'none';return;}const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');});
     return ov;
   }
-  window.closeTopicReading=function(){const ov=document.getElementById('topic-reading-overlay');if(ov)ov.classList.remove('open');document.body.style.overflow='';};
+  window.closeTopicReading=function(){const ov=document.getElementById('topic-reading-overlay');if(ov){ov.classList.remove('open');ov.style.display='none';}document.body.style.overflow='';};
   window.topicHideClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.add('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.remove('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='';if(a)a.style.display='none';});};
   window.topicRevealClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.remove('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.add('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='none';if(a)a.style.display='inline';});};
 
   function openTopicInWindow(button){
     if(document.body.classList.contains('edit-mode')){showToast('Switch to Reading Mode to open a topic full page.');return;}
     const block=button.closest('.toggle-block');if(!block)return;
-    const heading=block.querySelector(':scope > .toggle-header h2, :scope > .toggle-header h3');
-    const title=heading?heading.innerText.trim():'Topic';
-    const source=block.querySelector(':scope > .toggle-body');if(!source)return;
+    const header=block.querySelector(':scope > .toggle-header');
+    const heading=header&&header.querySelector('h1,h2,h3,h4,strong');
+    const title=heading?heading.innerText.trim():(header?header.innerText.replace(/↗\\s*Full page/i,'').trim():'Topic');
+    const source=block.querySelector(':scope > .toggle-body')||block.querySelector('.toggle-body');if(!source){showToast('Could not find this topic content.');return;}
     const content=source.cloneNode(true);
     content.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
     content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.toggle-arrow,.topic-open-page').forEach(el=>el.remove());
     content.querySelectorAll('.toggle-block').forEach(el=>{el.classList.remove('collapsed');const body=el.querySelector(':scope > .toggle-body');if(body)body.style.display='block';});
     const ov=ensureTopicOverlay();document.getElementById('tro-title').textContent=title;
     const target=document.getElementById('tro-content');target.innerHTML='';target.appendChild(content);
-    ov.classList.add('open');document.body.style.overflow='hidden';
+    ov.style.display='flex';ov.classList.add('open');document.body.style.overflow='hidden';
   }
   function addButtons(root){
     (root||document).querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header=>{
@@ -4284,3 +4301,20 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
 </body>
 </html>
+<style>
+/* Paragraph builder controls stay in their own dock, clear of Android text-selection actions */
+#paragraph-transformer .pt-pane:first-child{display:flex;flex-direction:column;gap:8px;position:relative}
+#paragraph-transformer #pt-source{flex:1;min-height:120px;overflow:auto}
+#paragraph-transformer .pt-source-dock{position:sticky;bottom:0;z-index:20;margin:0 -14px -14px;padding:10px 14px;background:var(--bg-panel);border-top:1px solid var(--border-color);box-shadow:0 -5px 14px rgba(0,0,0,.06)}
+#paragraph-transformer .pt-source-actions{display:flex;gap:8px;flex-wrap:wrap}
+#paragraph-transformer #pt-tools{position:sticky;top:0;z-index:25;padding:6px;background:var(--bg-panel);border:1px solid var(--border-color);border-radius:10px}
+#paragraph-transformer .pt-head{position:sticky;top:0;z-index:40;min-height:64px;background:var(--bg-panel)}
+#paragraph-transformer .pt-canvas svg{pointer-events:none!important}
+#paragraph-transformer .pt-node{user-select:none;-webkit-user-select:none}
+#paragraph-transformer .pt-node [contenteditable=true]{user-select:text;-webkit-user-select:text}
+#paragraph-transformer .pt-canvas.drawing{touch-action:none}
+#topic-reading-overlay{z-index:1300!important}
+#topic-reading-overlay.open{display:flex!important}
+#topic-reading-overlay .tro-shell{height:100dvh;max-height:100dvh;overflow:hidden}
+#topic-reading-overlay #tro-content{overflow:auto;overscroll-behavior:contain}
+</style>
