@@ -628,7 +628,48 @@
     .cloze-question .qa-answer {display:none !important;}
     .cloze-question.qa-open .qa-question {display:none !important;}
     .cloze-question.qa-open .qa-answer {display:inline !important;}
-\n  </style>
+\n  
+/* Stable editing toolbar: remains visible while the editor scrolls or the keyboard opens */
+#top-toolbar{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:1200!important;max-height:45vh;overflow-y:auto;overscroll-behavior:contain}
+#main-wrapper{padding-top:var(--toolbar-height,120px)!important}
+#top-toolbar:focus-within{z-index:1200!important}
+#paragraph-transformer .pt-grid{min-height:0}
+#paragraph-transformer .pt-head{position:sticky;top:0;z-index:8;background:var(--bg-panel)}
+#paragraph-transformer .pt-pane{overscroll-behavior:contain}
+#paragraph-transformer .pt-source-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#paragraph-transformer .pt-node{width:max-content!important;height:auto!important;min-width:72px;max-width:360px;min-height:0!important;padding:9px 13px!important;background:var(--bg-nested)!important;color:var(--text-main)!important;border:1px solid var(--border-strong)!important;white-space:pre-wrap;overflow-wrap:anywhere;box-sizing:border-box}
+#paragraph-transformer .pt-node [contenteditable="true"]{display:block;width:auto!important;height:auto!important;min-width:35px;min-height:18px;max-width:100%;color:inherit!important;background:transparent!important;overflow:visible!important;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
+#paragraph-transformer .pt-node-handle{height:12px;line-height:12px;cursor:grab;touch-action:none}
+#paragraph-transformer .pt-inspector.node-inspector{display:none!important}
+#paragraph-transformer .pt-arrow-inspector{display:none!important}
+#paragraph-transformer .pt-canvas{touch-action:pan-x pan-y}
+#paragraph-transformer .pt-canvas.drawing{touch-action:none;cursor:crosshair}
+#paragraph-transformer .pt-canvas svg{pointer-events:none!important}
+.cloze-question .qa-answer{display:none}
+.cloze-question.qa-open .qa-answer{display:inline!important}
+.cloze-question.qa-open .qa-question{display:none!important}
+.diagram-occlusion-wrap{position:relative;display:inline-block;max-width:100%;vertical-align:middle}
+.diagram-occlusion-wrap>img{display:block;max-width:100%;height:auto}
+.diagram-mask{position:absolute;box-sizing:border-box;background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:3px;cursor:pointer;transition:opacity .12s ease}
+.diagram-mask.revealed{opacity:0;pointer-events:auto}
+body.edit-mode .diagram-mask{outline:1px dashed var(--text-muted);opacity:.75}
+#diagram-occlusion-modal{position:fixed;inset:0;z-index:1300;background:#000b;display:none;align-items:center;justify-content:center;padding:12px}
+#diagram-occlusion-modal.open{display:flex}
+#diagram-occlusion-modal .dom-shell{width:min(1000px,100%);max-height:92vh;display:flex;flex-direction:column;background:var(--bg-panel);color:var(--text-main);border:1px solid var(--border-strong);border-radius:12px;overflow:hidden}
+#diagram-occlusion-modal .dom-stage{position:relative;overflow:auto;min-height:180px;max-height:70vh;background:var(--bg-nested);touch-action:pan-x pan-y}
+#diagram-occlusion-modal .dom-stage img{display:block;max-width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+#diagram-occlusion-modal .dom-draw-layer{position:absolute;inset:0;touch-action:none;cursor:crosshair}
+#diagram-occlusion-modal .dom-rect{position:absolute;border:2px solid var(--text-muted);background:var(--bg-panel);opacity:.8;pointer-events:none}
+#topic-reading-overlay{position:fixed;inset:0;z-index:1250;background:var(--bg-main);color:var(--text-main);display:none;flex-direction:column}
+#topic-reading-overlay.open{display:flex}
+#topic-reading-overlay .tro-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--bg-panel);border-bottom:1px solid var(--border-color)}
+#topic-reading-overlay .tro-content{overflow:auto;flex:1;max-width:1100px;width:100%;margin:0 auto;padding:20px 24px 60px}
+#topic-reading-overlay .tro-content .toggle-block{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important}
+#topic-reading-overlay .tro-content .toggle-header{display:flex!important;align-items:center;margin:8px 0!important}#topic-reading-overlay .tro-content .toggle-arrow{display:none!important}
+#topic-reading-overlay .tro-content .toggle-body{display:block!important;padding:0!important;margin:0!important}
+@media(max-width:700px){#top-toolbar{max-height:48vh}#topic-reading-overlay .tro-content{padding:14px 12px 40px}}
+
+</style>
 </head>
 <body class="min-h-screen selection:bg-sky-500/30">
 
@@ -859,6 +900,7 @@
         </button>
         <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('flowchart')" class="px-2.5 py-1 rounded font-semibold bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30" title="Transform selected paragraph or text into an editable flowchart">⇩ Flowchart Builder</button>
         <button type="button" onmousedown="event.preventDefault(); createQuestionAnswer()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40" title="Turn selected text into a tap-to-reveal question and answer">❔ Q → A</button>
+        <button type="button" onmousedown="event.preventDefault(); openDiagramOcclusion()" class="px-2.5 py-1 rounded font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" title="Cover diagram labels and reveal them by tapping">▧ Diagram Occlusion</button>
         <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('table')" class="px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30" title="Transform selected paragraph or text into an editable table">▦ Table Builder</button>
       </div>
     </header>
@@ -3309,13 +3351,24 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     /* =====================================================================
        CLOZE DELETION & EVENT DELEGATION
        ===================================================================== */
+
+    document.addEventListener('click',function(e){
+      const qa=e.target.closest&&e.target.closest('.cloze-question');
+      if(!qa||isEditMode)return;
+      e.preventDefault();e.stopPropagation();
+      const open=!qa.classList.contains('qa-open');qa.classList.toggle('qa-open',open);
+      const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');
+      if(q)q.style.display=open?'none':'';
+      if(a)a.style.display=open?'inline':'none';
+    },true);
     function setupEventListeners() {
       const canvas = document.getElementById('notes-canvas');
       const title = document.getElementById('chapter-title');
       const subtitle = document.getElementById('chapter-subtitle');
 
       canvas.addEventListener('click', (e) => {
-        const qa=e.target.closest('.cloze-question'); if(qa&&!isEditMode){e.preventDefault();e.stopPropagation();qa.classList.toggle('qa-open');const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q&&a){q.hidden=qa.classList.contains('qa-open');a.hidden=!qa.classList.contains('qa-open');}return;}
+        const clickedImg=e.target.closest('img'); if(clickedImg&&isEditMode)window.__selectedDiagramImage=clickedImg;
+        const mask=e.target.closest('.diagram-mask'); if(mask&&!isEditMode){e.preventDefault();mask.classList.toggle('revealed');return;}
         const clozeEl = e.target.closest('.cloze');
         if (clozeEl && !isEditMode) {
           e.stopPropagation();
@@ -3796,12 +3849,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           </div>
           <div class="pt-grid">
             <div class="pt-pane">
-              <div class="flex items-center justify-between gap-2 mb-2"><b class="text-xs">Original text</b><span class="text-[10px] theme-muted">Select any phrase</span></div>
+              <div class="flex items-center justify-between gap-2 mb-2 flex-wrap"><div><b class="text-xs">Original text</b><span class="text-[10px] theme-muted ml-2">Select any phrase</span></div><div class="pt-source-actions"><button class="pt-btn primary" onmousedown="event.preventDefault()" onclick="ptAddSelection()">＋ Add selected text</button><button class="pt-btn" onmousedown="event.preventDefault()" onclick="ptAddWholeSource()">＋ Add entire text</button></div></div>
               <div id="pt-source" class="pt-source text-sm"></div>
-              <div class="flex flex-wrap gap-2 mt-3">
-                <button class="pt-btn primary" onclick="ptAddSelection()">＋ Add selected text</button>
-                <button class="pt-btn" onclick="ptAddWholeSource()">＋ Add entire text</button>
-              </div>
               <p class="text-[10px] theme-muted mt-2">The original paragraph stays unchanged until you press Apply.</p>
             </div>
             <div class="pt-pane">
@@ -3829,17 +3878,13 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         ? `<button class="pt-btn" onclick="ptAddNode()">＋ Node</button><button class="pt-btn ${ptState.drawArrow?'primary':''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow?'Drawing…':'Draw arrow'}</button><button class="pt-btn" onclick="ptDeleteArrow()">✕ Delete arrow</button><button class="pt-btn" onclick="ptDeleteNode()">✕ Delete node</button>`
         : `<button class="pt-btn" onclick="ptAddRow()">＋ Row</button><button class="pt-btn" onclick="ptAddColumn()">＋ Column</button><button class="pt-btn" onclick="ptRemoveRow()">− Row</button><button class="pt-btn" onclick="ptRemoveColumn()">− Column</button>`;
       if(flow){
-        const n=ptState.nodes[ptState.activeNode], a=ptState.arrows[ptState.activeArrow??-1];
-        const inspector=(n?`<div class="pt-inspector"><b class="text-[10px]">NODE</b>
-          <label>Width <input type="number" min="70" max="700" value="${n.w}" onchange="ptSetProp('w',this.value)"></label>
-          <label>Height <input type="number" min="38" max="500" value="${n.h}" onchange="ptSetProp('h',this.value)"></label>
-          <label>Font <input type="number" min="9" max="40" value="${n.fs}" onchange="ptSetProp('fs',this.value)"></label>
-          <label>Fill <input type="color" value="${n.bg}" onchange="ptSetProp('bg',this.value)"></label>
-          <label>Border <input type="color" value="${n.border}" onchange="ptSetProp('border',this.value)"></label>
-          <label>Border px <input type="number" min="1" max="12" value="${n.line}" onchange="ptSetProp('line',this.value)"></label></div>`:'<div class="text-[10px] theme-muted mb-2">Drag nodes anywhere. Select a node to change its size and colour. Use Draw arrow and drag from tail to arrowhead.</div>')+
-          (a?`<div class="pt-inspector"><b class="text-[10px]">ARROW</b><label>Thickness <input type="number" min="1" max="18" value="${a.width}" onchange="ptSetArrowProp('width',this.value)"></label><label>Colour <input type="color" value="${a.color}" onchange="ptSetArrowProp('color',this.value)"></label><button class="pt-btn" onclick="ptDeleteArrow()">Delete arrow</button></div>`:'');
-        const edges=ptState.arrows.map((ar,i)=>{const dx=ar.x2-ar.x1,dy=ar.y2-ar.y1,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len,head=Math.max(12,ar.width*4),half=head*.55,bx=ar.x2-ux*head,by=ar.y2-uy*head,px=-uy*half,py=ux*half;return `<g onclick="ptSelectArrow(${i})" style="cursor:pointer"><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="${ar.color}" stroke-width="${ar.width}" fill="none" stroke-linecap="round"/><polygon points="${ar.x2},${ar.y2} ${bx+px},${by+py} ${bx-px},${by-py}" fill="${ar.color}"/><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="transparent" stroke-width="18" fill="none"/></g>`}).join('');
-        document.getElementById('pt-workspace').innerHTML=inspector+`<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: drag from the tail to the arrowhead.':'Free positioning; arrows can point in any direction and do not need to connect to nodes.'}</div><div class="pt-viewport" id="pt-viewport"><div class="pt-canvas ${ptState.drawArrow?'drawing':''}" id="pt-canvas"><svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none">${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="#38bdf8" stroke-width="3" style="display:none"/></svg>${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" style="left:${v.x}px;top:${v.y}px;width:${v.w}px;height:${v.h}px;min-height:${v.h}px;background:${v.bg};border:${v.line}px solid ${v.border};font-size:${v.fs}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" onclick="ptSelectNode(${i})" title="Drag node">⠿</div><div contenteditable="true" oninput="ptNodeText(${i},this)" style="width:100%;height:calc(100% - 14px);outline:none;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(v.text)}</div></div>`).join('')}</div></div>`;
+        const edges=ptState.arrows.map((ar,i)=>`<g><line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" marker-end="url(#pt-arrowhead)" /><line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="transparent" stroke-width="16" /></g>`).join('');
+        document.getElementById('pt-workspace').innerHTML=
+          `<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: touch/click and drag from the arrow tail to its head.':'Drag the node handle to move it. Select Draw arrow to make directional connections.'}</div>
+           <div class="pt-viewport" id="pt-viewport"><div class="pt-canvas ${ptState.drawArrow?'drawing':''}" id="pt-canvas">
+             <svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none"><defs><marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#pt-arrowhead)" style="display:none"/></svg>
+             ${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" title="Drag node">⠿</div><div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div></div>`).join('')}
+           </div></div>`;
         ptBindCanvasDrawing();
       }else{
         let html='<table class="pt-table"><tbody>';
@@ -3850,7 +3895,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptSelectedSourceText(){const sel=window.getSelection();if(!sel||!sel.rangeCount)return '';const text=sel.toString().trim(),src=document.getElementById('pt-source');return text&&src.contains(sel.getRangeAt(0).commonAncestorContainer)?text:'';}
     function ptAddSelection(){const text=ptSelectedSourceText();if(!text){showToast('Select a phrase in the original text first.');return;}if(ptState.mode==='flowchart')ptCreateNode(text);else{ptEnsureCells();let idx=ptState.nextCell||0,total=(ptState.rows-1)*ptState.cols;if(idx>=total){ptState.rows++;ptEnsureCells();}const r=1+Math.floor(idx/ptState.cols),c=idx%ptState.cols;ptState.cells[r][c]=(ptState.cells[r][c]?ptState.cells[r][c]+' ':'')+text;ptState.nextCell=idx+1;renderParagraphTransformer();}}
     function ptAddWholeSource(){if(ptState.mode==='flowchart')ptCreateNode(ptState.source);else{ptEnsureCells();ptState.cells[1][0]=(ptState.cells[1][0]?' ':'')+ptState.source;renderParagraphTransformer();}}
-    function ptCreateNode(text){const i=ptState.nodes.length,t=String(text||'New node');ptState.nodes.push({text:t,x:70+(i%4)*300,y:70+Math.floor(i/4)*190,w:Math.max(150,Math.min(380,t.length*8+34)),h:76,fs:14,bg:'#1f2937',border:'#38bdf8',line:1});ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
+    function ptCreateNode(text){const i=ptState.nodes.length,t=String(text||'New node');ptState.nodes.push({text:t,x:70+(i%3)*360,y:70+Math.floor(i/3)*190,w:0,h:0,fs:14});ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptAddNode(){ptCreateNode('New node');}
     function ptSelectNode(i){ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptSetProp(k,v){const n=ptState.nodes[ptState.activeNode];if(n){n[k]=Number(v);renderParagraphTransformer();}}
@@ -3858,10 +3903,11 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptNodePointerDown(e,i){
       if(ptState.drawArrow||e.target.isContentEditable)return;
       e.preventDefault();e.stopPropagation();
-      const handle=e.currentTarget,node=handle.closest('.pt-node'),canvas=document.getElementById('pt-canvas'),scaleX=canvas.clientWidth/1100,scaleY=canvas.clientHeight/720;
+      const handle=e.currentTarget,node=handle.closest('.pt-node'),canvas=document.getElementById('pt-canvas'),rect=canvas.getBoundingClientRect();
       ptState.activeNode=i;ptState.activeArrow=-1;
       const sx=e.clientX,sy=e.clientY,ox=ptState.nodes[i].x,oy=ptState.nodes[i].y;
-      handle.setPointerCapture?.(e.pointerId);
+      const scaleX=rect.width/1800,scaleY=rect.height/1200;
+      try{handle.setPointerCapture(e.pointerId);}catch(_){}
       const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ox+(ev.clientX-sx)/Math.max(.01,scaleX));n.y=Math.max(0,oy+(ev.clientY-sy)/Math.max(.01,scaleY));node.style.left=n.x+'px';node.style.top=n.y+'px';};
       const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);renderParagraphTransformer();};
       handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
@@ -3870,26 +3916,22 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptBindCanvasDrawing(){
       const canvas=document.getElementById('pt-canvas'),svg=document.getElementById('pt-svg');
       if(!canvas||!svg)return;
+      const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1800/r.width,y:(ev.clientY-r.top)*1200/r.height};};
       canvas.addEventListener('pointerdown',e=>{
         if(!ptState.drawArrow)return;
         e.preventDefault();e.stopPropagation();
-        const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1800/r.width,y:(ev.clientY-r.top)*1200/r.height};};
         const p=point(e),preview=svg.querySelector('#pt-preview-arrow');
         preview.style.display='';preview.setAttribute('x1',p.x);preview.setAttribute('y1',p.y);preview.setAttribute('x2',p.x);preview.setAttribute('y2',p.y);
         try{canvas.setPointerCapture(e.pointerId);}catch(_){}
         const move=ev=>{const q=point(ev);preview.setAttribute('x2',q.x);preview.setAttribute('y2',q.y);};
-        const up=ev=>{
-          canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);
-          const q=point(ev);
-          if(Math.hypot(q.x-p.x,q.y-p.y)>14){ptState.arrows.push({x1:p.x,y1:p.y,x2:q.x,y2:q.y,width:4,color:'#38bdf8'});ptState.activeArrow=ptState.arrows.length-1;}
-          ptState.drawArrow=false;renderParagraphTransformer();
-        };
-        const cancel=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);ptState.drawArrow=false;renderParagraphTransformer();};
+        const cleanup=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);};
+        const up=ev=>{cleanup();const q=point(ev);if(Math.hypot(q.x-p.x,q.y-p.y)>10){ptState.arrows.push({x1:p.x,y1:p.y,x2:q.x,y2:q.y,width:2,color:'theme'});}ptState.drawArrow=false;renderParagraphTransformer();};
+        const cancel=()=>{cleanup();ptState.drawArrow=false;renderParagraphTransformer();};
         canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
       });
     }
     function ptSelectArrow(i){ptState.activeArrow=i;ptState.activeNode=-1;renderParagraphTransformer();}
-    function ptSetArrowProp(k,v){const a=ptState.arrows[ptState.activeArrow??-1];if(a){a[k]=k==='width'?Number(v):v;renderParagraphTransformer();}}
+    function ptSetArrowProp(k,v){return;}
     function ptDeleteArrow(){const i=ptState.activeArrow??ptState.arrows.length-1;if(i<0||!ptState.arrows.length)return;ptState.arrows.splice(i,1);ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptDeleteNode(){if(ptState.activeNode<0)return;ptState.nodes.splice(ptState.activeNode,1);ptState.activeNode=-1;renderParagraphTransformer();}
     function ptEnsureCells(){if(!ptState.cells)ptState.cells=Array.from({length:ptState.rows},()=>Array(ptState.cols).fill(''));while(ptState.cells.length<ptState.rows)ptState.cells.push(Array(ptState.cols).fill(''));ptState.cells=ptState.cells.map(row=>{while(row.length<ptState.cols)row.push('');return row.slice(0,ptState.cols);});}
@@ -3904,7 +3946,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       let html='';
       if(ptState.mode==='flowchart'){
         if(!ptState.nodes.length){showToast('Add at least one flowchart node first.');return;}
-        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><defs><marker id="savedFlowArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>'+ptState.arrows.map(a=>{const dx=a.x2-a.x1,dy=a.y2-a.y1,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len,head=Math.max(12,a.width*4),half=head*.55,bx=a.x2-ux*head,by=a.y2-uy*head,px=-uy*half,py=ux*half;return `<path d="M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}" stroke="${a.color}" stroke-width="${a.width}" fill="none" stroke-linecap="round"/><polygon points="${a.x2},${a.y2} ${bx+px},${by+py} ${bx-px},${by-py}" fill="${a.color}"/>`;}).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:${n.w/2}px;height:${n.h/2}px;box-sizing:border-box;padding:8px;border:${n.line}px solid ${n.border};border-radius:9px;background:${n.bg};color:white;text-align:center;font-size:${n.fs}px;overflow:auto;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
+        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none"><defs><marker id="savedFlowArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>'+ptState.arrows.map(a=>`<line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#savedFlowArrow)"/>`).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:max-content;max-width:180px;min-width:36px;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border-strong);border-radius:9px;background:var(--bg-nested);color:var(--text-main);text-align:center;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
       }else{
         ptEnsureCells();
         html='<div class="table-wrapper my-3" style="width:100%"><div class="overflow-x-auto"><table class="notion-table"><thead><tr>'+ptState.cells[0].map(v=>`<th contenteditable="true">${escapeHTML(v)}</th>`).join('')+'</tr></thead><tbody>'+ptState.cells.slice(1).map(row=>'<tr>'+row.map(v=>`<td contenteditable="true">${escapeHTML(v)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div></div>';
@@ -3922,12 +3964,57 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function createQuestionAnswer(){
       const sel=window.getSelection(); if(!sel||sel.isCollapsed||!sel.rangeCount){showToast('Select the question text first.');return;}
       const range=sel.getRangeAt(0);const canvas=document.getElementById('notes-canvas');if(!canvas.contains(range.commonAncestorContainer)){showToast('Select text inside the chapter.');return;}
-      const question=range.toString().trim();if(!question)return;const answer=prompt('Enter the answer that should appear when the question is tapped:');if(answer===null||!answer.trim())return;
-      const span=document.createElement('span');span.className='cloze-question';span.innerHTML=`<span class="qa-question">${escapeHTML(question)}</span><span class="qa-answer" hidden>${escapeHTML(answer.trim())}</span>`;
-      try{range.surroundContents(span);}catch(e){const f=range.extractContents();span.querySelector('.qa-question').textContent=question;range.insertNode(span);}
+      const question=range.toString().trim();if(!question)return;
+      const answer=prompt('Enter the answer that should appear when the question is tapped:');if(answer===null||!answer.trim())return;
+      const span=document.createElement('span');span.className='cloze-question';span.setAttribute('role','button');span.setAttribute('tabindex','0');
+      const q=document.createElement('span');q.className='qa-question';q.textContent=question;
+      const a=document.createElement('span');a.className='qa-answer';a.textContent=answer.trim();a.style.display='none';
+      span.append(q,a);
+      try{range.deleteContents();range.insertNode(span);}catch(err){showToast('Please select text within one paragraph or table cell.');return;}
       sel.removeAllRanges();scheduleAutoSave(true);showToast('Tap-to-reveal Q&A inserted.');
     }
 
+
+
+    /* Diagram label occlusion: paint rectangular masks over an image, tap masks to reveal in Recall Mode. */
+    let domState={img:null,rects:[],start:null};
+    function openDiagramOcclusion(){
+      if(!isEditMode){showToast('Switch to Edit Mode, then select a diagram image first.');return;}
+      const sel=window.getSelection(),canvas=document.getElementById('notes-canvas');
+      let node=sel&&sel.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement):null;
+      let img=(window.__selectedDiagramImage&&window.__selectedDiagramImage.isConnected)?window.__selectedDiagramImage:(node&&node.closest?node.closest('img'):null);
+      if(!img){showToast('Place the cursor on or select the diagram image you want to label-mask.');return;}
+      domState={img,rects:[],start:null};
+      const wrap=img.closest('.diagram-occlusion-wrap');
+      if(wrap){domState.rects=[...wrap.querySelectorAll('.diagram-mask')].map(m=>({x:parseFloat(m.style.left)||0,y:parseFloat(m.style.top)||0,w:parseFloat(m.style.width)||0,h:parseFloat(m.style.height)||0}));}
+      const modal=document.getElementById('diagram-occlusion-modal')||createDiagramOcclusionModal();
+      const stage=modal.querySelector('.dom-stage');stage.innerHTML='';
+      const preview=img.cloneNode(true);preview.removeAttribute('contenteditable');preview.style.maxWidth='100%';preview.style.height='auto';
+      const layer=document.createElement('div');layer.className='dom-draw-layer';
+      stage.append(preview,layer);layer.style.left='0';layer.style.top='0';layer.style.width=preview.clientWidth+'px';layer.style.height=preview.clientHeight+'px';
+      const draw=()=>{layer.querySelectorAll('.dom-rect').forEach(x=>x.remove());domState.rects.forEach(r=>{const el=document.createElement('div');el.className='dom-rect';el.style.cssText=`left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%`;layer.appendChild(el);});};
+      const coords=e=>{const r=preview.getBoundingClientRect();return {x:Math.max(0,Math.min(100,(e.clientX-r.left)*100/r.width)),y:Math.max(0,Math.min(100,(e.clientY-r.top)*100/r.height))};};
+      layer.onpointerdown=e=>{e.preventDefault();const p=coords(e);domState.start=p;try{layer.setPointerCapture(e.pointerId)}catch(_){};};
+      layer.onpointermove=e=>{if(!domState.start)return;const p=coords(e),r={x:Math.min(p.x,domState.start.x),y:Math.min(p.y,domState.start.y),w:Math.abs(p.x-domState.start.x),h:Math.abs(p.y-domState.start.y)};draw();const el=document.createElement('div');el.className='dom-rect';el.style.cssText=`left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%`;layer.appendChild(el);};
+      layer.onpointerup=e=>{if(!domState.start)return;const p=coords(e),a=domState.start;const r={x:Math.min(p.x,a.x),y:Math.min(p.y,a.y),w:Math.abs(p.x-a.x),h:Math.abs(p.y-a.y)};if(r.w>1&&r.h>1)domState.rects.push(r);domState.start=null;draw();};
+      draw();modal.classList.add('open');
+    }
+    function createDiagramOcclusionModal(){
+      const m=document.createElement('div');m.id='diagram-occlusion-modal';
+      m.innerHTML=`<div class="dom-shell"><div class="p-3 flex items-center gap-2 border-b" style="border-color:var(--border-color)"><strong style="flex:1">Diagram Occlusion</strong><button class="pt-btn" onclick="domState.rects.pop();openDiagramOcclusionRefresh()">↶ Undo mask</button><button class="pt-btn" onclick="document.getElementById('diagram-occlusion-modal').classList.remove('open')">Cancel</button><button class="pt-btn primary" onclick="applyDiagramOcclusion()">✓ Apply</button></div><div class="p-2 text-xs theme-muted">Draw rectangles over labels. In Reading/Recall Mode, tap a covered label to reveal it.</div><div class="dom-stage"></div></div>`;
+      document.body.appendChild(m);return m;
+    }
+    function openDiagramOcclusionRefresh(){const layer=document.querySelector('#diagram-occlusion-modal .dom-draw-layer');if(!layer)return;layer.querySelectorAll('.dom-rect').forEach(x=>x.remove());domState.rects.forEach(r=>{const el=document.createElement('div');el.className='dom-rect';el.style.cssText=`left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%`;layer.appendChild(el);});}
+    function openDiagramOcclusionForExisting(img){const wrap=img.closest('.diagram-occlusion-wrap');if(!wrap)return;const sel=window.getSelection();const range=document.createRange();range.selectNode(img);sel.removeAllRanges();sel.addRange(range);openDiagramOcclusion();}
+    function applyDiagramOcclusion(){
+      const img=domState.img;if(!img)return;
+      recordRollingSnapshot('Before diagram occlusion');
+      let wrap=img.closest('.diagram-occlusion-wrap');
+      if(!wrap){wrap=document.createElement('span');wrap.className='diagram-occlusion-wrap';img.parentNode.insertBefore(wrap,img);wrap.appendChild(img);}
+      wrap.querySelectorAll('.diagram-mask').forEach(m=>m.remove());
+      domState.rects.forEach(r=>{const mask=document.createElement('span');mask.className='diagram-mask';mask.style.cssText=`left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%`;wrap.appendChild(mask);});
+      document.getElementById('diagram-occlusion-modal').classList.remove('open');window.__selectedDiagramImage=img;scheduleAutoSave(true);showToast('Diagram label masks added. Tap each mask in Reading/Recall Mode to reveal.');
+    }
     function addNewTableBlock() {
       if (!isEditMode) toggleEditMode();
       const canvas = document.getElementById('notes-canvas');
@@ -4123,41 +4210,49 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
 <script>
 (function(){
+  function ensureTopicOverlay(){
+    let ov=document.getElementById('topic-reading-overlay');if(ov)return ov;
+    ov=document.createElement('div');ov.id='topic-reading-overlay';
+    ov.innerHTML=`<div class="tro-bar"><strong id="tro-title" style="flex:1">Topic</strong>
+      <button class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button><button class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
+      <button class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button><button class="pt-btn" onclick="closeTopicReading()">✕ Close</button></div>
+      <main class="tro-content" id="tro-content"></main>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{const qa=e.target.closest('.cloze-question');if(qa){e.preventDefault();const open=!qa.classList.contains('qa-open');qa.classList.toggle('qa-open',open);const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q)q.style.display=open?'none':'';if(a)a.style.display=open?'inline':'none';return;}const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');});
+    return ov;
+  }
+  window.closeTopicReading=function(){const ov=document.getElementById('topic-reading-overlay');if(ov)ov.classList.remove('open');document.body.style.overflow='';};
+  window.topicHideClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.add('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.remove('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='';if(a)a.style.display='none';});};
+  window.topicRevealClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.remove('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.add('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='none';if(a)a.style.display='inline';});};
+
   function openTopicInWindow(button){
-    const block=button.closest('.toggle-block'); if(!block)return;
+    if(document.body.classList.contains('edit-mode')){showToast('Switch to Reading Mode to open a topic full page.');return;}
+    const block=button.closest('.toggle-block');if(!block)return;
     const heading=block.querySelector(':scope > .toggle-header h2, :scope > .toggle-header h3');
     const title=heading?heading.innerText.trim():'Topic';
-    const source=block.querySelector(':scope > .toggle-body');
-    if(!source)return;
+    const source=block.querySelector(':scope > .toggle-body');if(!source)return;
     const content=source.cloneNode(true);
     content.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-    content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.toggle-arrow').forEach(el=>el.remove());
+    content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.toggle-arrow,.topic-open-page').forEach(el=>el.remove());
     content.querySelectorAll('.toggle-block').forEach(el=>{el.classList.remove('collapsed');const body=el.querySelector(':scope > .toggle-body');if(body)body.style.display='block';});
-    const styleNodes=[...document.head.querySelectorAll('style,link[rel="stylesheet"]')].map(el=>el.outerHTML).join('\n');
-    const themeClass=document.documentElement.className;
-    const themeVars=getComputedStyle(document.documentElement);
-    const vars=['--bg-main','--bg-panel','--bg-nested','--bg-hover','--border-color','--border-strong','--text-main','--text-muted','--text-heading','--table-th','--table-td','--cloze-revealed','--cloze-line','--note-font','--note-size'].map(k=>`${k}:${themeVars.getPropertyValue(k)}`).join(';');
-    const win=window.open('','_blank');
-    if(!win){showToast('Allow pop-ups to open a topic in a new window.');return;}
-    win.document.open();
-    win.document.write(`<!doctype html><html class="${themeClass}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHTML(title)}</title>${styleNodes}<style>
-      :root{${vars}} body{margin:0!important;background:var(--bg-main)!important;color:var(--text-main)!important}
-      .topic-page{max-width:1180px;margin:0 auto;padding:28px clamp(16px,4vw,56px) 80px;line-height:1.7}
-      .topic-page .topic-title{font-size:clamp(22px,3vw,32px);font-weight:750;color:var(--text-heading);margin:0 0 24px;padding-bottom:14px;border-bottom:1px solid var(--border-color)}
-      .topic-page .toggle-block{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;margin:0 0 18px!important;box-shadow:none!important}
-      .topic-page .toggle-header{display:flex!important;align-items:center;border:0!important;padding:0!important;margin:0 0 8px!important}
-      .topic-page .toggle-header h2,.topic-page .toggle-header h3{color:var(--text-heading)!important}
-      .topic-page .toggle-body{display:block!important;padding:0!important;margin:0!important}
-      .topic-page .toggle-arrow{display:none!important}
-      .topic-page .edit-only,.topic-page .table-toolbar,.topic-page .img-controls{display:none!important}
-      .topic-page table{max-width:100%}
-      .topic-page img{max-width:100%;height:auto}
-      .topic-top{position:sticky;top:0;z-index:100;background:var(--bg-main);border-bottom:1px solid var(--border-color);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
-      .topic-top button{border:1px solid var(--border-color);border-radius:8px;padding:6px 12px;color:var(--text-main)}
-      @media print{.topic-top{display:none}.topic-page{max-width:none;padding:0}}
-    </style></head><body><div class="topic-top"><strong>${escapeHTML(title)}</strong><div><button onclick="window.print()">Print</button><button onclick="window.close()">Close</button></div></div><main class="topic-page"><h1 class="topic-title">${escapeHTML(title)}</h1><div id="topic-content">${content.innerHTML}</div></main>
-    <script>document.getElementById('topic-content').addEventListener('click',function(e){const qa=e.target.closest('.cloze-question');if(qa){e.preventDefault();qa.classList.toggle('qa-open');const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q&&a){q.hidden=qa.classList.contains('qa-open');a.hidden=!qa.classList.contains('qa-open');}return;}const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');});<\/script>
-    </body></html>`);
+    const ov=ensureTopicOverlay();document.getElementById('tro-title').textContent=title;
+    const target=document.getElementById('tro-content');target.innerHTML='';target.appendChild(content);
+    ov.classList.add('open');document.body.style.overflow='hidden';
+  }
+  function addButtons(root){
+    (root||document).querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header=>{
+      if(header.querySelector(':scope > .topic-open-page'))return;
+      const btn=document.createElement('button');btn.type='button';btn.className='topic-open-page';btn.textContent='↗ Full page';btn.title='Open this topic in a clean reading view';
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openTopicInWindow(btn);});
+      header.appendChild(btn);
+    });
+  }
+  function start(){const canvas=document.getElementById('notes-canvas');if(!canvas)return;addButtons(canvas);new MutationObserver(()=>addButtons(canvas)).observe(canvas,{childList:true,subtree:true});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+</body></html>`);
     win.document.close();
   }
   function addButtons(root){
@@ -4174,6 +4269,16 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     new MutationObserver(()=>addButtons(canvas)).observe(canvas,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+
+<script>
+(function(){
+ function sizeToolbar(){const bar=document.getElementById('top-toolbar');if(bar){document.documentElement.style.setProperty('--toolbar-height',(bar.offsetHeight+8)+'px');}}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sizeToolbar);else sizeToolbar();
+ window.addEventListener('resize',sizeToolbar);
+ if(window.ResizeObserver){const bar=document.getElementById('top-toolbar');if(bar)new ResizeObserver(sizeToolbar).observe(bar);}
 })();
 </script>
 
