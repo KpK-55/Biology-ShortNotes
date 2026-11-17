@@ -579,6 +579,13 @@
     #paragraph-transformer .pt-pane { min-width:0; min-height:0; overflow:auto; padding:14px; }
     #paragraph-transformer .pt-pane + .pt-pane { border-left:1px solid var(--border-color); }
     #paragraph-transformer .pt-source { white-space:pre-wrap; line-height:1.8; padding:12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--bg-nested); user-select:text; }
+    #top-toolbar { position: sticky !important; top: 0 !important; z-index: 1000 !important; align-self: stretch; width: 100%; }
+    #paragraph-transformer .pt-canvas { touch-action: pan-x pan-y; }
+    #paragraph-transformer .pt-canvas.drawing { touch-action: none; cursor: crosshair; }
+    #paragraph-transformer .pt-node-handle { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+    #paragraph-transformer .pt-node-handle:active { cursor: grabbing; }
+    .topic-open-page { flex: 0 0 auto; margin-left: auto; padding: 2px 7px; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); font-size: 11px; line-height: 1.5; }
+    .topic-open-page:hover { color: var(--text-heading); background: var(--bg-hover); }
     #paragraph-transformer .pt-node { position:relative; padding:9px 12px; border:1px solid var(--border-strong); border-radius:9px; background:var(--bg-nested); text-align:center; margin:8px auto; max-width:90%; cursor:grab; }
     #paragraph-transformer .pt-node.selected { outline:2px solid #38bdf8; }
     #paragraph-transformer .pt-arrow { text-align:center; color:var(--text-muted); line-height:1.1; }
@@ -684,7 +691,7 @@
   <div id="main-wrapper" class="min-h-screen flex flex-col">
 
     <!-- Top Sticky Action & Active Recall Toolbar -->
-    <header id="top-toolbar" class="fixed top-0 left-0 right-0 z-40 theme-panel/95 backdrop-blur-md border-b px-3 sm:px-5 py-2">
+    <header id="top-toolbar" class="sticky top-0 left-0 right-0 z-50 theme-panel/95 backdrop-blur-md border-b px-3 sm:px-5 py-2">
       <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
         
         <!-- Left: Persistent Hamburger Button (Portrait & Landscape) + Mode Switch + Cloze Controls -->
@@ -3831,8 +3838,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           <label>Border <input type="color" value="${n.border}" onchange="ptSetProp('border',this.value)"></label>
           <label>Border px <input type="number" min="1" max="12" value="${n.line}" onchange="ptSetProp('line',this.value)"></label></div>`:'<div class="text-[10px] theme-muted mb-2">Drag nodes anywhere. Select a node to change its size and colour. Use Draw arrow and drag from tail to arrowhead.</div>')+
           (a?`<div class="pt-inspector"><b class="text-[10px]">ARROW</b><label>Thickness <input type="number" min="1" max="18" value="${a.width}" onchange="ptSetArrowProp('width',this.value)"></label><label>Colour <input type="color" value="${a.color}" onchange="ptSetArrowProp('color',this.value)"></label><button class="pt-btn" onclick="ptDeleteArrow()">Delete arrow</button></div>`:'');
-        const edges=ptState.arrows.map((ar,i)=>`<g><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="${ar.color}" stroke-width="${ar.width}" fill="none" marker-end="url(#ptArrowHead)" stroke-linecap="round"/><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="transparent" stroke-width="16" fill="none" onclick="ptSelectArrow(${i})"/></g>`).join('');
-        document.getElementById('pt-workspace').innerHTML=inspector+`<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: drag from the tail to the arrowhead.':'Free positioning; arrows can point in any direction and do not need to connect to nodes.'}</div><div class="pt-viewport" id="pt-viewport"><div class="pt-canvas" id="pt-canvas"><svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none"><defs><marker id="ptArrowHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="#38bdf8" stroke-width="3" marker-end="url(#ptArrowHead)" style="display:none"/></svg>${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" style="left:${v.x}px;top:${v.y}px;width:${v.w}px;height:${v.h}px;min-height:${v.h}px;background:${v.bg};border:${v.line}px solid ${v.border};font-size:${v.fs}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" onclick="ptSelectNode(${i})" title="Drag node">⠿</div><div contenteditable="true" oninput="ptNodeText(${i},this)" style="width:100%;height:calc(100% - 14px);outline:none;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(v.text)}</div></div>`).join('')}</div></div>`;
+        const edges=ptState.arrows.map((ar,i)=>{const dx=ar.x2-ar.x1,dy=ar.y2-ar.y1,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len,head=Math.max(12,ar.width*4),half=head*.55,bx=ar.x2-ux*head,by=ar.y2-uy*head,px=-uy*half,py=ux*half;return `<g onclick="ptSelectArrow(${i})" style="cursor:pointer"><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="${ar.color}" stroke-width="${ar.width}" fill="none" stroke-linecap="round"/><polygon points="${ar.x2},${ar.y2} ${bx+px},${by+py} ${bx-px},${by-py}" fill="${ar.color}"/><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="transparent" stroke-width="18" fill="none"/></g>`}).join('');
+        document.getElementById('pt-workspace').innerHTML=inspector+`<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: drag from the tail to the arrowhead.':'Free positioning; arrows can point in any direction and do not need to connect to nodes.'}</div><div class="pt-viewport" id="pt-viewport"><div class="pt-canvas ${ptState.drawArrow?'drawing':''}" id="pt-canvas"><svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none">${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="#38bdf8" stroke-width="3" style="display:none"/></svg>${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" style="left:${v.x}px;top:${v.y}px;width:${v.w}px;height:${v.h}px;min-height:${v.h}px;background:${v.bg};border:${v.line}px solid ${v.border};font-size:${v.fs}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" onclick="ptSelectNode(${i})" title="Drag node">⠿</div><div contenteditable="true" oninput="ptNodeText(${i},this)" style="width:100%;height:calc(100% - 14px);outline:none;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(v.text)}</div></div>`).join('')}</div></div>`;
         ptBindCanvasDrawing();
       }else{
         let html='<table class="pt-table"><tbody>';
@@ -3848,9 +3855,39 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptSelectNode(i){ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptSetProp(k,v){const n=ptState.nodes[ptState.activeNode];if(n){n[k]=Number(v);renderParagraphTransformer();}}
     function ptNodeText(i,el){if(ptState.nodes[i])ptState.nodes[i].text=el.innerText;}
-    function ptNodePointerDown(e,i){if(e.target.isContentEditable||ptState.drawArrow)return;e.preventDefault();const node=e.currentTarget,canvas=document.getElementById('pt-canvas');ptState.activeNode=i;ptState.activeArrow=-1;const sx=e.clientX,sy=e.clientY,ox=ptState.nodes[i].x,oy=ptState.nodes[i].y;node.setPointerCapture?.(e.pointerId);const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ox+(ev.clientX-sx)*1800/canvas.clientWidth);n.y=Math.max(0,oy+(ev.clientY-sy)*1200/canvas.clientHeight);node.style.left=n.x+'px';node.style.top=n.y+'px';};const up=()=>{node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);renderParagraphTransformer();};node.addEventListener('pointermove',move);node.addEventListener('pointerup',up);node.addEventListener('pointercancel',up);}
+    function ptNodePointerDown(e,i){
+      if(ptState.drawArrow||e.target.isContentEditable)return;
+      e.preventDefault();e.stopPropagation();
+      const handle=e.currentTarget,node=handle.closest('.pt-node'),canvas=document.getElementById('pt-canvas'),scaleX=canvas.clientWidth/1100,scaleY=canvas.clientHeight/720;
+      ptState.activeNode=i;ptState.activeArrow=-1;
+      const sx=e.clientX,sy=e.clientY,ox=ptState.nodes[i].x,oy=ptState.nodes[i].y;
+      handle.setPointerCapture?.(e.pointerId);
+      const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ox+(ev.clientX-sx)/Math.max(.01,scaleX));n.y=Math.max(0,oy+(ev.clientY-sy)/Math.max(.01,scaleY));node.style.left=n.x+'px';node.style.top=n.y+'px';};
+      const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);renderParagraphTransformer();};
+      handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
+    }
     function ptToggleDrawArrow(){ptState.drawArrow=!ptState.drawArrow;ptState.activeArrow=-1;renderParagraphTransformer();}
-    function ptBindCanvasDrawing(){const canvas=document.getElementById('pt-canvas'),svg=document.getElementById('pt-svg');if(!canvas||!svg)return;canvas.addEventListener('pointerdown',e=>{if(!ptState.drawArrow||e.target.closest('.pt-node'))return;e.preventDefault();const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*1800/r.width,y=(e.clientY-r.top)*1200/r.height,preview=svg.querySelector('#pt-preview-arrow');preview.style.display='';preview.setAttribute('x1',x);preview.setAttribute('y1',y);preview.setAttribute('x2',x);preview.setAttribute('y2',y);const move=ev=>{const rr=canvas.getBoundingClientRect();preview.setAttribute('x2',(ev.clientX-rr.left)*1800/rr.width);preview.setAttribute('y2',(ev.clientY-rr.top)*1200/rr.height);};const up=ev=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);const rr=canvas.getBoundingClientRect(),x2=(ev.clientX-rr.left)*1800/rr.width,y2=(ev.clientY-rr.top)*1200/rr.height;if(Math.hypot(x2-x,y2-y)>12){ptState.arrows.push({x1:x,y1:y,x2,y2,width:3,color:'#38bdf8'});ptState.activeArrow=ptState.arrows.length-1;}ptState.drawArrow=false;renderParagraphTransformer();};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up,{once:true});});}
+    function ptBindCanvasDrawing(){
+      const canvas=document.getElementById('pt-canvas'),svg=document.getElementById('pt-svg');
+      if(!canvas||!svg)return;
+      canvas.addEventListener('pointerdown',e=>{
+        if(!ptState.drawArrow)return;
+        e.preventDefault();e.stopPropagation();
+        const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1800/r.width,y:(ev.clientY-r.top)*1200/r.height};};
+        const p=point(e),preview=svg.querySelector('#pt-preview-arrow');
+        preview.style.display='';preview.setAttribute('x1',p.x);preview.setAttribute('y1',p.y);preview.setAttribute('x2',p.x);preview.setAttribute('y2',p.y);
+        try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+        const move=ev=>{const q=point(ev);preview.setAttribute('x2',q.x);preview.setAttribute('y2',q.y);};
+        const up=ev=>{
+          canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);
+          const q=point(ev);
+          if(Math.hypot(q.x-p.x,q.y-p.y)>14){ptState.arrows.push({x1:p.x,y1:p.y,x2:q.x,y2:q.y,width:4,color:'#38bdf8'});ptState.activeArrow=ptState.arrows.length-1;}
+          ptState.drawArrow=false;renderParagraphTransformer();
+        };
+        const cancel=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);ptState.drawArrow=false;renderParagraphTransformer();};
+        canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
+      });
+    }
     function ptSelectArrow(i){ptState.activeArrow=i;ptState.activeNode=-1;renderParagraphTransformer();}
     function ptSetArrowProp(k,v){const a=ptState.arrows[ptState.activeArrow??-1];if(a){a[k]=k==='width'?Number(v):v;renderParagraphTransformer();}}
     function ptDeleteArrow(){const i=ptState.activeArrow??ptState.arrows.length-1;if(i<0||!ptState.arrows.length)return;ptState.arrows.splice(i,1);ptState.activeArrow=-1;renderParagraphTransformer();}
@@ -3867,7 +3904,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       let html='';
       if(ptState.mode==='flowchart'){
         if(!ptState.nodes.length){showToast('Add at least one flowchart node first.');return;}
-        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><defs><marker id="savedFlowArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>'+ptState.arrows.map(a=>`<path d="M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}" stroke="${a.color}" stroke-width="${a.width}" fill="none" marker-end="url(#savedFlowArrow)"/>`).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:${n.w/2}px;height:${n.h/2}px;box-sizing:border-box;padding:8px;border:${n.line}px solid ${n.border};border-radius:9px;background:${n.bg};color:white;text-align:center;font-size:${n.fs}px;overflow:auto;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
+        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><defs><marker id="savedFlowArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>'+ptState.arrows.map(a=>{const dx=a.x2-a.x1,dy=a.y2-a.y1,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len,head=Math.max(12,a.width*4),half=head*.55,bx=a.x2-ux*head,by=a.y2-uy*head,px=-uy*half,py=ux*half;return `<path d="M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}" stroke="${a.color}" stroke-width="${a.width}" fill="none" stroke-linecap="round"/><polygon points="${a.x2},${a.y2} ${bx+px},${by+py} ${bx-px},${by-py}" fill="${a.color}"/>`;}).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:${n.w/2}px;height:${n.h/2}px;box-sizing:border-box;padding:8px;border:${n.line}px solid ${n.border};border-radius:9px;background:${n.bg};color:white;text-align:center;font-size:${n.fs}px;overflow:auto;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
       }else{
         ptEnsureCells();
         html='<div class="table-wrapper my-3" style="width:100%"><div class="overflow-x-auto"><table class="notion-table"><thead><tr>'+ptState.cells[0].map(v=>`<th contenteditable="true">${escapeHTML(v)}</th>`).join('')+'</tr></thead><tbody>'+ptState.cells.slice(1).map(row=>'<tr>'+row.map(v=>`<td contenteditable="true">${escapeHTML(v)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div></div>';
@@ -4083,5 +4120,62 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
   </script>
+
+<script>
+(function(){
+  function openTopicInWindow(button){
+    const block=button.closest('.toggle-block'); if(!block)return;
+    const heading=block.querySelector(':scope > .toggle-header h2, :scope > .toggle-header h3');
+    const title=heading?heading.innerText.trim():'Topic';
+    const source=block.querySelector(':scope > .toggle-body');
+    if(!source)return;
+    const content=source.cloneNode(true);
+    content.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+    content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.toggle-arrow').forEach(el=>el.remove());
+    content.querySelectorAll('.toggle-block').forEach(el=>{el.classList.remove('collapsed');const body=el.querySelector(':scope > .toggle-body');if(body)body.style.display='block';});
+    const styleNodes=[...document.head.querySelectorAll('style,link[rel="stylesheet"]')].map(el=>el.outerHTML).join('\n');
+    const themeClass=document.documentElement.className;
+    const themeVars=getComputedStyle(document.documentElement);
+    const vars=['--bg-main','--bg-panel','--bg-nested','--bg-hover','--border-color','--border-strong','--text-main','--text-muted','--text-heading','--table-th','--table-td','--cloze-revealed','--cloze-line','--note-font','--note-size'].map(k=>`${k}:${themeVars.getPropertyValue(k)}`).join(';');
+    const win=window.open('','_blank');
+    if(!win){showToast('Allow pop-ups to open a topic in a new window.');return;}
+    win.document.open();
+    win.document.write(`<!doctype html><html class="${themeClass}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHTML(title)}</title>${styleNodes}<style>
+      :root{${vars}} body{margin:0!important;background:var(--bg-main)!important;color:var(--text-main)!important}
+      .topic-page{max-width:1180px;margin:0 auto;padding:28px clamp(16px,4vw,56px) 80px;line-height:1.7}
+      .topic-page .topic-title{font-size:clamp(22px,3vw,32px);font-weight:750;color:var(--text-heading);margin:0 0 24px;padding-bottom:14px;border-bottom:1px solid var(--border-color)}
+      .topic-page .toggle-block{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;margin:0 0 18px!important;box-shadow:none!important}
+      .topic-page .toggle-header{display:flex!important;align-items:center;border:0!important;padding:0!important;margin:0 0 8px!important}
+      .topic-page .toggle-header h2,.topic-page .toggle-header h3{color:var(--text-heading)!important}
+      .topic-page .toggle-body{display:block!important;padding:0!important;margin:0!important}
+      .topic-page .toggle-arrow{display:none!important}
+      .topic-page .edit-only,.topic-page .table-toolbar,.topic-page .img-controls{display:none!important}
+      .topic-page table{max-width:100%}
+      .topic-page img{max-width:100%;height:auto}
+      .topic-top{position:sticky;top:0;z-index:100;background:var(--bg-main);border-bottom:1px solid var(--border-color);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+      .topic-top button{border:1px solid var(--border-color);border-radius:8px;padding:6px 12px;color:var(--text-main)}
+      @media print{.topic-top{display:none}.topic-page{max-width:none;padding:0}}
+    </style></head><body><div class="topic-top"><strong>${escapeHTML(title)}</strong><div><button onclick="window.print()">Print</button><button onclick="window.close()">Close</button></div></div><main class="topic-page"><h1 class="topic-title">${escapeHTML(title)}</h1><div id="topic-content">${content.innerHTML}</div></main>
+    <script>document.getElementById('topic-content').addEventListener('click',function(e){const qa=e.target.closest('.cloze-question');if(qa){e.preventDefault();qa.classList.toggle('qa-open');const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q&&a){q.hidden=qa.classList.contains('qa-open');a.hidden=!qa.classList.contains('qa-open');}return;}const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');});<\/script>
+    </body></html>`);
+    win.document.close();
+  }
+  function addButtons(root){
+    (root||document).querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header=>{
+      if(header.querySelector(':scope > .topic-open-page'))return;
+      const btn=document.createElement('button');btn.type='button';btn.className='topic-open-page';btn.textContent='↗ Full page';btn.title='Open this topic without toggle cards in a new window';
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openTopicInWindow(btn);});
+      header.appendChild(btn);
+    });
+  }
+  function start(){
+    const canvas=document.getElementById('notes-canvas');if(!canvas)return;
+    addButtons(canvas);
+    new MutationObserver(()=>addButtons(canvas)).observe(canvas,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
 </body>
 </html>
