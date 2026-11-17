@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>NEET BioNotes — Active Recall &amp; Fullscreen Reader</title>
+  <title>NEET BioNotes — Active Recall, Builders &amp; Fullscreen Reader</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,15 +128,25 @@
       left: 0 !important;
       right: 0 !important;
       width: 100% !important;
-      z-index: 1200 !important;
+      z-index: 40 !important;
       max-height: 45vh;
       overflow-y: auto;
       overscroll-behavior: contain;
+      transition: left 0.22s cubic-bezier(0.16, 1, 0.3, 1), width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     #main-wrapper {
       margin-left: 0;
       padding-top: var(--toolbar-height, 72px) !important;
       transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media (min-width: 1024px) {
+      body.sidebar-open #top-toolbar {
+        left: 18rem !important;
+        width: calc(100% - 18rem) !important;
+      }
+      body.sidebar-open #main-wrapper {
+        margin-left: 18rem;
+      }
     }
 
     /* Notion Toggle Block Transitions */
@@ -201,6 +211,22 @@
     body:not(.edit-mode) .cloze:not(.cloze-hidden) * {
       color: var(--cloze-revealed) !important;
       font-weight: 700;
+    }
+
+    /* Spaced-Repetition Hard Cloze Flagging */
+    .cloze[data-hard="1"] {
+      border-bottom-color: #f43f5e !important;
+    }
+    body:not(.edit-mode) .cloze[data-hard="1"]::after {
+      content: "•";
+      color: #f43f5e;
+      font-size: 10px;
+      vertical-align: super;
+      margin-left: 1px;
+    }
+    body.edit-mode .cloze[data-hard="1"] {
+      border-bottom: 2px dotted #f43f5e !important;
+      color: #fb7185 !important;
     }
 
     body.edit-mode .cloze {
@@ -312,7 +338,7 @@
     }
     body.edit-mode .table-wrapper:hover .table-edge-resizer { display: block; opacity: 1; }
 
-    /* Default Flowchart Flexbox Styling (for imported JSON flowcharts) */
+    /* Default Flowchart Flexbox Styling */
     .flowchart {
       display: flex;
       flex-wrap: wrap;
@@ -447,11 +473,9 @@
     #chapter-sidebar {
       transform: translateX(-100%);
       transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 60 !important;
     }
     body.sidebar-open #chapter-sidebar { transform: translateX(0); }
-    @media (min-width: 1024px) {
-      body.sidebar-open #main-wrapper { margin-left: 18rem; }
-    }
 
     /* Reading Mode */
     body.reading-mode {
@@ -513,14 +537,13 @@
     .topic-open-page {
       flex: 0 0 auto;
       margin-left: auto;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       color: var(--text-muted);
       font-size: 11px;
       line-height: 1.5;
       cursor: pointer;
-      user-select: none;
     }
     .topic-open-page:hover { color: var(--text-heading); background: var(--bg-hover); }
     body.edit-mode .topic-open-page { display: none !important; }
@@ -567,12 +590,25 @@
     #topic-reading-overlay .tro-content .toggle-arrow { display: none !important; }
     #topic-reading-overlay .tro-content .toggle-body { display: block !important; padding: 0 !important; margin: 0 !important; }
 
-    /* Paragraph Transformer (Flowchart & Table Builder) */
-    #paragraph-transformer { position: fixed; inset: 0; z-index: 1300; display: none; background: rgba(0, 0, 0, .82); padding: 10px; }
-    #paragraph-transformer.open { display: flex; align-items: center; justify-content: center; }
+    /* =====================================================================
+       STABLE SIDE-BY-SIDE PARAGRAPH TRANSFORMER (FLOWCHART & TABLE BUILDER)
+       ===================================================================== */
+    #paragraph-transformer {
+      position: fixed;
+      inset: 0;
+      z-index: 1300;
+      display: none;
+      background: rgba(0, 0, 0, 0.82);
+      padding: 10px;
+    }
+    #paragraph-transformer.open {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     #paragraph-transformer .pt-shell {
-      width: min(1480px, 100%);
-      height: min(92vh, 940px);
+      width: min(1440px, 100%);
+      height: min(92dvh, 920px);
       display: flex;
       flex-direction: column;
       background: var(--bg-panel);
@@ -580,10 +616,11 @@
       border: 1px solid var(--border-strong);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 20px 60px #0008;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
     }
     #paragraph-transformer .pt-head,
     #paragraph-transformer .pt-foot {
+      flex-shrink: 0;
       padding: 10px 14px;
       display: flex;
       align-items: center;
@@ -591,56 +628,70 @@
       gap: 8px;
       border-bottom: 1px solid var(--border-color);
       background: var(--bg-panel);
-      flex-shrink: 0;
     }
-    #paragraph-transformer .pt-foot { border-top: 1px solid var(--border-color); border-bottom: 0; }
-    /* Locked side-by-side layout across desktop, tablet & portrait */
+    #paragraph-transformer .pt-foot {
+      border-top: 1px solid var(--border-color);
+      border-bottom: 0;
+    }
+    /* Locked side-by-side grid across desktop & mobile landscape/portrait */
     #paragraph-transformer .pt-grid {
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: minmax(220px, 38%) minmax(0, 62%);
-      gap: 0;
+      grid-template-columns: minmax(210px, 38%) minmax(0, 62%);
+      grid-template-rows: minmax(0, 1fr);
       overflow: hidden;
+    }
+    @media (max-width: 620px) and (orientation: portrait) {
+      #paragraph-transformer { padding: 0; }
+      #paragraph-transformer .pt-shell { height: 100dvh; border-radius: 0; }
+      #paragraph-transformer .pt-grid {
+        grid-template-columns: minmax(145px, 42%) minmax(0, 58%);
+      }
     }
     #paragraph-transformer .pt-pane {
       min-width: 0;
       min-height: 0;
-      overflow: hidden;
-      padding: 12px;
       display: flex;
       flex-direction: column;
+      padding: 10px;
+      overflow: hidden;
     }
-    #paragraph-transformer .pt-pane + .pt-pane { border-left: 1px solid var(--border-color); }
-    #paragraph-transformer .pt-source-bar {
-      position: sticky;
-      top: 0;
-      z-index: 15;
-      background: var(--bg-panel);
-      padding-bottom: 8px;
-      flex-shrink: 0;
+    #paragraph-transformer .pt-pane + .pt-pane {
+      border-left: 1px solid var(--border-color);
     }
     #paragraph-transformer .pt-source {
       flex: 1;
-      min-height: 80px;
+      min-height: 0;
       overflow-y: auto;
       white-space: pre-wrap;
       line-height: 1.75;
-      padding: 12px;
+      padding: 10px 12px;
       border: 1px solid var(--border-strong);
       border-radius: 9px;
       background: var(--bg-nested);
       user-select: text;
       -webkit-user-select: text;
     }
-    #paragraph-transformer .pt-source-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    #paragraph-transformer #pt-tools {
+    #paragraph-transformer .pt-source-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
       flex-shrink: 0;
+    }
+    #paragraph-transformer #pt-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
       padding: 6px 8px;
+      margin-bottom: 8px;
       background: var(--bg-nested);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
-      margin-bottom: 8px;
+      border-radius: 9px;
+      flex-shrink: 0;
     }
     #paragraph-transformer #pt-workspace {
       flex: 1;
@@ -658,64 +709,83 @@
       background: var(--bg-nested);
       position: relative;
       touch-action: pan-x pan-y;
-      overscroll-behavior: contain;
     }
-    #paragraph-transformer .pt-zoom-sizer {
+    #paragraph-transformer .pt-zoom-stage {
+      position: relative;
+      transform-origin: 0 0;
+    }
+    #paragraph-transformer .pt-canvas {
       position: relative;
       width: 1600px;
       height: 1100px;
-    }
-    #paragraph-transformer .pt-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 1600px;
-      height: 1100px;
       transform-origin: 0 0;
-      background-image: radial-gradient(var(--border-color) 1.15px, transparent 1.15px);
+      background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
       background-size: 20px 20px;
       overflow: hidden;
+    }
+    #paragraph-transformer .pt-canvas.drawing {
+      touch-action: none;
+      cursor: crosshair;
+    }
+    #paragraph-transformer .pt-canvas svg {
+      position: absolute;
+      inset: 0;
+      width: 1600px;
+      height: 1100px;
+      overflow: visible;
+      pointer-events: none;
+    }
+    #paragraph-transformer .pt-canvas svg .pt-arrow-hit,
+    #paragraph-transformer .pt-canvas svg .pt-arrow-handle {
+      pointer-events: all;
+      cursor: pointer;
+    }
+    #paragraph-transformer .pt-canvas svg .pt-arrow-handle {
       cursor: grab;
     }
-    #paragraph-transformer .pt-canvas.panning { cursor: grabbing; }
-    #paragraph-transformer .pt-canvas.drawing { touch-action: none; cursor: crosshair; }
-    #paragraph-transformer .pt-canvas svg { position: absolute; inset: 0; width: 1600px; height: 1100px; overflow: visible; }
-    #paragraph-transformer .pt-canvas svg .pt-arrow-hit { pointer-events: stroke; cursor: move; }
-    #paragraph-transformer .pt-canvas svg .pt-arrow-handle { pointer-events: all; cursor: grab; }
-    #paragraph-transformer .pt-canvas svg .pt-arrow-handle:active { cursor: grabbing; }
     #paragraph-transformer .pt-node {
       position: absolute;
       margin: 0;
       width: max-content !important;
       height: auto !important;
-      min-width: 80px;
-      max-width: 380px;
-      padding: 8px 13px !important;
-      border-radius: 9px;
+      min-width: 75px;
+      max-width: 300px;
+      padding: 9px 13px !important;
+      border-radius: 10px;
       background: var(--bg-panel) !important;
       color: var(--text-main) !important;
-      border: 1.5px solid var(--border-strong) !important;
+      border: 1px solid var(--border-strong) !important;
       text-align: center;
+      font-size: 14.5px;
+      line-height: 1.4;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
       box-sizing: border-box;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
       user-select: none;
       -webkit-user-select: none;
       z-index: 3;
     }
     #paragraph-transformer .pt-node.selected { outline: 2px solid #38bdf8; z-index: 6; }
     #paragraph-transformer .pt-node-handle {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
       height: 15px;
+      padding: 0 8px;
       line-height: 13px;
       text-align: center;
-      font-size: 11px;
-      opacity: .65;
+      font-size: 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      color: var(--text-muted);
       cursor: grab;
       touch-action: none;
-      letter-spacing: 2px;
-      border-bottom: 1px dashed var(--border-color);
-      margin-bottom: 4px;
+      letter-spacing: 1px;
+      opacity: 0.9;
     }
     #paragraph-transformer .pt-node-handle:active { cursor: grabbing; }
     #paragraph-transformer .pt-node [contenteditable="true"] {
@@ -729,9 +799,18 @@
       -webkit-user-select: text;
       cursor: text;
     }
-    #paragraph-transformer .pt-btn { padding: 5px 9px; border-radius: 7px; border: 1px solid var(--border-strong); font-size: 12px; background: var(--bg-panel); cursor: pointer; }
+    #paragraph-transformer .pt-btn {
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border-strong);
+      font-size: 11.5px;
+      background: var(--bg-panel);
+      color: var(--text-main);
+      cursor: pointer;
+    }
     #paragraph-transformer .pt-btn:hover { background: var(--bg-hover); }
     #paragraph-transformer .pt-btn.primary { background: #0369a1; color: white; border-color: #0284c7; }
+    #paragraph-transformer .pt-table-scroll { flex: 1; overflow: auto; }
     #paragraph-transformer .pt-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     #paragraph-transformer .pt-table td,
     #paragraph-transformer .pt-table th { border: 1px solid var(--border-strong); padding: 7px; min-width: 70px; vertical-align: top; }
@@ -739,18 +818,6 @@
 
     .pt-generated-flow { isolation: isolate; contain: layout paint; }
     .pt-generated-flow .pt-saved-node { z-index: 1; }
-
-    @media (max-width: 900px) {
-      #top-toolbar { max-height: 48vh; }
-      #topic-reading-overlay .tro-content { padding: 14px 12px 40px; }
-      #paragraph-transformer { padding: 0 !important; }
-      #paragraph-transformer .pt-shell { width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; }
-      /* Keep side-by-side split even on compact screens */
-      #paragraph-transformer .pt-grid { grid-template-columns: minmax(150px, 42%) minmax(0, 58%) !important; grid-template-rows: 1fr !important; }
-      #paragraph-transformer .pt-pane { padding: 8px !important; }
-      #paragraph-transformer .pt-head { flex-wrap: wrap; padding: 8px 10px !important; }
-      #paragraph-transformer .pt-foot { padding: 8px 10px !important; }
-    }
 
     @media print {
       @page { size: A4 portrait; margin: 14mm 14mm 16mm 14mm; }
@@ -781,7 +848,7 @@
   <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden"></div>
 
   <!-- MULTI-CHAPTER NCERT LIBRARY SIDEBAR -->
-  <aside id="chapter-sidebar" class="fixed top-0 left-0 bottom-0 w-72 theme-panel border-r z-50 flex flex-col shadow-2xl lg:shadow-none">
+  <aside id="chapter-sidebar" class="fixed top-0 left-0 bottom-0 w-72 theme-panel border-r flex flex-col shadow-2xl lg:shadow-none">
     <div class="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
@@ -855,6 +922,7 @@
 
           <div id="recall-controls" class="flex items-center gap-1 bg-[var(--bg-nested)] border border-[var(--border-color)] rounded-lg p-1">
             <button onclick="hideAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition">🙈 Hide</button>
+            <button onclick="hideHardClozesOnly()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-rose-400 transition" title="Mask only Hard-flagged clozes (double-tap or right-click any cloze to flag)">🎯 Hard</button>
             <button onclick="revealAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-sky-400 transition">👁️ Reveal</button>
             <span id="cloze-counter" class="px-2 py-0.5 text-[11px] font-mono theme-muted border-l border-[var(--border-color)]">0/0</span>
           </div>
@@ -999,7 +1067,7 @@
           Chapter 15: Body Fluids and Circulation
         </h1>
         <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
-          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.
+          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.
         </p>
       </div>
 
@@ -1100,7 +1168,7 @@
   </div>
 
   <!-- =====================================================================
-       COMPLETE PRE-LOADED CHAPTER 15 TEMPLATE (ALL 8 SECTIONS)
+       PRE-LOADED CHAPTER 15 TEMPLATE (ALL 8 SECTIONS INTACT)
        ===================================================================== -->
   <template id="default-chapter-15-template">
 
@@ -1218,7 +1286,6 @@
               </div>
             </div>
 
-            <!-- WBC Classification Sub-table -->
             <div class="table-wrapper" style="width: 100%;">
               <div class="overflow-x-auto">
                 <table class="notion-table">
@@ -1325,7 +1392,6 @@
           </div>
         </div>
 
-        <!-- Rh Grouping & Erythroblastosis Foetalis Flowchart -->
         <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2.5 text-center text-xs sm:text-sm">
           <div class="font-semibold text-amber-400 uppercase tracking-wider text-xs">Rh Incompatibility &amp; Erythroblastosis Foetalis</div>
           <p class="text-left text-xs theme-muted">• Rh antigen (from Rhesus monkey) present in <span class="cloze cloze-hidden">~80%</span> humans (Rh⁺ᵛᵉ); absent in <span class="cloze cloze-hidden">~20%</span> (Rh⁻ᵛᵉ).</p>
@@ -1492,7 +1558,6 @@
           <p>• <strong>Valves:</strong> RA → RV guarded by <span class="cloze cloze-hidden">Tricuspid valve</span> (3 muscular flaps/cusps); LA → LV guarded by <span class="cloze cloze-hidden">Bicuspid / Mitral valve</span>; RV → Pulmonary artery &amp; LV → Aorta guarded by <span class="cloze cloze-hidden">Semilunar valves</span>.</p>
         </div>
 
-        <!-- Nodal Conduction Pathway Flowchart -->
         <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2 text-xs sm:text-sm">
           <div class="font-semibold text-amber-400">Autoexcitable Nodal Conduction Pathway</div>
           <div class="flex flex-wrap items-center justify-center gap-2 text-center pt-1">
@@ -1506,7 +1571,6 @@
           </div>
         </div>
 
-        <!-- Cardiac Cycle & Metrics -->
         <div contenteditable="false" class="space-y-3">
           <ol class="list-decimal pl-5 space-y-1.5">
             <li><strong>Joint Diastole:</strong> All 4 chambers relaxed; Tricuspid &amp; Bicuspid <span class="cloze cloze-hidden">open</span>; Semilunar <span class="cloze cloze-hidden">closed</span>.</li>
@@ -1838,7 +1902,7 @@
             id: 'ch-15',
             badge: 'NCERT Class XI • Ch. 15',
             title: 'Chapter 15: Body Fluids and Circulation',
-            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.',
+            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.',
             html: defaultHtml,
             updatedAt: Date.now()
           }
@@ -1848,9 +1912,7 @@
     }
 
     function getCleanNotesCanvasHTML() {
-      const canvas = document.getElementById('notes-canvas');
-      if (!canvas) return '';
-      const clone = canvas.cloneNode(true);
+      const clone = document.getElementById('notes-canvas').cloneNode(true);
       clone.querySelectorAll('.topic-open-page').forEach(btn => btn.remove());
       return clone.innerHTML;
     }
@@ -2464,6 +2526,8 @@
         if (parsed.library && parsed.library.chapters && typeof parsed.library.chapters === 'object') {
           const entries = Object.values(parsed.library.chapters);
           if (!entries.length) { showToast('This backup contains no chapters.'); return; }
+          if (!confirm(`Import ${entries.length} chapter(s) as NEW copies? Existing chapters will not be overwritten.`)) return;
+
           const additions = {};
           entries.forEach((ch, index) => {
             if (!ch || typeof ch !== 'object') return;
@@ -2642,12 +2706,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     function copyAppsScriptCode() {
       const code = document.getElementById('apps-script-snippet').textContent;
-      const ta = document.createElement('textarea');
-      ta.value = code;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
+      navigator.clipboard?.writeText(code).catch(() => {});
       showToast('Apps Script backup code copied.');
     }
 
@@ -2700,6 +2759,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         if (!response || !response.ok || !response.backup) { showToast('No valid BioNotes backup found in Drive.'); return; }
         const backup = response.backup;
         if (backup.app !== 'NEET_BioNotes' || !backup.library || !backup.library.chapters) throw new Error('Invalid BioNotes backup.');
+        const when = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString() : 'unknown date';
+        if (!confirm(`Restore latest Google Drive backup from ${when}?\n\nCurrent local data will first be saved in a recovery snapshot.`)) return;
         recordRollingSnapshot('Before restoring latest Google Drive backup');
         library = JSON.parse(JSON.stringify(backup.library));
         if (backup.preferences) {
@@ -2745,6 +2806,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       syncEditableAttributes();
       enhanceAllTables();
       rebindInsertedImages();
+      injectTopicFullPageButtons();
       updateClozeCounter();
       if (!isEditMode) scheduleAutoSave();
     }
@@ -2895,7 +2957,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
 
-    /* --- Cloze, Q&A, Diagram Occlusion & Events --- */
+    /* --- Cloze, Hard Cloze Flagging, Q&A, Diagram Occlusion & Events --- */
     function captureActiveEditorLocation() {
       const sel = window.getSelection();
       if (!sel || !sel.rangeCount) return;
@@ -2924,6 +2986,24 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const canvas = document.getElementById('notes-canvas');
       const title = document.getElementById('chapter-title');
       const subtitle = document.getElementById('chapter-subtitle');
+
+      canvas.addEventListener('dblclick', (e) => {
+        const clozeEl = e.target.closest('.cloze');
+        if (clozeEl) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleHardClozeFlag(clozeEl);
+        }
+      });
+
+      canvas.addEventListener('contextmenu', (e) => {
+        const clozeEl = e.target.closest('.cloze');
+        if (clozeEl) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleHardClozeFlag(clozeEl);
+        }
+      });
 
       canvas.addEventListener('click', (e) => {
         const clickedImg = e.target.closest('img');
@@ -2976,6 +3056,21 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       [canvas, title, subtitle].forEach(el => el.addEventListener('input', () => scheduleAutoSave(false)));
 
       document.addEventListener('keydown', (e) => {
+        const ptModal = document.getElementById('paragraph-transformer');
+        if (ptModal && ptModal.classList.contains('open')) {
+          if ((e.key === 'Delete' || e.key === 'Backspace') && !e.target.isContentEditable) {
+            if (ptState.activeArrow >= 0) {
+              e.preventDefault();
+              ptDeleteArrow();
+              return;
+            }
+            if (ptState.activeNode >= 0) {
+              e.preventDefault();
+              ptDeleteNode();
+              return;
+            }
+          }
+        }
         if (isEditMode && e.altKey && (e.key === 'c' || e.key === 'C')) {
           e.preventDefault();
           wrapSelectionInCloze();
@@ -3091,6 +3186,35 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const hidden = document.querySelectorAll('#notes-canvas .cloze.cloze-hidden');
       const counter = document.getElementById('cloze-counter');
       if (counter) counter.textContent = `${all.length - hidden.length}/${all.length}`;
+    }
+
+    function toggleHardClozeFlag(clozeEl) {
+      const isHard = clozeEl.getAttribute('data-hard') === '1';
+      if (isHard) {
+        clozeEl.removeAttribute('data-hard');
+        showToast('Removed Hard flag from cloze.');
+      } else {
+        clozeEl.setAttribute('data-hard', '1');
+        clozeEl.classList.add('cloze-hidden');
+        showToast('Flagged as Hard Cloze (🎯) for rapid drills.');
+      }
+      updateClozeCounter();
+      scheduleAutoSave();
+    }
+
+    function hideHardClozesOnly() {
+      const hardList = document.querySelectorAll('#notes-canvas .cloze[data-hard="1"]');
+      if (!hardList.length) {
+        showToast('No Hard clozes flagged yet. Double-tap or right-click any blank to flag it.');
+        return;
+      }
+      document.querySelectorAll('#notes-canvas .cloze').forEach(el => {
+        if (el.getAttribute('data-hard') === '1') el.classList.add('cloze-hidden');
+        else el.classList.remove('cloze-hidden');
+      });
+      updateClozeCounter();
+      scheduleAutoSave();
+      showToast(`Masked ${hardList.length} Hard cloze(s) only.`);
     }
 
     /* --- Image Insertion & Compression --- */
@@ -3221,7 +3345,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
 
-    /* --- Toggle, Format & Paragraph Transformer --- */
+    /* --- Toggle, Format & Paragraph Transformer (Stable Side-by-Side Flowchart & Table Builder) --- */
     function toggleBlock(arrowEl) {
       const block = arrowEl.closest('.toggle-block');
       if (!block) return;
@@ -3291,6 +3415,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         </div>
       `;
       canvas.appendChild(sec);
+      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
@@ -3337,7 +3462,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         activeNode: -1,
         activeArrow: -1,
         drawArrow: false,
-        zoom: window.innerWidth < 768 ? 0.65 : 0.9,
+        zoom: 1,
         rows: 2,
         cols: 2,
         nextCell: 0
@@ -3355,35 +3480,37 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       modal.innerHTML = `
         <div class="pt-shell">
           <div class="pt-head">
-            <div><div id="pt-title" class="font-bold text-sm">Paragraph Transformer</div><div class="text-[11px] theme-muted">Left: NCERT source text • Right: Stable zoomable sheet.</div></div>
-            <button type="button" class="pt-btn" onclick="closeParagraphTransformer()">✕ Close</button>
+            <div>
+              <div id="pt-title" class="font-bold text-sm">Paragraph Transformer</div>
+              <div class="text-[11px] theme-muted">Highlight phrases on the left &amp; build on the right sheet.</div>
+            </div>
+            <div class="flex items-center gap-1.5" id="pt-zoom-controls">
+              <button type="button" class="pt-btn" onclick="ptZoom(-0.15)" title="Zoom Out">−</button>
+              <button type="button" class="pt-btn font-mono text-[11px]" id="pt-zoom-label" onclick="ptZoom(0)" title="Reset Zoom">100%</button>
+              <button type="button" class="pt-btn" onclick="ptZoom(0.15)" title="Zoom In">+</button>
+              <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-1"></span>
+              <button type="button" class="pt-btn" onclick="closeParagraphTransformer()">✕ Close</button>
+            </div>
           </div>
           <div class="pt-grid">
             <div class="pt-pane">
-              <div class="pt-source-bar">
-                <div class="flex items-center justify-between gap-1 mb-1.5 flex-wrap">
-                  <b class="text-xs">Original Text</b>
-                  <span class="text-[10px] theme-muted">Highlight phrase &amp; add</span>
-                </div>
-                <div class="pt-source-actions">
-                  <button type="button" class="pt-btn primary" onmousedown="event.preventDefault()" onclick="ptAddSelection()">＋ Add selected</button>
-                  <button type="button" class="pt-btn" onmousedown="event.preventDefault()" onclick="ptAddWholeSource()">＋ Add all</button>
-                </div>
+              <div class="pt-source-actions">
+                <button type="button" class="pt-btn primary" onmousedown="event.preventDefault()" onclick="ptAddSelection()">＋ Add selected</button>
+                <button type="button" class="pt-btn" onmousedown="event.preventDefault()" onclick="ptAddWholeSource()">＋ Add all</button>
               </div>
-              <div id="pt-source" class="pt-source text-xs sm:text-sm"></div>
+              <div id="pt-source" class="pt-source text-sm"></div>
             </div>
             <div class="pt-pane">
-              <div class="flex items-center justify-between gap-2 mb-1.5 flex-shrink-0">
-                <b id="pt-work-title" class="text-xs">Flowchart Sheet</b>
-                <div id="pt-zoom-bar" class="flex items-center gap-1"></div>
-              </div>
-              <div id="pt-tools" class="flex flex-wrap gap-1 items-center"></div>
+              <div id="pt-tools"></div>
               <div id="pt-workspace"></div>
             </div>
           </div>
           <div class="pt-foot">
-            <span class="text-[10px] theme-muted">Pinch or use −/+ to zoom • Drag empty sheet to pan • Drag arrow endpoints to resize.</span>
-            <div class="flex gap-2"><button type="button" class="pt-btn" onclick="closeParagraphTransformer()">Cancel</button><button type="button" class="pt-btn primary" onclick="applyParagraphTransformer()">✓ Apply to Notes</button></div>
+            <span class="text-[10px] theme-muted hidden sm:inline">Pinch or Ctrl+Scroll to zoom • Drag empty space to pan • Tap any arrow to select, color, resize or delete.</span>
+            <div class="flex gap-2 ml-auto">
+              <button type="button" class="pt-btn" onclick="closeParagraphTransformer()">Cancel</button>
+              <button type="button" class="pt-btn primary" onclick="applyParagraphTransformer()">✓ Apply to Notes</button>
+            </div>
           </div>
         </div>`;
       modal.addEventListener('mousedown', e => { if (e.target === modal) closeParagraphTransformer(); });
@@ -3391,54 +3518,26 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       return modal;
     }
 
-    function ptSetZoom(newZoom, preserveScroll = true) {
-      const vp = document.getElementById('pt-viewport');
-      const oldZoom = ptState.zoom || 1;
-      const clamped = Math.min(2.2, Math.max(0.4, Number(newZoom.toFixed(2))));
-      let centerX = 0, centerY = 0;
-      if (vp && preserveScroll) {
-        centerX = (vp.scrollLeft + vp.clientWidth / 2) / oldZoom;
-        centerY = (vp.scrollTop + vp.clientHeight / 2) / oldZoom;
-      }
-      ptState.zoom = clamped;
-      const sizer = document.getElementById('pt-zoom-sizer');
-      const canvas = document.getElementById('pt-canvas');
-      const lbl = document.getElementById('pt-zoom-label');
-      if (sizer) {
-        sizer.style.width = Math.round(1600 * clamped) + 'px';
-        sizer.style.height = Math.round(1100 * clamped) + 'px';
-      }
-      if (canvas) {
-        canvas.style.transform = `scale(${clamped})`;
-      }
-      if (lbl) lbl.textContent = Math.round(clamped * 100) + '%';
-      if (vp && preserveScroll) {
-        vp.scrollLeft = Math.max(0, centerX * clamped - vp.clientWidth / 2);
-        vp.scrollTop = Math.max(0, centerY * clamped - vp.clientHeight / 2);
-      }
-    }
-
     function renderParagraphTransformer() {
       ensureParagraphTransformer();
-      const vp = document.getElementById('pt-viewport');
-      const prevScrollLeft = vp ? vp.scrollLeft : 0;
-      const prevScrollTop = vp ? vp.scrollTop : 0;
-
       const flow = ptState.mode === 'flowchart';
-      document.getElementById('pt-title').textContent = flow ? 'Flowchart Builder' : 'Table Builder';
-      document.getElementById('pt-work-title').textContent = flow ? 'Blank Flowchart Sheet' : 'Table Workspace';
-      document.getElementById('pt-source').textContent = ptState.source;
+      const prevVp = document.getElementById('pt-viewport');
+      const prevScrollLeft = prevVp ? prevVp.scrollLeft : 0;
+      const prevScrollTop = prevVp ? prevVp.scrollTop : 0;
 
-      const zoomBar = document.getElementById('pt-zoom-bar');
-      zoomBar.innerHTML = flow ? `
-        <button type="button" class="pt-btn" onclick="ptSetZoom(ptState.zoom - 0.15)" title="Zoom Out">−</button>
-        <button type="button" id="pt-zoom-label" class="pt-btn font-mono" onclick="ptSetZoom(1)" title="Reset 100%">${Math.round((ptState.zoom || 1) * 100)}%</button>
-        <button type="button" class="pt-btn" onclick="ptSetZoom(ptState.zoom + 0.15)" title="Zoom In">+</button>
-      ` : '';
+      document.getElementById('pt-title').textContent = flow ? 'Flowchart Builder' : 'Table Builder';
+      document.getElementById('pt-zoom-controls').style.visibility = flow ? 'visible' : 'hidden';
+      document.getElementById('pt-source').textContent = ptState.source;
 
       document.getElementById('pt-tools').innerHTML = flow
         ? `<button type="button" class="pt-btn" onclick="ptAddNode()">＋ Node</button>
            <button type="button" class="pt-btn ${ptState.drawArrow ? 'primary' : ''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow ? 'Drawing Arrow…' : 'Draw Arrow'}</button>
+           ${ptState.activeArrow >= 0 ? `
+             <button type="button" class="pt-btn" onclick="ptSetArrowColor('var(--text-muted)')" title="Default Arrow">●</button>
+             <button type="button" class="pt-btn" style="color:#38bdf8" onclick="ptSetArrowColor('#38bdf8')" title="Sky Arrow">●</button>
+             <button type="button" class="pt-btn" style="color:#34d399" onclick="ptSetArrowColor('#34d399')" title="Emerald Arrow">●</button>
+             <button type="button" class="pt-btn" style="color:#f43f5e" onclick="ptSetArrowColor('#f43f5e')" title="Rose Arrow">●</button>
+           ` : ''}
            <button type="button" class="pt-btn" onclick="ptDeleteArrow()">✕ Arrow</button>
            <button type="button" class="pt-btn" onclick="ptDeleteNode()">✕ Node</button>`
         : `<button type="button" class="pt-btn" onclick="ptAddRow()">＋ Row</button>
@@ -3450,32 +3549,30 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const z = ptState.zoom || 1;
         const edges = ptState.arrows.map((ar, idx) => {
           const isSel = ptState.activeArrow === idx;
-          const strokeCol = isSel ? '#38bdf8' : 'var(--text-muted)';
-          const markerRef = isSel ? 'url(#pt-arrowhead-sel)' : 'url(#pt-arrowhead)';
+          const baseCol = ar.color || 'var(--text-muted)';
+          const strokeCol = isSel ? '#38bdf8' : baseCol;
+          const markerId = isSel ? 'pt-arrowhead-sel' : `pt-arrowhead-${idx}`;
           const handles = isSel ? `
             <circle class="pt-arrow-handle" data-arrow="${idx}" data-end="start" cx="${ar.x1}" cy="${ar.y1}" r="8" fill="#38bdf8" stroke="#ffffff" stroke-width="2" />
             <circle class="pt-arrow-handle" data-arrow="${idx}" data-end="end" cx="${ar.x2}" cy="${ar.y2}" r="8" fill="#38bdf8" stroke="#ffffff" stroke-width="2" />
           ` : '';
           return `<g>
-            <line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="${strokeCol}" stroke-width="${isSel ? 2.6 : 2}" stroke-linecap="round" marker-end="${markerRef}" />
-            <line class="pt-arrow-hit" data-arrow="${idx}" x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="transparent" stroke-width="18" />
+            <defs><marker id="${markerId}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="${strokeCol}"/></marker></defs>
+            <line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="${strokeCol}" stroke-width="${isSel ? 2.6 : 2}" stroke-linecap="round" marker-end="url(#${markerId})" />
+            <line class="pt-arrow-hit" data-arrow="${idx}" x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="transparent" stroke-width="20" />
             ${handles}
           </g>`;
         }).join('');
 
         document.getElementById('pt-workspace').innerHTML = `
           <div class="pt-viewport" id="pt-viewport">
-            <div class="pt-zoom-sizer" id="pt-zoom-sizer" style="width:${Math.round(1600 * z)}px;height:${Math.round(1100 * z)}px;">
+            <div class="pt-zoom-stage" id="pt-stage" style="width:${Math.round(1600 * z)}px;height:${Math.round(1100 * z)}px;">
               <div class="pt-canvas ${ptState.drawArrow ? 'drawing' : ''}" id="pt-canvas" style="transform:scale(${z});">
                 <svg id="pt-svg" viewBox="0 0 1600 1100" preserveAspectRatio="none">
-                  <defs>
-                    <marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker>
-                    <marker id="pt-arrowhead-sel" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="#38bdf8"/></marker>
-                  </defs>
                   ${edges}
                 </svg>
                 ${ptState.nodes.map((v, i) => `
-                  <div class="pt-node ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px" onpointerdown="ptSelectNodeOnly(event,${i})">
+                  <div class="pt-node ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px">
                     <div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" title="Drag node">⠿⠿</div>
                     <div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div>
                   </div>
@@ -3483,15 +3580,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
               </div>
             </div>
           </div>`;
-
         const newVp = document.getElementById('pt-viewport');
         if (newVp) {
           newVp.scrollLeft = prevScrollLeft;
           newVp.scrollTop = prevScrollTop;
         }
-        ptBindCanvasInteractions();
+        ptBindCanvasDrawing();
       } else {
-        let html = '<div class="overflow-auto flex-1"><table class="pt-table"><tbody>';
+        let html = '<div class="pt-table-scroll"><table class="pt-table"><tbody>';
         for (let r = 0; r < ptState.rows; r++) {
           html += '<tr>';
           for (let c = 0; c < ptState.cols; c++) {
@@ -3504,22 +3600,52 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       }
     }
 
+    function ptCreateNode(text) {
+      const i = ptState.nodes.length;
+      const vp = document.getElementById('pt-viewport');
+      const z = ptState.zoom || 1;
+      const baseX = vp ? Math.round((vp.scrollLeft + 70) / z) : 70;
+      const baseY = vp ? Math.round((vp.scrollTop + 60) / z) : 60;
+      ptState.nodes.push({
+        text: String(text || 'New node'),
+        x: baseX + (i % 3) * 260,
+        y: baseY + Math.floor(i / 3) * 120
+      });
+      ptState.activeNode = i;
+      ptState.activeArrow = -1;
+      renderParagraphTransformer();
+    }
+
+    function ptAddNode() {
+      ptCreateNode('New node');
+    }
+
     function ptSelectedSourceText() {
       const sel = window.getSelection();
       if (!sel || !sel.rangeCount) return '';
-      const text = sel.toString().trim(), src = document.getElementById('pt-source');
-      return text && src.contains(sel.getRangeAt(0).commonAncestorContainer) ? text : '';
+      const text = sel.toString().trim();
+      const src = document.getElementById('pt-source');
+      return text && src && src.contains(sel.getRangeAt(0).commonAncestorContainer) ? text : '';
     }
 
     function ptAddSelection() {
       const text = ptSelectedSourceText();
-      if (!text) { showToast('Select a phrase in the original text first.'); return; }
-      if (ptState.mode === 'flowchart') ptCreateNode(text);
-      else {
+      if (!text) {
+        showToast('Select a phrase in the original text first.');
+        return;
+      }
+      if (ptState.mode === 'flowchart') {
+        ptCreateNode(text);
+      } else {
         ptEnsureCells();
-        let idx = ptState.nextCell || 0, total = (ptState.rows - 1) * ptState.cols;
-        if (idx >= total) { ptState.rows++; ptEnsureCells(); }
-        const r = 1 + Math.floor(idx / ptState.cols), c = idx % ptState.cols;
+        const idx = ptState.nextCell || 0;
+        const total = (ptState.rows - 1) * ptState.cols;
+        if (idx >= total) {
+          ptState.rows++;
+          ptEnsureCells();
+        }
+        const r = 1 + Math.floor(idx / ptState.cols);
+        const c = idx % ptState.cols;
         ptState.cells[r][c] = (ptState.cells[r][c] ? ptState.cells[r][c] + ' ' : '') + text;
         ptState.nextCell = idx + 1;
         renderParagraphTransformer();
@@ -3527,24 +3653,248 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     function ptAddWholeSource() {
-      if (ptState.mode === 'flowchart') ptCreateNode(ptState.source);
-      else { ptEnsureCells(); ptState.cells[1][0] = (ptState.cells[1][0] ? ' ' : '') + ptState.source; renderParagraphTransformer(); }
+      if (ptState.mode === 'flowchart') {
+        ptCreateNode(ptState.source);
+      } else {
+        ptEnsureCells();
+        ptState.cells[1][0] = (ptState.cells[1][0] ? ' ' : '') + ptState.source;
+        renderParagraphTransformer();
+      }
     }
 
-    function ptCreateNode(text) {
-      const vp = document.getElementById('pt-viewport');
-      const z = ptState.zoom || 1;
-      const i = ptState.nodes.length;
-      const baseX = vp ? Math.round(vp.scrollLeft / z + 60 + (i % 3) * 260) : (60 + (i % 3) * 280);
-      const baseY = vp ? Math.round(vp.scrollTop / z + 60 + Math.floor(i / 3) * 140) : (60 + Math.floor(i / 3) * 140);
-      ptState.nodes.push({ text: String(text || 'New node'), x: Math.min(1300, baseX), y: Math.min(950, baseY) });
-      ptState.activeNode = i;
-      ptState.activeArrow = -1;
+    function ptNodeText(i, el) {
+      if (ptState.nodes[i]) ptState.nodes[i].text = el.innerText;
+    }
+
+    function ptToggleDrawArrow() {
+      ptState.drawArrow = !ptState.drawArrow;
       renderParagraphTransformer();
     }
-    function ptAddNode() { ptCreateNode('New node'); }
-    function ptNodeText(i, el) { if (ptState.nodes[i]) ptState.nodes[i].text = el.innerText; }
-    function ptToggleDrawArrow() { ptState.drawArrow = !ptState.drawArrow; ptState.activeArrow = -1; renderParagraphTransformer(); }
+
+    function ptZoom(delta) {
+      const next = delta === 0 ? 1 : Math.min(2.2, Math.max(0.4, Number(((ptState.zoom || 1) + delta).toFixed(2))));
+      ptState.zoom = next;
+      const stage = document.getElementById('pt-stage');
+      const canvas = document.getElementById('pt-canvas');
+      const label = document.getElementById('pt-zoom-label');
+      if (stage) {
+        stage.style.width = Math.round(1600 * next) + 'px';
+        stage.style.height = Math.round(1100 * next) + 'px';
+      }
+      if (canvas) {
+        canvas.style.transform = `scale(${next})`;
+      }
+      if (label) {
+        label.textContent = Math.round(next * 100) + '%';
+      }
+    }
+
+    function ptNodePointerDown(e, i) {
+      if (ptState.drawArrow || e.target.isContentEditable) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const handle = e.currentTarget;
+      const node = handle.closest('.pt-node');
+      const z = ptState.zoom || 1;
+      ptState.activeNode = i;
+      ptState.activeArrow = -1;
+      const sx = e.clientX;
+      const sy = e.clientY;
+      const ox = ptState.nodes[i].x;
+      const oy = ptState.nodes[i].y;
+      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+
+      const move = ev => {
+        const n = ptState.nodes[i];
+        n.x = Math.max(0, Math.min(1520, ox + (ev.clientX - sx) / z));
+        n.y = Math.max(18, Math.min(1060, oy + (ev.clientY - sy) / z));
+        node.style.left = n.x + 'px';
+        node.style.top = n.y + 'px';
+      };
+      const up = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        renderParagraphTransformer();
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    }
+
+    function ptBindCanvasDrawing() {
+      const vp = document.getElementById('pt-viewport');
+      const canvas = document.getElementById('pt-canvas');
+      const svg = document.getElementById('pt-svg');
+      if (!vp || !canvas || !svg) return;
+
+      const toCanvasPoint = (clientX, clientY) => {
+        const r = canvas.getBoundingClientRect();
+        const z = ptState.zoom || 1;
+        return {
+          x: Math.max(0, Math.min(1600, (clientX - r.left) / z)),
+          y: Math.max(0, Math.min(1100, (clientY - r.top) / z))
+        };
+      };
+
+      let pinchStartDist = 0;
+      let pinchStartZoom = 1;
+      vp.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+          pinchStartDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          pinchStartZoom = ptState.zoom || 1;
+        }
+      }, { passive: true });
+
+      vp.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && pinchStartDist > 0) {
+          e.preventDefault();
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const next = Math.min(2.2, Math.max(0.4, Number((pinchStartZoom * (dist / pinchStartDist)).toFixed(2))));
+          ptState.zoom = next;
+          ptZoom(0);
+        }
+      }, { passive: false });
+
+      vp.addEventListener('wheel', e => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          ptZoom(e.deltaY < 0 ? 0.1 : -0.1);
+        }
+      }, { passive: false });
+
+      svg.querySelectorAll('.pt-arrow-handle').forEach(circle => {
+        circle.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const idx = Number(circle.dataset.arrow);
+          const end = circle.dataset.end;
+          const ar = ptState.arrows[idx];
+          if (!ar) return;
+          try { circle.setPointerCapture(e.pointerId); } catch (_) {}
+          const move = ev => {
+            const p = toCanvasPoint(ev.clientX, ev.clientY);
+            if (end === 'start') { ar.x1 = p.x; ar.y1 = p.y; }
+            else { ar.x2 = p.x; ar.y2 = p.y; }
+            circle.setAttribute('cx', p.x);
+            circle.setAttribute('cy', p.y);
+            const g = circle.closest('g');
+            g?.querySelectorAll('line').forEach(ln => {
+              ln.setAttribute('x1', ar.x1); ln.setAttribute('y1', ar.y1);
+              ln.setAttribute('x2', ar.x2); ln.setAttribute('y2', ar.y2);
+            });
+          };
+          const up = () => {
+            circle.removeEventListener('pointermove', move);
+            circle.removeEventListener('pointerup', up);
+            renderParagraphTransformer();
+          };
+          circle.addEventListener('pointermove', move);
+          circle.addEventListener('pointerup', up);
+        });
+      });
+
+      svg.querySelectorAll('.pt-arrow-hit').forEach(hit => {
+        hit.addEventListener('pointerdown', e => {
+          if (ptState.drawArrow) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const idx = Number(hit.dataset.arrow);
+          ptState.activeArrow = idx;
+          ptState.activeNode = -1;
+          const ar = ptState.arrows[idx];
+          if (!ar) return;
+          const startP = toCanvasPoint(e.clientX, e.clientY);
+          const orig = { x1: ar.x1, y1: ar.y1, x2: ar.x2, y2: ar.y2 };
+          try { hit.setPointerCapture(e.pointerId); } catch (_) {}
+          const move = ev => {
+            const curP = toCanvasPoint(ev.clientX, ev.clientY);
+            const dx = curP.x - startP.x;
+            const dy = curP.y - startP.y;
+            ar.x1 = orig.x1 + dx; ar.y1 = orig.y1 + dy;
+            ar.x2 = orig.x2 + dx; ar.y2 = orig.y2 + dy;
+            const g = hit.closest('g');
+            g?.querySelectorAll('line').forEach(ln => {
+              ln.setAttribute('x1', ar.x1); ln.setAttribute('y1', ar.y1);
+              ln.setAttribute('x2', ar.x2); ln.setAttribute('y2', ar.y2);
+            });
+            g?.querySelectorAll('.pt-arrow-handle').forEach(c => {
+              const isStart = c.dataset.end === 'start';
+              c.setAttribute('cx', isStart ? ar.x1 : ar.x2);
+              c.setAttribute('cy', isStart ? ar.y1 : ar.y2);
+            });
+          };
+          const up = () => {
+            hit.removeEventListener('pointermove', move);
+            hit.removeEventListener('pointerup', up);
+            renderParagraphTransformer();
+          };
+          hit.addEventListener('pointermove', move);
+          hit.addEventListener('pointerup', up);
+        });
+      });
+
+      canvas.addEventListener('pointerdown', e => {
+        if (e.target.closest('.pt-node') || e.target.closest('.pt-arrow-hit') || e.target.closest('.pt-arrow-handle')) return;
+        if (ptState.drawArrow) {
+          e.preventDefault();
+          e.stopPropagation();
+          const p = toCanvasPoint(e.clientX, e.clientY);
+          const preview = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          preview.setAttribute('x1', p.x); preview.setAttribute('y1', p.y);
+          preview.setAttribute('x2', p.x); preview.setAttribute('y2', p.y);
+          preview.setAttribute('stroke', '#38bdf8');
+          preview.setAttribute('stroke-width', '2.2');
+          svg.appendChild(preview);
+          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+          const move = ev => {
+            const q = toCanvasPoint(ev.clientX, ev.clientY);
+            preview.setAttribute('x2', q.x);
+            preview.setAttribute('y2', q.y);
+          };
+          const up = ev => {
+            canvas.removeEventListener('pointermove', move);
+            canvas.removeEventListener('pointerup', up);
+            const q = toCanvasPoint(ev.clientX, ev.clientY);
+            preview.remove();
+            if (Math.hypot(q.x - p.x, q.y - p.y) > 12) {
+              ptState.arrows.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y, color: 'var(--text-muted)' });
+              ptState.activeArrow = ptState.arrows.length - 1;
+              ptState.activeNode = -1;
+            }
+            ptState.drawArrow = false;
+            renderParagraphTransformer();
+          };
+          canvas.addEventListener('pointermove', move);
+          canvas.addEventListener('pointerup', up);
+        } else {
+          if (ptState.activeArrow >= 0 || ptState.activeNode >= 0) {
+            ptState.activeArrow = -1;
+            ptState.activeNode = -1;
+            renderParagraphTransformer();
+          }
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startScrollL = vp.scrollLeft;
+          const startScrollT = vp.scrollTop;
+          const panMove = ev => {
+            vp.scrollLeft = startScrollL - (ev.clientX - startX);
+            vp.scrollTop = startScrollT - (ev.clientY - startY);
+          };
+          const panUp = () => {
+            window.removeEventListener('pointermove', panMove);
+            window.removeEventListener('pointerup', panUp);
+          };
+          window.addEventListener('pointermove', panMove);
+          window.addEventListener('pointerup', panUp);
+        }
+      });
+    }
+
     function ptDeleteArrow() {
       if (ptState.activeArrow >= 0 && ptState.arrows[ptState.activeArrow]) {
         ptState.arrows.splice(ptState.activeArrow, 1);
@@ -3555,6 +3905,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         renderParagraphTransformer();
       }
     }
+
+    function ptSetArrowColor(color) {
+      if (ptState.activeArrow >= 0 && ptState.arrows[ptState.activeArrow]) {
+        ptState.arrows[ptState.activeArrow].color = color;
+        renderParagraphTransformer();
+      }
+    }
+
     function ptDeleteNode() {
       if (ptState.activeNode >= 0) {
         ptState.nodes.splice(ptState.activeNode, 1);
@@ -3562,238 +3920,21 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         renderParagraphTransformer();
       }
     }
-    function ptSelectNodeOnly(e, i) {
-      e.stopPropagation();
-      if (ptState.activeNode !== i || ptState.activeArrow !== -1) {
-        ptState.activeNode = i;
-        ptState.activeArrow = -1;
-        document.querySelectorAll('#pt-canvas .pt-node').forEach((el, idx) => el.classList.toggle('selected', idx === i));
-      }
-    }
-
-    function ptNodePointerDown(e, i) {
-      if (ptState.drawArrow || e.target.isContentEditable) return;
-      e.preventDefault(); e.stopPropagation();
-      const handle = e.currentTarget;
-      const node = handle.closest('.pt-node');
-      ptState.activeNode = i;
-      ptState.activeArrow = -1;
-      document.querySelectorAll('#pt-canvas .pt-node').forEach((el, idx) => el.classList.toggle('selected', idx === i));
-
-      const z = ptState.zoom || 1;
-      const sx = e.clientX, sy = e.clientY;
-      const ox = ptState.nodes[i].x, oy = ptState.nodes[i].y;
-      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
-
-      const move = ev => {
-        const n = ptState.nodes[i];
-        n.x = Math.max(0, Math.min(1520, ox + (ev.clientX - sx) / z));
-        n.y = Math.max(0, Math.min(1040, oy + (ev.clientY - sy) / z));
-        node.style.left = n.x + 'px';
-        node.style.top = n.y + 'px';
-      };
-      const up = () => {
-        handle.removeEventListener('pointermove', move);
-        handle.removeEventListener('pointerup', up);
-        handle.removeEventListener('pointercancel', up);
-      };
-      handle.addEventListener('pointermove', move);
-      handle.addEventListener('pointerup', up);
-      handle.addEventListener('pointercancel', up);
-    }
-
-    function ptBindCanvasInteractions() {
-      const vp = document.getElementById('pt-viewport');
-      const canvas = document.getElementById('pt-canvas');
-      if (!vp || !canvas) return;
-
-      const toCanvasCoords = (clientX, clientY) => {
-        const r = canvas.getBoundingClientRect();
-        const z = ptState.zoom || 1;
-        return {
-          x: Math.max(0, Math.min(1600, (clientX - r.left) / z)),
-          y: Math.max(0, Math.min(1100, (clientY - r.top) / z))
-        };
-      };
-
-      // Two-finger Pinch-to-Zoom on Viewport
-      const activePointers = new Map();
-      let initialPinchDist = 0;
-      let initialPinchZoom = ptState.zoom || 1;
-
-      vp.addEventListener('pointerdown', (e) => {
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (activePointers.size === 2) {
-          const pts = Array.from(activePointers.values());
-          initialPinchDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
-          initialPinchZoom = ptState.zoom || 1;
-        }
-      });
-
-      vp.addEventListener('pointermove', (e) => {
-        if (!activePointers.has(e.pointerId)) return;
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (activePointers.size === 2 && initialPinchDist > 10) {
-          e.preventDefault();
-          const pts = Array.from(activePointers.values());
-          const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
-          ptSetZoom(initialPinchZoom * (dist / initialPinchDist), true);
-        }
-      });
-
-      const removePointer = (e) => {
-        activePointers.delete(e.pointerId);
-        if (activePointers.size < 2) initialPinchDist = 0;
-      };
-      vp.addEventListener('pointerup', removePointer);
-      vp.addEventListener('pointercancel', removePointer);
-
-      // Ctrl + Wheel Zoom
-      vp.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          ptSetZoom((ptState.zoom || 1) * (e.deltaY < 0 ? 1.1 : 0.9), true);
-        }
-      }, { passive: false });
-
-      // Canvas Pointer Interactions: Draw Arrow, Resize Arrow Endpoints, Drag Arrow, or Pan Sheet
-      canvas.addEventListener('pointerdown', (e) => {
-        if (activePointers.size >= 2) return;
-        if (e.target.closest('.pt-node')) return;
-
-        // 1. Resize Arrow Endpoint Handle
-        const endHandle = e.target.closest('.pt-arrow-handle');
-        if (endHandle) {
-          e.preventDefault(); e.stopPropagation();
-          const idx = Number(endHandle.dataset.arrow);
-          const endType = endHandle.dataset.end; // 'start' | 'end'
-          const ar = ptState.arrows[idx];
-          if (!ar) return;
-          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-          const move = (ev) => {
-            if (activePointers.size >= 2) return;
-            const q = toCanvasCoords(ev.clientX, ev.clientY);
-            if (endType === 'start') { ar.x1 = q.x; ar.y1 = q.y; }
-            else { ar.x2 = q.x; ar.y2 = q.y; }
-            renderParagraphTransformer();
-          };
-          const up = () => {
-            canvas.removeEventListener('pointermove', move);
-            canvas.removeEventListener('pointerup', up);
-            canvas.removeEventListener('pointercancel', up);
-          };
-          canvas.addEventListener('pointermove', move);
-          canvas.addEventListener('pointerup', up);
-          canvas.addEventListener('pointercancel', up);
-          return;
-        }
-
-        // 2. Select & Move Existing Arrow Shaft
-        const arrowHit = e.target.closest('.pt-arrow-hit');
-        if (arrowHit && !ptState.drawArrow) {
-          e.preventDefault(); e.stopPropagation();
-          const idx = Number(arrowHit.dataset.arrow);
-          ptState.activeArrow = idx;
-          ptState.activeNode = -1;
-          renderParagraphTransformer();
-          const ar = ptState.arrows[idx];
-          if (!ar) return;
-          const startPt = toCanvasCoords(e.clientX, e.clientY);
-          const orig = { ...ar };
-          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-          const move = (ev) => {
-            if (activePointers.size >= 2) return;
-            const q = toCanvasCoords(ev.clientX, ev.clientY);
-            const dx = q.x - startPt.x;
-            const dy = q.y - startPt.y;
-            ar.x1 = Math.max(0, Math.min(1600, orig.x1 + dx));
-            ar.y1 = Math.max(0, Math.min(1100, orig.y1 + dy));
-            ar.x2 = Math.max(0, Math.min(1600, orig.x2 + dx));
-            ar.y2 = Math.max(0, Math.min(1100, orig.y2 + dy));
-            renderParagraphTransformer();
-          };
-          const up = () => {
-            canvas.removeEventListener('pointermove', move);
-            canvas.removeEventListener('pointerup', up);
-            canvas.removeEventListener('pointercancel', up);
-          };
-          canvas.addEventListener('pointermove', move);
-          canvas.addEventListener('pointerup', up);
-          canvas.addEventListener('pointercancel', up);
-          return;
-        }
-
-        // 3. Draw New Arrow Mode
-        if (ptState.drawArrow) {
-          e.preventDefault(); e.stopPropagation();
-          const p = toCanvasCoords(e.clientX, e.clientY);
-          const preview = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          preview.setAttribute('x1', p.x); preview.setAttribute('y1', p.y);
-          preview.setAttribute('x2', p.x); preview.setAttribute('y2', p.y);
-          preview.setAttribute('stroke', '#38bdf8'); preview.setAttribute('stroke-width', '2.5');
-          preview.setAttribute('marker-end', 'url(#pt-arrowhead-sel)');
-          document.getElementById('pt-svg')?.appendChild(preview);
-          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-
-          const move = (ev) => {
-            const q = toCanvasCoords(ev.clientX, ev.clientY);
-            preview.setAttribute('x2', q.x); preview.setAttribute('y2', q.y);
-          };
-          const up = (ev) => {
-            canvas.removeEventListener('pointermove', move);
-            canvas.removeEventListener('pointerup', up);
-            canvas.removeEventListener('pointercancel', up);
-            const q = toCanvasCoords(ev.clientX, ev.clientY);
-            preview.remove();
-            if (Math.hypot(q.x - p.x, q.y - p.y) > 12) {
-              ptState.arrows.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y });
-              ptState.activeArrow = ptState.arrows.length - 1;
-            }
-            ptState.drawArrow = false;
-            renderParagraphTransformer();
-          };
-          canvas.addEventListener('pointermove', move);
-          canvas.addEventListener('pointerup', up);
-          canvas.addEventListener('pointercancel', up);
-          return;
-        }
-
-        // 4. Empty Sheet Background: Deselect & Pan Viewport Smoothly
-        if (ptState.activeNode !== -1 || ptState.activeArrow !== -1) {
-          ptState.activeNode = -1;
-          ptState.activeArrow = -1;
-          renderParagraphTransformer();
-        }
-        canvas.classList.add('panning');
-        const panStartX = e.clientX;
-        const panStartY = e.clientY;
-        const startScrollLeft = vp.scrollLeft;
-        const startScrollTop = vp.scrollTop;
-        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-
-        const panMove = (ev) => {
-          if (activePointers.size >= 2) return;
-          vp.scrollLeft = startScrollLeft - (ev.clientX - panStartX);
-          vp.scrollTop = startScrollTop - (ev.clientY - panStartY);
-        };
-        const panUp = () => {
-          canvas.classList.remove('panning');
-          canvas.removeEventListener('pointermove', panMove);
-          canvas.removeEventListener('pointerup', panUp);
-          canvas.removeEventListener('pointercancel', panUp);
-        };
-        canvas.addEventListener('pointermove', panMove);
-        canvas.addEventListener('pointerup', panUp);
-        canvas.addEventListener('pointercancel', panUp);
-      });
-    }
 
     function ptEnsureCells() {
       if (!ptState.cells) ptState.cells = Array.from({ length: ptState.rows }, () => Array(ptState.cols).fill(''));
       while (ptState.cells.length < ptState.rows) ptState.cells.push(Array(ptState.cols).fill(''));
-      ptState.cells = ptState.cells.map(row => { while (row.length < ptState.cols) row.push(''); return row.slice(0, ptState.cols); });
+      ptState.cells = ptState.cells.map(row => {
+        while (row.length < ptState.cols) row.push('');
+        return row.slice(0, ptState.cols);
+      });
     }
-    function ptCellChanged(el) { ptEnsureCells(); ptState.cells[+el.dataset.r][+el.dataset.c] = el.innerText; }
+
+    function ptCellChanged(el) {
+      ptEnsureCells();
+      ptState.cells[+el.dataset.r][+el.dataset.c] = el.innerText;
+    }
+
     function ptAddRow() { ptState.rows++; ptEnsureCells(); renderParagraphTransformer(); }
     function ptAddColumn() { ptState.cols++; ptEnsureCells(); renderParagraphTransformer(); }
     function ptRemoveRow() { if (ptState.rows > 2) { ptState.rows--; ptEnsureCells(); renderParagraphTransformer(); } }
@@ -3803,13 +3944,15 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function applyParagraphTransformer() {
       const originalRange = ptState.range && ptState.range.cloneRange ? ptState.range.cloneRange() : null;
       if (!originalRange || !originalRange.startContainer.isConnected) {
-        showToast('Original text is no longer available.'); return;
+        showToast('Original text is no longer available.');
+        return;
       }
       let replacement;
       if (ptState.mode === 'flowchart') {
-        if (!ptState.nodes.length) { showToast('Add at least one flowchart node first.'); return; }
-
-        // Compute tight bounding box around placed nodes and arrows so saved diagram fits cleanly
+        if (!ptState.nodes.length) {
+          showToast('Add at least one flowchart node first.');
+          return;
+        }
         let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
         ptState.nodes.forEach(n => {
           minX = Math.min(minX, n.x);
@@ -3823,59 +3966,77 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           maxX = Math.max(maxX, a.x1, a.x2);
           maxY = Math.max(maxY, a.y1, a.y2);
         });
-        const pad = 24;
+        const pad = 20;
         const offsetX = Math.max(0, minX - pad);
         const offsetY = Math.max(0, minY - pad);
-        const boxW = Math.max(360, Math.round(maxX - offsetX + pad));
-        const boxH = Math.max(180, Math.round(maxY - offsetY + pad));
+        const boxW = Math.max(260, Math.round(maxX - offsetX + pad));
+        const boxH = Math.max(140, Math.round(maxY - offsetY + pad));
 
         const markerId = 'bioFlowArrow' + Date.now();
-        replacement = document.createElement('span');
+        replacement = document.createElement('div');
         replacement.className = 'pt-generated-flow';
         replacement.setAttribute('contenteditable', 'false');
-        replacement.style.cssText = `display:block;position:relative;width:100%;overflow-x:auto;margin:14px 0;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--border-color);border-radius:12px;`;
+        replacement.style.cssText = 'display:block;position:relative;width:100%;overflow-x:auto;margin:14px 0;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--border-color);border-radius:12px;';
 
-        const inner = document.createElement('span');
-        inner.style.cssText = `display:block;position:relative;width:${boxW}px;height:${boxH}px;min-width:100%;`;
+        const inner = document.createElement('div');
+        inner.style.cssText = `position:relative;width:${boxW}px;height:${boxH}px;min-width:100%;`;
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', `0 0 ${boxW} ${boxH}`);
         svg.style.cssText = `position:absolute;top:0;left:0;width:${boxW}px;height:${boxH}px;overflow:visible;pointer-events:none;`;
-        svg.innerHTML = `<defs><marker id="${markerId}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>` +
-          ptState.arrows.map(a => `<line x1="${(a.x1 - offsetX).toFixed(1)}" y1="${(a.y1 - offsetY).toFixed(1)}" x2="${(a.x2 - offsetX).toFixed(1)}" y2="${(a.y2 - offsetY).toFixed(1)}" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#${markerId})" />`).join('');
+        svg.innerHTML = ptState.arrows.map((a, idx) => {
+          const col = a.color || 'var(--text-muted)';
+          const mId = `${markerId}_${idx}`;
+          return `<defs><marker id="${mId}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="${col}"/></marker></defs>` +
+                 `<line x1="${(a.x1 - offsetX).toFixed(1)}" y1="${(a.y1 - offsetY).toFixed(1)}" x2="${(a.x2 - offsetX).toFixed(1)}" y2="${(a.y2 - offsetY).toFixed(1)}" stroke="${col}" stroke-width="1.8" stroke-linecap="round" marker-end="url(#${mId})" />`;
+        }).join('');
         inner.appendChild(svg);
 
         ptState.nodes.forEach(n => {
           const node = document.createElement('span');
           node.className = 'pt-saved-node';
           node.textContent = String(n.text || '');
-          node.style.cssText = `position:absolute;left:${Math.max(0, Math.round(n.x - offsetX))}px;top:${Math.max(0, Math.round(n.y - offsetY))}px;display:block;width:max-content;min-width:75px;max-width:280px;box-sizing:border-box;padding:9px 13px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:14.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 2px 6px rgba(0,0,0,0.12);`;
+          node.style.cssText = `position:absolute;left:${Math.max(4, Math.round(n.x - offsetX))}px;top:${Math.max(4, Math.round(n.y - offsetY))}px;display:block;width:max-content;min-width:75px;max-width:300px;box-sizing:border-box;padding:9px 13px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:14.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 2px 6px rgba(0,0,0,0.08);`;
           inner.appendChild(node);
         });
         replacement.appendChild(inner);
       } else {
         ptEnsureCells();
-        replacement = document.createElement('span');
+        replacement = document.createElement('div');
         replacement.className = 'pt-generated-table';
         replacement.style.cssText = 'display:block;width:100%;margin:12px 0;';
         const table = document.createElement('table');
         table.className = 'notion-table';
         const thead = document.createElement('thead'), tr = document.createElement('tr');
-        (ptState.cells[0] || []).forEach(v => { const th = document.createElement('th'); th.textContent = v; th.setAttribute('contenteditable', 'true'); tr.appendChild(th); });
-        thead.appendChild(tr); table.appendChild(thead);
+        (ptState.cells[0] || []).forEach(v => {
+          const th = document.createElement('th');
+          th.textContent = v;
+          th.setAttribute('contenteditable', 'true');
+          tr.appendChild(th);
+        });
+        thead.appendChild(tr);
+        table.appendChild(thead);
         const tbody = document.createElement('tbody');
         ptState.cells.slice(1).forEach(row => {
           const r = document.createElement('tr');
-          row.forEach(v => { const td = document.createElement('td'); td.textContent = v; td.setAttribute('contenteditable', 'true'); r.appendChild(td); });
+          row.forEach(v => {
+            const td = document.createElement('td');
+            td.textContent = v;
+            td.setAttribute('contenteditable', 'true');
+            r.appendChild(td);
+          });
           tbody.appendChild(r);
         });
-        table.appendChild(tbody); replacement.appendChild(table);
+        table.appendChild(tbody);
+        replacement.appendChild(table);
       }
       recordRollingSnapshot('Before paragraph transformation');
       originalRange.deleteContents();
       originalRange.insertNode(replacement);
       closeParagraphTransformer();
-      enhanceAllTables(); syncEditableAttributes(); scheduleAutoSave(true);
+      enhanceAllTables();
+      syncEditableAttributes();
+      scheduleAutoSave(true);
       showToast(ptState.mode === 'flowchart' ? 'Converted to flowchart.' : 'Converted to table.');
     }
 
@@ -4035,6 +4196,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       `;
       canvas.appendChild(sec);
       enhanceAllTables();
+      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
@@ -4061,6 +4223,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         </div>
       `;
       canvas.appendChild(sec);
+      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
@@ -4097,23 +4260,17 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     });
 
     function exportStandaloneHTML() {
-      captureActiveChapterFromDOM();
       const clone = document.documentElement.cloneNode(true);
       const toast = clone.querySelector('#toast-banner');
       if (toast) toast.classList.add('hidden');
-      // Strip dynamically injected full-page buttons & overlays so exported file initializes cleanly on load
-      clone.querySelectorAll('.topic-open-page, #topic-reading-overlay, #paragraph-transformer, #diagram-occlusion-modal').forEach(el => el.remove());
-      clone.body.classList.remove('edit-mode', 'reading-mode', 'sidebar-open');
-      clone.body.style.overflow = '';
+      clone.querySelectorAll('.topic-open-page').forEach(b => b.remove());
       const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'neet_bionotes_offline.html';
-      document.body.appendChild(a);
       a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      URL.revokeObjectURL(url);
       showToast('Standalone HTML exported!');
     }
 
@@ -4136,7 +4293,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         id: 'ch-15',
         badge: 'NCERT Class XI • Ch. 15',
         title: 'Chapter 15: Body Fluids and Circulation',
-        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.',
+        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.',
         html: defaultHtml,
         updatedAt: Date.now()
       };
@@ -4165,7 +4322,97 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       banner.classList.remove('flex');
     }
 
-    /* --- Topic Full-Page Reading Overlay & Dynamic Toolbar Height --- */
+    /* =====================================================================
+       TOPIC FULL-PAGE OVERLAY (RELIABLE IN PREVIEW, OFFLINE HTML & GITHUB PAGES)
+       ===================================================================== */
+    function ensureTopicOverlay() {
+      let ov = document.getElementById('topic-reading-overlay');
+      if (ov) return ov;
+      ov = document.createElement('div');
+      ov.id = 'topic-reading-overlay';
+      ov.innerHTML = `<div class="tro-bar">
+        <strong id="tro-title" style="flex:1;min-width:140px">Topic</strong>
+        <button type="button" class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button>
+        <button type="button" class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
+        <button type="button" class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button>
+        <button type="button" class="pt-btn" onclick="closeTopicReading()">✕ Close</button>
+      </div><main class="tro-content" id="tro-content"></main>`;
+      document.body.appendChild(ov);
+      ov.addEventListener('click', e => {
+        const mask = e.target.closest('.diagram-mask');
+        if (mask) { e.preventDefault(); mask.classList.toggle('revealed'); return; }
+        const qa = e.target.closest('.cloze-question');
+        if (qa) {
+          e.preventDefault();
+          const open = !qa.classList.contains('qa-open');
+          qa.classList.toggle('qa-open', open);
+          const q = qa.querySelector('.qa-question'), a = qa.querySelector('.qa-answer');
+          if (q) q.style.display = open ? 'none' : '';
+          if (a) a.style.display = open ? 'inline' : 'none';
+          return;
+        }
+        const c = e.target.closest('.cloze');
+        if (c) c.classList.toggle('cloze-hidden');
+      });
+      return ov;
+    }
+
+    function closeTopicReading() {
+      const ov = document.getElementById('topic-reading-overlay');
+      if (ov) { ov.classList.remove('open'); ov.style.display = 'none'; }
+      document.body.style.overflow = '';
+    }
+
+    function topicHideClozes() {
+      const root = document.getElementById('tro-content'); if (!root) return;
+      root.querySelectorAll('.cloze').forEach(el => el.classList.add('cloze-hidden'));
+      root.querySelectorAll('.diagram-mask').forEach(m => m.classList.remove('revealed'));
+      root.querySelectorAll('.cloze-question').forEach(el => {
+        el.classList.remove('qa-open');
+        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
+        if (q) q.style.display = ''; if (a) a.style.display = 'none';
+      });
+    }
+
+    function topicRevealClozes() {
+      const root = document.getElementById('tro-content'); if (!root) return;
+      root.querySelectorAll('.cloze').forEach(el => el.classList.remove('cloze-hidden'));
+      root.querySelectorAll('.diagram-mask').forEach(m => m.classList.add('revealed'));
+      root.querySelectorAll('.cloze-question').forEach(el => {
+        el.classList.add('qa-open');
+        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
+        if (q) q.style.display = 'none'; if (a) a.style.display = 'inline';
+      });
+    }
+
+    function openTopicInWindow(button) {
+      if (document.body.classList.contains('edit-mode')) {
+        showToast('Switch to Recall Mode to open a topic full page.');
+        return;
+      }
+      const block = button && button.closest ? button.closest('.toggle-block') : null;
+      if (!block) return;
+      const header = Array.from(block.children).find(el => el.classList?.contains('toggle-header')) || block.querySelector('.toggle-header');
+      const heading = header?.querySelector('h1,h2,h3,h4,h5,strong');
+      const title = heading ? heading.textContent.trim() : 'Topic';
+      const source = Array.from(block.children).find(el => el.classList?.contains('toggle-body')) || block.querySelector('.toggle-body');
+      if (!source) return;
+      const content = source.cloneNode(true);
+      content.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+      content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.topic-open-page').forEach(el => el.remove());
+      content.querySelectorAll('.toggle-block').forEach(el => {
+        el.classList.remove('collapsed');
+        const body = el.querySelector(':scope > .toggle-body');
+        if (body) body.style.display = 'block';
+      });
+      const ov = ensureTopicOverlay();
+      ov.querySelector('#tro-title').textContent = title;
+      ov.querySelector('#tro-content').replaceChildren(content);
+      ov.style.display = 'flex';
+      ov.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
     function injectTopicFullPageButtons() {
       const canvas = document.getElementById('notes-canvas');
       if (!canvas) return;
@@ -4175,7 +4422,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         btn.type = 'button';
         btn.className = 'topic-open-page no-print';
         btn.textContent = '↗ Full page';
-        btn.setAttribute('onclick', 'window.openTopicInWindow(this)');
+        btn.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);');
         header.appendChild(btn);
       });
     }
@@ -4185,87 +4432,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const bar = document.getElementById('top-toolbar');
         if (bar) document.documentElement.style.setProperty('--toolbar-height', (bar.offsetHeight + 8) + 'px');
       }
-      function ensureTopicOverlay() {
-        let ov = document.getElementById('topic-reading-overlay');
-        if (ov) return ov;
-        ov = document.createElement('div');
-        ov.id = 'topic-reading-overlay';
-        ov.innerHTML = `<div class="tro-bar">
-          <strong id="tro-title" style="flex:1;min-width:140px">Topic</strong>
-          <button type="button" class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button>
-          <button type="button" class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
-          <button type="button" class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button>
-          <button type="button" class="pt-btn" onclick="closeTopicReading()">✕ Close</button>
-        </div><main class="tro-content" id="tro-content"></main>`;
-        document.body.appendChild(ov);
-        ov.addEventListener('click', e => {
-          const mask = e.target.closest('.diagram-mask');
-          if (mask) { e.preventDefault(); mask.classList.toggle('revealed'); return; }
-          const qa = e.target.closest('.cloze-question');
-          if (qa) {
-            e.preventDefault();
-            const open = !qa.classList.contains('qa-open');
-            qa.classList.toggle('qa-open', open);
-            const q = qa.querySelector('.qa-question'), a = qa.querySelector('.qa-answer');
-            if (q) q.style.display = open ? 'none' : '';
-            if (a) a.style.display = open ? 'inline' : 'none';
-            return;
-          }
-          const c = e.target.closest('.cloze');
-          if (c) c.classList.toggle('cloze-hidden');
-        });
-        return ov;
-      }
-
-      window.closeTopicReading = function () {
-        const ov = document.getElementById('topic-reading-overlay');
-        if (ov) { ov.classList.remove('open'); ov.style.display = 'none'; }
-        document.body.style.overflow = '';
-      };
-      window.topicHideClozes = function () {
-        const root = document.getElementById('tro-content'); if (!root) return;
-        root.querySelectorAll('.cloze').forEach(el => el.classList.add('cloze-hidden'));
-        root.querySelectorAll('.diagram-mask').forEach(m => m.classList.remove('revealed'));
-        root.querySelectorAll('.cloze-question').forEach(el => {
-          el.classList.remove('qa-open');
-          const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-          if (q) q.style.display = ''; if (a) a.style.display = 'none';
-        });
-      };
-      window.topicRevealClozes = function () {
-        const root = document.getElementById('tro-content'); if (!root) return;
-        root.querySelectorAll('.cloze').forEach(el => el.classList.remove('cloze-hidden'));
-        root.querySelectorAll('.diagram-mask').forEach(m => m.classList.add('revealed'));
-        root.querySelectorAll('.cloze-question').forEach(el => {
-          el.classList.add('qa-open');
-          const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-          if (q) q.style.display = 'none'; if (a) a.style.display = 'inline';
-        });
-      };
-      window.openTopicInWindow = function (button) {
-        if (document.body.classList.contains('edit-mode')) { showToast('Switch to Recall Mode to open a topic full page.'); return; }
-        const block = button && button.closest ? button.closest('.toggle-block') : null;
-        if (!block) return;
-        const header = Array.from(block.children).find(el => el.classList?.contains('toggle-header')) || block.querySelector('.toggle-header');
-        const heading = header?.querySelector('h1,h2,h3,h4,h5,strong');
-        const title = heading ? heading.textContent.trim() : 'Topic';
-        const source = Array.from(block.children).find(el => el.classList?.contains('toggle-body')) || block.querySelector('.toggle-body');
-        if (!source) return;
-        const content = source.cloneNode(true);
-        content.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-        content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.topic-open-page').forEach(el => el.remove());
-        content.querySelectorAll('.toggle-block').forEach(el => {
-          el.classList.remove('collapsed');
-          const body = el.querySelector(':scope > .toggle-body');
-          if (body) body.style.display = 'block';
-        });
-        const ov = ensureTopicOverlay();
-        ov.querySelector('#tro-title').textContent = title;
-        ov.querySelector('#tro-content').replaceChildren(content);
-        ov.style.display = 'flex';
-        ov.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      };
 
       window.addEventListener('DOMContentLoaded', () => {
         sizeToolbar();
@@ -4278,13 +4444,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           injectTopicFullPageButtons();
           canvas.addEventListener('click', (e) => {
             const btn = e.target.closest('.topic-open-page');
-            if (btn) {
-              e.preventDefault();
-              e.stopPropagation();
-              window.openTopicInWindow(btn);
-            }
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openTopicInWindow(btn);
           }, true);
-          new MutationObserver(() => injectTopicFullPageButtons()).observe(canvas, { childList: true, subtree: true });
+          if (window.MutationObserver) {
+            new MutationObserver(() => injectTopicFullPageButtons()).observe(canvas, { childList: true, subtree: true });
+          }
         }
       });
     })();
