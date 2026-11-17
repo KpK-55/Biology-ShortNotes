@@ -609,7 +609,19 @@
       #paragraph-transformer .pt-pane + .pt-pane { border-left:0; border-top:1px solid var(--border-color); }
     }
 
-  </style>
+
+    #top-toolbar {position:sticky !important;top:0 !important;z-index:90 !important;width:100%;flex-shrink:0;}
+    #cursor-quick-bar {display:none !important;}
+    #paragraph-transformer .pt-viewport {max-height:55vh;overflow:auto;border:1px solid var(--border-strong);border-radius:9px;touch-action:pan-x pan-y;}
+    #paragraph-transformer .pt-canvas {position:relative;width:1800px;height:1200px;min-width:1800px;min-height:1200px;overflow:hidden;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;touch-action:pan-x pan-y;}
+    #paragraph-transformer .pt-canvas svg {position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;overflow:visible;}
+    #paragraph-transformer .pt-node {position:absolute;margin:0;min-width:70px;max-width:none;box-sizing:border-box;border-radius:9px;padding:8px 12px;cursor:move;touch-action:none;user-select:none;}
+    #paragraph-transformer .pt-node [contenteditable="true"] {user-select:text;cursor:text;touch-action:auto;}\n    #paragraph-transformer .pt-node-handle {height:14px;line-height:12px;text-align:left;font-size:11px;opacity:.7;cursor:grab;touch-action:none;user-select:none;}
+    .cloze-question {cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(245,158,11,.2);}
+    .cloze-question .qa-answer {display:none !important;}
+    .cloze-question.qa-open .qa-question {display:none !important;}
+    .cloze-question.qa-open .qa-answer {display:inline !important;}
+\n  </style>
 </head>
 <body class="min-h-screen selection:bg-sky-500/30">
 
@@ -669,7 +681,7 @@
   </aside>
 
   <!-- Main Content Wrapper -->
-  <div id="main-wrapper" class="min-h-screen flex flex-col pt-[118px]">
+  <div id="main-wrapper" class="min-h-screen flex flex-col">
 
     <!-- Top Sticky Action & Active Recall Toolbar -->
     <header id="top-toolbar" class="fixed top-0 left-0 right-0 z-40 theme-panel/95 backdrop-blur-md border-b px-3 sm:px-5 py-2">
@@ -3296,7 +3308,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const subtitle = document.getElementById('chapter-subtitle');
 
       canvas.addEventListener('click', (e) => {
-        const qa = e.target.closest('.cloze-question'); if (qa && !isEditMode) { e.stopPropagation(); qa.classList.toggle('qa-open'); scheduleAutoSave(); return; }
+        const qa=e.target.closest('.cloze-question'); if(qa&&!isEditMode){e.preventDefault();e.stopPropagation();qa.classList.toggle('qa-open');const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q&&a){q.hidden=qa.classList.contains('qa-open');a.hidden=!qa.classList.contains('qa-open');}return;}
         const clozeEl = e.target.closest('.cloze');
         if (clozeEl && !isEditMode) {
           e.stopPropagation();
@@ -3802,83 +3814,47 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     function renderParagraphTransformer() {
       ensureParagraphTransformer();
-      const flow = ptState.mode === 'flowchart';
-      document.getElementById('pt-title').textContent = flow ? 'Flowchart Builder' : 'Table Builder';
-      document.getElementById('pt-work-title').textContent = flow ? 'Flowchart workspace' : 'Table workspace';
-      document.getElementById('pt-source').textContent = ptState.source;
-      document.getElementById('pt-tools').innerHTML = flow
-        ? `<button class="pt-btn" onclick="ptAddNode()">＋ Node</button><button class="pt-btn" onclick="ptStartConnect()">↗ Connect nodes</button><button class="pt-btn" onclick="ptDeleteArrow()">✕ Delete arrow</button><button class="pt-btn" onclick="ptDeleteNode()">✕ Delete node</button>`
+      const flow=ptState.mode==='flowchart';
+      document.getElementById('pt-title').textContent=flow?'Flowchart Builder':'Table Builder';
+      document.getElementById('pt-work-title').textContent=flow?'Flowchart workspace':'Table workspace';
+      document.getElementById('pt-source').textContent=ptState.source;
+      document.getElementById('pt-tools').innerHTML=flow
+        ? `<button class="pt-btn" onclick="ptAddNode()">＋ Node</button><button class="pt-btn ${ptState.drawArrow?'primary':''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow?'Drawing…':'Draw arrow'}</button><button class="pt-btn" onclick="ptDeleteArrow()">✕ Delete arrow</button><button class="pt-btn" onclick="ptDeleteNode()">✕ Delete node</button>`
         : `<button class="pt-btn" onclick="ptAddRow()">＋ Row</button><button class="pt-btn" onclick="ptAddColumn()">＋ Column</button><button class="pt-btn" onclick="ptRemoveRow()">− Row</button><button class="pt-btn" onclick="ptRemoveColumn()">− Column</button>`;
-      if (flow) {
-        const ws = document.getElementById('pt-workspace');
-        const n = ptState.nodes[ptState.activeNode];
-        const a = ptState.arrows[ptState.arrows.length-1];
-        const inspector = (n ? `<div class="pt-inspector">
-          <b class="text-[10px]">NODE</b><label>X <input type="number" value="${n.x}" onchange="ptSetProp('x',this.value)"></label><label>Y <input type="number" value="${n.y}" onchange="ptSetProp('y',this.value)"></label>
-          <label>Width <input type="text" value="${n.w}" onchange="ptSetProp('w',this.value)"></label><label>Height <input type="number" value="${n.h}" onchange="ptSetProp('h',this.value)"></label>
-          <label>Font <input type="number" value="${n.fs}" onchange="ptSetProp('fs',this.value)"></label><label>Fill <input type="color" value="${n.bg}" onchange="ptSetProp('bg',this.value)"></label>
-          <label>Border <input type="color" value="${n.border}" onchange="ptSetProp('border',this.value)"></label><label>Border px <input type="number" min="1" max="12" value="${n.line}" onchange="ptSetProp('line',this.value)"></label>
-        </div>` : '') + (a ? `<div class="pt-inspector"><b class="text-[10px]">LAST ARROW</b>
-          <label>From <select onchange="ptSetArrowProp('fromSide',this.value)"><option value="auto" ${a.fromSide==='auto'?'selected':''}>Auto</option><option value="top" ${a.fromSide==='top'?'selected':''}>Top</option><option value="right" ${a.fromSide==='right'?'selected':''}>Right</option><option value="bottom" ${a.fromSide==='bottom'?'selected':''}>Bottom</option><option value="left" ${a.fromSide==='left'?'selected':''}>Left</option></select></label>
-          <label>To <select onchange="ptSetArrowProp('toSide',this.value)"><option value="auto" ${a.toSide==='auto'?'selected':''}>Auto</option><option value="top" ${a.toSide==='top'?'selected':''}>Top</option><option value="right" ${a.toSide==='right'?'selected':''}>Right</option><option value="bottom" ${a.toSide==='bottom'?'selected':''}>Bottom</option><option value="left" ${a.toSide==='left'?'selected':''}>Left</option></select></label>
-          <label>Thickness <input type="number" min="1" max="14" value="${a.width}" onchange="ptSetArrowProp('width',this.value)"></label><label>Colour <input type="color" value="${a.color}" onchange="ptSetArrowProp('color',this.value)"></label>
-        </div>` : '<div class="text-[10px] theme-muted mb-2">Select a node to edit it. To connect nodes, click Connect nodes, then tap the source and destination nodes.</div>');
-        const edges = ptState.arrows.map((a,i)=>{ const A=ptState.nodes[a.from],B=ptState.nodes[a.to]; if(!A||!B)return ''; const ac=ptAnchor(A,a.fromSide||'auto',B),bc=ptAnchor(B,a.toSide||'auto',A); return `<path d="M ${ac.x} ${ac.y} L ${bc.x} ${bc.y}" stroke="${a.color}" stroke-width="${a.width}" fill="none" marker-end="url(#ptArrowHead)" />`; }).join('');
-        ws.innerHTML = inspector + `<div class="text-[10px] theme-muted mb-1">Drag nodes freely. Canvas scrolls in both directions. Node width grows to fit text unless you set a custom width.</div><div class="overflow-auto border rounded-lg" style="max-height:55vh"><div class="pt-canvas"><svg viewBox="0 0 1100 720"><defs><marker id="ptArrowHead" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="context-stroke"/></marker></defs>${edges}</svg>${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" style="left:${v.x}px;top:${v.y}px;width:${v.w==='auto'?'max-content':v.w+'px'};min-height:${v.h}px;max-width:420px;background:${v.bg};border: ${v.line}px solid ${v.border};font-size:${v.fs}px" onpointerdown="ptNodePointerDown(event,${i})" onclick="ptNodeClick(event,${i})"><div contenteditable="true" oninput="ptNodeText(${i},this)" onclick="event.stopPropagation()" style="min-width:25px;max-width:390px">${escapeHTML(v.text)}</div><div class="text-[9px] opacity-60 mt-1">Node ${i+1}</div></div>`).join('')}</div></div>`;
-            } else {
-        let html = '<table class="pt-table"><tbody>';
-        for(let r=0;r<ptState.rows;r++){
-          html += '<tr>';
-          for(let c=0;c<ptState.cols;c++){
-            const tag = r===0 ? 'th' : 'td';
-            html += `<${tag}><div contenteditable="true" data-r="${r}" data-c="${c}" oninput="ptCellChanged(this)">${escapeHTML((ptState.cells?.[r]?.[c]) || (r===0 ? (c===0?'Feature':`Column ${c+1}`) : ''))}</div></${tag}>`;
-          }
-          html += '</tr>';
-        }
-        html += '</tbody></table><p class="text-[10px] theme-muted mt-2">Selected phrases are placed into successive body cells; add rows or columns as needed.</p>';
-        document.getElementById('pt-workspace').innerHTML = html;
+      if(flow){
+        const n=ptState.nodes[ptState.activeNode], a=ptState.arrows[ptState.activeArrow??-1];
+        const inspector=(n?`<div class="pt-inspector"><b class="text-[10px]">NODE</b>
+          <label>Width <input type="number" min="70" max="700" value="${n.w}" onchange="ptSetProp('w',this.value)"></label>
+          <label>Height <input type="number" min="38" max="500" value="${n.h}" onchange="ptSetProp('h',this.value)"></label>
+          <label>Font <input type="number" min="9" max="40" value="${n.fs}" onchange="ptSetProp('fs',this.value)"></label>
+          <label>Fill <input type="color" value="${n.bg}" onchange="ptSetProp('bg',this.value)"></label>
+          <label>Border <input type="color" value="${n.border}" onchange="ptSetProp('border',this.value)"></label>
+          <label>Border px <input type="number" min="1" max="12" value="${n.line}" onchange="ptSetProp('line',this.value)"></label></div>`:'<div class="text-[10px] theme-muted mb-2">Drag nodes anywhere. Select a node to change its size and colour. Use Draw arrow and drag from tail to arrowhead.</div>')+
+          (a?`<div class="pt-inspector"><b class="text-[10px]">ARROW</b><label>Thickness <input type="number" min="1" max="18" value="${a.width}" onchange="ptSetArrowProp('width',this.value)"></label><label>Colour <input type="color" value="${a.color}" onchange="ptSetArrowProp('color',this.value)"></label><button class="pt-btn" onclick="ptDeleteArrow()">Delete arrow</button></div>`:'');
+        const edges=ptState.arrows.map((ar,i)=>`<g><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="${ar.color}" stroke-width="${ar.width}" fill="none" marker-end="url(#ptArrowHead)" stroke-linecap="round"/><path d="M ${ar.x1} ${ar.y1} L ${ar.x2} ${ar.y2}" stroke="transparent" stroke-width="16" fill="none" onclick="ptSelectArrow(${i})"/></g>`).join('');
+        document.getElementById('pt-workspace').innerHTML=inspector+`<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: drag from the tail to the arrowhead.':'Free positioning; arrows can point in any direction and do not need to connect to nodes.'}</div><div class="pt-viewport" id="pt-viewport"><div class="pt-canvas" id="pt-canvas"><svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none"><defs><marker id="ptArrowHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="#38bdf8" stroke-width="3" marker-end="url(#ptArrowHead)" style="display:none"/></svg>${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" style="left:${v.x}px;top:${v.y}px;width:${v.w}px;height:${v.h}px;min-height:${v.h}px;background:${v.bg};border:${v.line}px solid ${v.border};font-size:${v.fs}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" onclick="ptSelectNode(${i})" title="Drag node">⠿</div><div contenteditable="true" oninput="ptNodeText(${i},this)" style="width:100%;height:calc(100% - 14px);outline:none;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(v.text)}</div></div>`).join('')}</div></div>`;
+        ptBindCanvasDrawing();
+      }else{
+        let html='<table class="pt-table"><tbody>';
+        for(let r=0;r<ptState.rows;r++){html+='<tr>';for(let c=0;c<ptState.cols;c++){const tag=r===0?'th':'td';html+=`<${tag}><div contenteditable="true" data-r="${r}" data-c="${c}" oninput="ptCellChanged(this)">${escapeHTML((ptState.cells?.[r]?.[c])||(r===0?(c===0?'Feature':`Column ${c+1}`):''))}</div></${tag}>`;}html+='</tr>';}
+        document.getElementById('pt-workspace').innerHTML=html+'</tbody></table><p class="text-[10px] theme-muted mt-2">Selected phrases are placed into successive body cells.</p>';
       }
     }
-
-    function ptSelectedSourceText() {
-      const sel = window.getSelection();
-      if (!sel || !sel.rangeCount) return '';
-      const text = sel.toString().trim();
-      const source = document.getElementById('pt-source');
-      return text && source.contains(sel.getRangeAt(0).commonAncestorContainer) ? text : '';
-    }
-    function ptAddSelection() {
-      const text = ptSelectedSourceText();
-      if (!text) { showToast('Select a phrase in the original text first.'); return; }
-      if (ptState.mode === 'flowchart') { ptCreateNode(text); }
-      else {
-        ptEnsureCells();
-        const total = (ptState.rows - 1) * ptState.cols;
-        let idx = ptState.nextCell || 0;
-        if (idx >= total) { ptState.rows++; ptEnsureCells(); }
-        const r = 1 + Math.floor(idx / ptState.cols), c = idx % ptState.cols;
-        ptState.cells[r][c] = (ptState.cells[r][c] ? ptState.cells[r][c] + ' ' : '') + text;
-        ptState.nextCell = idx + 1;
-      }
-      renderParagraphTransformer();
-    }
-    function ptAddWholeSource() {
-      if (ptState.mode === 'flowchart') { ptCreateNode(ptState.source); }
-      else { ptEnsureCells(); ptState.cells[1][0] = (ptState.cells[1][0] ? ptState.cells[1][0]+' ' : '') + ptState.source; }
-      renderParagraphTransformer();
-    }
-    function ptCreateNode(text){const i=ptState.nodes.length;ptState.nodes.push({text:String(text||'New node'),x:40+(i%4)*240,y:40+Math.floor(i/4)*150,w:'auto',h:48,fs:14,bg:'#1f2937',border:'#64748b',line:1});ptState.activeNode=i;renderParagraphTransformer();}
+    function ptSelectedSourceText(){const sel=window.getSelection();if(!sel||!sel.rangeCount)return '';const text=sel.toString().trim(),src=document.getElementById('pt-source');return text&&src.contains(sel.getRangeAt(0).commonAncestorContainer)?text:'';}
+    function ptAddSelection(){const text=ptSelectedSourceText();if(!text){showToast('Select a phrase in the original text first.');return;}if(ptState.mode==='flowchart')ptCreateNode(text);else{ptEnsureCells();let idx=ptState.nextCell||0,total=(ptState.rows-1)*ptState.cols;if(idx>=total){ptState.rows++;ptEnsureCells();}const r=1+Math.floor(idx/ptState.cols),c=idx%ptState.cols;ptState.cells[r][c]=(ptState.cells[r][c]?ptState.cells[r][c]+' ':'')+text;ptState.nextCell=idx+1;renderParagraphTransformer();}}
+    function ptAddWholeSource(){if(ptState.mode==='flowchart')ptCreateNode(ptState.source);else{ptEnsureCells();ptState.cells[1][0]=(ptState.cells[1][0]?' ':'')+ptState.source;renderParagraphTransformer();}}
+    function ptCreateNode(text){const i=ptState.nodes.length,t=String(text||'New node');ptState.nodes.push({text:t,x:70+(i%4)*300,y:70+Math.floor(i/4)*190,w:Math.max(150,Math.min(380,t.length*8+34)),h:76,fs:14,bg:'#1f2937',border:'#38bdf8',line:1});ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
     function ptAddNode(){ptCreateNode('New node');}
-    function ptSelectNode(i){ptState.activeNode=i;renderParagraphTransformer();}
-    function ptNodeClick(e,i){ if(ptState.connectFrom>=0){ if(ptState.connectFrom!==i){ptState.arrows.push({from:ptState.connectFrom,to:i,width:2,color:'#38bdf8',fromSide:'auto',toSide:'auto'}); } ptState.connectFrom=-1; renderParagraphTransformer(); return; } ptState.activeNode=i; renderParagraphTransformer(); }
-    function ptStartConnect(){if(ptState.nodes.length<2){showToast('Add at least two nodes first.');return;}ptState.connectFrom=ptState.activeNode>=0?ptState.activeNode:0;showToast('Now tap the destination node to draw an arrow.');}
-    function ptDeleteArrow(){if(!ptState.arrows.length)return;ptState.arrows.pop();renderParagraphTransformer();}
-    function ptDeleteNode(){if(ptState.activeNode<0)return;const i=ptState.activeNode;ptState.nodes.splice(i,1);ptState.arrows=ptState.arrows.filter(a=>a.from!==i&&a.to!==i).map(a=>({...a,from:a.from>i?a.from-1:a.from,to:a.to>i?a.to-1:a.to}));ptState.activeNode=-1;renderParagraphTransformer();}
-    function ptSetProp(k,v){const n=ptState.nodes[ptState.activeNode];if(!n)return;n[k]=['x','y','h','fs','line'].includes(k)?Number(v):k==='w'?(v==='auto'?'auto':Number(v)):v;renderParagraphTransformer();}
-    function ptSetArrowProp(k,v){const a=ptState.arrows[ptState.arrows.length-1];if(a){a[k]=k==='width'?Number(v):v;renderParagraphTransformer();}}
-    function ptAnchor(n,side,other){if(side==='auto'){const dx=(other.x+other.w/2)-(n.x+(n.w==='auto'?140:n.w)/2),dy=(other.y+other.h/2)-(n.y+n.h/2);side=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'bottom':'top');}const w=n.w==='auto'?180:n.w;return side==='left'?{x:n.x,y:n.y+n.h/2}:side==='right'?{x:n.x+w,y:n.y+n.h/2}:side==='top'?{x:n.x+w/2,y:n.y}:{x:n.x+w/2,y:n.y+n.h};}
-    function ptNodeText(i,el){ptState.nodes[i].text=el.innerText;const n=ptState.nodes[i];if(n.w==='auto'){el.parentElement.style.width='max-content';}}
-    function ptNodePointerDown(e,i){if(e.target.isContentEditable)return;const el=e.currentTarget,canvas=el.parentElement;const rect=canvas.getBoundingClientRect(),sx=e.clientX-rect.left+canvas.scrollLeft-el.offsetLeft,sy=e.clientY-rect.top+canvas.scrollTop-el.offsetTop;el.setPointerCapture(e.pointerId);const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ev.clientX-rect.left+canvas.scrollLeft-sx);n.y=Math.max(0,ev.clientY-rect.top+canvas.scrollTop-sy);el.style.left=n.x+'px';el.style.top=n.y+'px';const svg=canvas.querySelector('svg');if(svg){const paths=ptState.arrows.map(a=>{const A=ptState.nodes[a.from],B=ptState.nodes[a.to],ac=ptAnchor(A,a.fromSide||'auto',B),bc=ptAnchor(B,a.toSide||'auto',A);return `<path d="M ${ac.x} ${ac.y} L ${bc.x} ${bc.y}" stroke="${a.color}" stroke-width="${a.width}" fill="none" marker-end="url(#ptArrowHead)"/>`;}).join('');svg.innerHTML=`<defs><marker id="ptArrowHead" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="context-stroke"/></marker></defs>${paths}`;}};const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);ptState.activeNode=i;}
+    function ptSelectNode(i){ptState.activeNode=i;ptState.activeArrow=-1;renderParagraphTransformer();}
+    function ptSetProp(k,v){const n=ptState.nodes[ptState.activeNode];if(n){n[k]=Number(v);renderParagraphTransformer();}}
+    function ptNodeText(i,el){if(ptState.nodes[i])ptState.nodes[i].text=el.innerText;}
+    function ptNodePointerDown(e,i){if(e.target.isContentEditable||ptState.drawArrow)return;e.preventDefault();const node=e.currentTarget,canvas=document.getElementById('pt-canvas');ptState.activeNode=i;ptState.activeArrow=-1;const sx=e.clientX,sy=e.clientY,ox=ptState.nodes[i].x,oy=ptState.nodes[i].y;node.setPointerCapture?.(e.pointerId);const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ox+(ev.clientX-sx)*1800/canvas.clientWidth);n.y=Math.max(0,oy+(ev.clientY-sy)*1200/canvas.clientHeight);node.style.left=n.x+'px';node.style.top=n.y+'px';};const up=()=>{node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);renderParagraphTransformer();};node.addEventListener('pointermove',move);node.addEventListener('pointerup',up);node.addEventListener('pointercancel',up);}
+    function ptToggleDrawArrow(){ptState.drawArrow=!ptState.drawArrow;ptState.activeArrow=-1;renderParagraphTransformer();}
+    function ptBindCanvasDrawing(){const canvas=document.getElementById('pt-canvas'),svg=document.getElementById('pt-svg');if(!canvas||!svg)return;canvas.addEventListener('pointerdown',e=>{if(!ptState.drawArrow||e.target.closest('.pt-node'))return;e.preventDefault();const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*1800/r.width,y=(e.clientY-r.top)*1200/r.height,preview=svg.querySelector('#pt-preview-arrow');preview.style.display='';preview.setAttribute('x1',x);preview.setAttribute('y1',y);preview.setAttribute('x2',x);preview.setAttribute('y2',y);const move=ev=>{const rr=canvas.getBoundingClientRect();preview.setAttribute('x2',(ev.clientX-rr.left)*1800/rr.width);preview.setAttribute('y2',(ev.clientY-rr.top)*1200/rr.height);};const up=ev=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);const rr=canvas.getBoundingClientRect(),x2=(ev.clientX-rr.left)*1800/rr.width,y2=(ev.clientY-rr.top)*1200/rr.height;if(Math.hypot(x2-x,y2-y)>12){ptState.arrows.push({x1:x,y1:y,x2,y2,width:3,color:'#38bdf8'});ptState.activeArrow=ptState.arrows.length-1;}ptState.drawArrow=false;renderParagraphTransformer();};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up,{once:true});});}
+    function ptSelectArrow(i){ptState.activeArrow=i;ptState.activeNode=-1;renderParagraphTransformer();}
+    function ptSetArrowProp(k,v){const a=ptState.arrows[ptState.activeArrow??-1];if(a){a[k]=k==='width'?Number(v):v;renderParagraphTransformer();}}
+    function ptDeleteArrow(){const i=ptState.activeArrow??ptState.arrows.length-1;if(i<0||!ptState.arrows.length)return;ptState.arrows.splice(i,1);ptState.activeArrow=-1;renderParagraphTransformer();}
+    function ptDeleteNode(){if(ptState.activeNode<0)return;ptState.nodes.splice(ptState.activeNode,1);ptState.activeNode=-1;renderParagraphTransformer();}
     function ptEnsureCells(){if(!ptState.cells)ptState.cells=Array.from({length:ptState.rows},()=>Array(ptState.cols).fill(''));while(ptState.cells.length<ptState.rows)ptState.cells.push(Array(ptState.cols).fill(''));ptState.cells=ptState.cells.map(row=>{while(row.length<ptState.cols)row.push('');return row.slice(0,ptState.cols);});}
     function ptCellChanged(el){ptEnsureCells();ptState.cells[+el.dataset.r][+el.dataset.c]=el.innerText;}
     function ptAddRow(){ptState.rows++;ptEnsureCells();renderParagraphTransformer();}
@@ -3891,7 +3867,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       let html='';
       if(ptState.mode==='flowchart'){
         if(!ptState.nodes.length){showToast('Add at least one flowchart node first.');return;}
-        html='<div class="pt-generated-flow my-3 p-3 rounded-lg theme-nested border text-center space-y-1">'+ptState.nodes.map((n,i)=>`${i?'<div class="theme-muted leading-none">↓</div>':''}<div class="rounded-lg border border-[var(--border-strong)] px-3 py-2 theme-panel font-medium">${escapeHTML(n)}</div>`).join('')+'</div>';
+        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><defs><marker id="savedFlowArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>'+ptState.arrows.map(a=>`<path d="M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}" stroke="${a.color}" stroke-width="${a.width}" fill="none" marker-end="url(#savedFlowArrow)"/>`).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:${n.w/2}px;height:${n.h/2}px;box-sizing:border-box;padding:8px;border:${n.line}px solid ${n.border};border-radius:9px;background:${n.bg};color:white;text-align:center;font-size:${n.fs}px;overflow:auto;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
       }else{
         ptEnsureCells();
         html='<div class="table-wrapper my-3" style="width:100%"><div class="overflow-x-auto"><table class="notion-table"><thead><tr>'+ptState.cells[0].map(v=>`<th contenteditable="true">${escapeHTML(v)}</th>`).join('')+'</tr></thead><tbody>'+ptState.cells.slice(1).map(row=>'<tr>'+row.map(v=>`<td contenteditable="true">${escapeHTML(v)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div></div>';
@@ -3910,7 +3886,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const sel=window.getSelection(); if(!sel||sel.isCollapsed||!sel.rangeCount){showToast('Select the question text first.');return;}
       const range=sel.getRangeAt(0);const canvas=document.getElementById('notes-canvas');if(!canvas.contains(range.commonAncestorContainer)){showToast('Select text inside the chapter.');return;}
       const question=range.toString().trim();if(!question)return;const answer=prompt('Enter the answer that should appear when the question is tapped:');if(answer===null||!answer.trim())return;
-      const span=document.createElement('span');span.className='cloze-question';span.innerHTML=`<span class="qa-question">${escapeHTML(question)}</span><span class="qa-answer">${escapeHTML(answer.trim())}</span>`;
+      const span=document.createElement('span');span.className='cloze-question';span.innerHTML=`<span class="qa-question">${escapeHTML(question)}</span><span class="qa-answer" hidden>${escapeHTML(answer.trim())}</span>`;
       try{range.surroundContents(span);}catch(e){const f=range.extractContents();span.querySelector('.qa-question').textContent=question;range.insertNode(span);}
       sel.removeAllRanges();scheduleAutoSave(true);showToast('Tap-to-reveal Q&A inserted.');
     }
