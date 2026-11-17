@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#141417" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<html lang="en" class="light" style="--toolbar-height: 134px;"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#141417">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>NEET BioNotes — Active Recall, Builders &amp; Fullscreen Reader</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&amp;display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -110,6 +109,13 @@
     #drive-sync-icon.sync-online { color: #10b981; }
     #drive-sync-icon.sync-pending { color: #f59e0b; }
     #drive-sync-icon.sync-offline { color: #94a3b8; }
+    #drive-sync-icon.sync-remote-new { color: #f43f5e; }
+
+    #header-sync-btn.has-remote-update {
+      background-color: rgba(244, 63, 94, 0.18) !important;
+      border-color: rgba(244, 63, 94, 0.55) !important;
+      color: #fb7185 !important;
+    }
 
     .theme-panel { background-color: var(--bg-panel); border-color: var(--border-color); }
     .theme-nested { background-color: var(--bg-nested); border-color: var(--border-color); }
@@ -748,50 +754,40 @@
       margin: 0;
       width: max-content !important;
       height: auto !important;
-      min-width: 75px;
-      max-width: 300px;
-      padding: 9px 13px !important;
-      border-radius: 10px;
+      min-width: 48px;
+      max-width: 320px;
+      padding: 5px 10px !important;
+      border-radius: 7px;
       background: var(--bg-panel) !important;
       color: var(--text-main) !important;
       border: 1px solid var(--border-strong) !important;
       text-align: center;
-      font-size: 14.5px;
-      line-height: 1.4;
+      font-size: 14px;
+      line-height: 1.35;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
       box-sizing: border-box;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+      cursor: grab;
       user-select: none;
       -webkit-user-select: none;
       z-index: 3;
     }
-    #paragraph-transformer .pt-node.selected { outline: 2px solid #38bdf8; z-index: 6; }
-    #paragraph-transformer .pt-node-handle {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      height: 15px;
-      padding: 0 8px;
-      line-height: 13px;
-      text-align: center;
-      font-size: 10px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border-strong);
-      border-bottom: none;
-      border-radius: 6px 6px 0 0;
-      color: var(--text-muted);
-      cursor: grab;
-      touch-action: none;
-      letter-spacing: 1px;
-      opacity: 0.9;
+    #paragraph-transformer .pt-node.borderless {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+      padding: 2px 6px !important;
     }
-    #paragraph-transformer .pt-node-handle:active { cursor: grabbing; }
+    #paragraph-transformer .pt-node.selected {
+      outline: 1.5px dashed #38bdf8;
+      outline-offset: 2px;
+      z-index: 6;
+    }
+    #paragraph-transformer .pt-node:active { cursor: grabbing; }
     #paragraph-transformer .pt-node [contenteditable="true"] {
-      display: block;
-      min-width: 40px;
-      min-height: 20px;
+      display: inline-block;
+      min-width: 24px;
+      min-height: 18px;
       outline: none;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -842,8 +838,8 @@
       .notion-table td { background-color: #ffffff !important; color: #111111 !important; border: 1px solid #888888 !important; }
     }
   </style>
-</head>
-<body class="min-h-screen selection:bg-sky-500/30">
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, system-ui, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:"JetBrains Mono", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.bottom-0{bottom:0px}.bottom-5{bottom:1.25rem}.left-0{left:0px}.left-1\/2{left:50%}.left-3{left:0.75rem}.right-0{right:0px}.right-4{right:1rem}.top-0{top:0px}.top-2\.5{top:0.625rem}.top-4{top:1rem}.z-40{z-index:40}.z-50{z-index:50}.mx-0\.5{margin-left:0.125rem;margin-right:0.125rem}.mx-auto{margin-left:auto;margin-right:auto}.my-1{margin-top:0.25rem;margin-bottom:0.25rem}.mx-1{margin-left:0.25rem;margin-right:0.25rem}.mx-2{margin-left:0.5rem;margin-right:0.5rem}.mb-1\.5{margin-bottom:0.375rem}.mb-2\.5{margin-bottom:0.625rem}.mb-6{margin-bottom:1.5rem}.mt-1\.5{margin-top:0.375rem}.mt-2{margin-top:0.5rem}.mb-1{margin-bottom:0.25rem}.mt-10{margin-top:2.5rem}.ml-auto{margin-left:auto}.mr-1{margin-right:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-2\.5{margin-top:0.625rem}.mt-3{margin-top:0.75rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-2\.5{height:0.625rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-3{height:0.75rem}.max-h-\[82vh\]{max-height:82vh}.max-h-\[88vh\]{max-height:88vh}.min-h-screen{min-height:100vh}.w-2\.5{width:0.625rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-64{width:16rem}.w-72{width:18rem}.w-\[1px\]{width:1px}.w-full{width:100%}.max-w-4xl{max-width:56rem}.max-w-7xl{max-width:80rem}.max-w-md{max-width:28rem}.max-w-lg{max-width:32rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.select-all{-webkit-user-select:all;user-select:all}.list-decimal{list-style-type:decimal}.list-disc{list-style-type:disc}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-0\.5{gap:0.125rem}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.rounded-2xl{border-radius:1rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-l{border-left-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-l-4{border-left-width:4px}.border-\[var\(--border-color\)\]{border-color:var(--border-color)}.border-\[var\(--border-strong\)\]{border-color:var(--border-strong)}.border-amber-500\/40{border-color:rgb(245 158 11 / 0.4)}.border-blue-500\/30{border-color:rgb(59 130 246 / 0.3)}.border-blue-500\/35{border-color:rgb(59 130 246 / 0.35)}.border-cyan-500\/40{border-color:rgb(6 182 212 / 0.4)}.border-emerald-500\/35{border-color:rgb(16 185 129 / 0.35)}.border-emerald-500\/40{border-color:rgb(16 185 129 / 0.4)}.border-indigo-500\/40{border-color:rgb(99 102 241 / 0.4)}.border-rose-500\/30{border-color:rgb(244 63 94 / 0.3)}.border-rose-500\/35{border-color:rgb(244 63 94 / 0.35)}.border-sky-500\/30{border-color:rgb(14 165 233 / 0.3)}.border-sky-500\/35{border-color:rgb(14 165 233 / 0.35)}.border-violet-500\/40{border-color:rgb(139 92 246 / 0.4)}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.border-blue-500\/40{border-color:rgb(59 130 246 / 0.4)}.border-rose-500\/45{border-color:rgb(244 63 94 / 0.45)}.border-amber-400{--tw-border-opacity:1;border-color:rgb(251 191 36 / var(--tw-border-opacity, 1))}.border-rose-400{--tw-border-opacity:1;border-color:rgb(251 113 133 / var(--tw-border-opacity, 1))}.border-sky-400{--tw-border-opacity:1;border-color:rgb(56 189 248 / var(--tw-border-opacity, 1))}.bg-\[var\(--bg-nested\)\]{background-color:var(--bg-nested)}.bg-\[var\(--border-strong\)\]{background-color:var(--border-strong)}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-blue-500\/15{background-color:rgb(59 130 246 / 0.15)}.bg-cyan-500\/20{background-color:rgb(6 182 212 / 0.2)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-emerald-400\/70{background-color:rgb(52 211 153 / 0.7)}.bg-emerald-500\/15{background-color:rgb(16 185 129 / 0.15)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-indigo-500\/20{background-color:rgb(99 102 241 / 0.2)}.bg-rose-400{--tw-bg-opacity:1;background-color:rgb(251 113 133 / var(--tw-bg-opacity, 1))}.bg-rose-500{--tw-bg-opacity:1;background-color:rgb(244 63 94 / var(--tw-bg-opacity, 1))}.bg-rose-500\/15{background-color:rgb(244 63 94 / 0.15)}.bg-rose-500\/20{background-color:rgb(244 63 94 / 0.2)}.bg-sky-400{--tw-bg-opacity:1;background-color:rgb(56 189 248 / var(--tw-bg-opacity, 1))}.bg-sky-400\/70{background-color:rgb(56 189 248 / 0.7)}.bg-sky-500\/15{background-color:rgb(14 165 233 / 0.15)}.bg-violet-500\/20{background-color:rgb(139 92 246 / 0.2)}.bg-yellow-400\/70{background-color:rgb(250 204 21 / 0.7)}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-black\/75{background-color:rgb(0 0 0 / 0.75)}.bg-blue-500\/20{background-color:rgb(59 130 246 / 0.2)}.bg-sky-500\/20{background-color:rgb(14 165 233 / 0.2)}.bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.bg-red-500\/15{background-color:rgb(239 68 68 / 0.15)}.p-1{padding:0.25rem}.p-1\.5{padding:0.375rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-2\.5{padding:0.625rem}.p-5{padding:1.25rem}.p-3\.5{padding:0.875rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-7{padding-top:1.75rem;padding-bottom:1.75rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.pb-1{padding-bottom:0.25rem}.pb-4{padding-bottom:1rem}.pl-9{padding-left:2.25rem}.pr-4{padding-right:1rem}.pt-2{padding-top:0.5rem}.pl-4{padding-left:1rem}.pt-3{padding-top:0.75rem}.pt-5{padding-top:1.25rem}.pl-2{padding-left:0.5rem}.pl-5{padding-left:1.25rem}.pt-1{padding-top:0.25rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:"JetBrains Mono", monospace}.font-serif{font-family:"Source Serif 4", Georgia, serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.leading-none{line-height:1}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-tighter{letter-spacing:-0.05em}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-indigo-400{--tw-text-opacity:1;color:rgb(129 140 248 / var(--tw-text-opacity, 1))}.text-purple-400{--tw-text-opacity:1;color:rgb(192 132 252 / var(--tw-text-opacity, 1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133 / var(--tw-text-opacity, 1))}.text-sky-400{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.text-violet-400{--tw-text-opacity:1;color:rgb(167 139 250 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-rose-300{--tw-text-opacity:1;color:rgb(253 164 175 / var(--tw-text-opacity, 1))}.text-teal-400{--tw-text-opacity:1;color:rgb(45 212 191 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.line-through{-webkit-text-decoration-line:line-through;text-decoration-line:line-through}.opacity-0{opacity:0}.opacity-50{opacity:0.5}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.selection\:bg-sky-500\/30 *::selection{background-color:rgb(14 165 233 / 0.3)}.selection\:bg-sky-500\/30::selection{background-color:rgb(14 165 233 / 0.3)}.hover\:bg-\[var\(--bg-hover\)\]:hover{background-color:var(--bg-hover)}.hover\:bg-amber-500\/30:hover{background-color:rgb(245 158 11 / 0.3)}.hover\:bg-blue-500\/25:hover{background-color:rgb(59 130 246 / 0.25)}.hover\:bg-cyan-500\/30:hover{background-color:rgb(6 182 212 / 0.3)}.hover\:bg-emerald-500\/25:hover{background-color:rgb(16 185 129 / 0.25)}.hover\:bg-emerald-500\/30:hover{background-color:rgb(16 185 129 / 0.3)}.hover\:bg-red-500\/15:hover{background-color:rgb(239 68 68 / 0.15)}.hover\:bg-rose-500\/25:hover{background-color:rgb(244 63 94 / 0.25)}.hover\:bg-rose-500\/30:hover{background-color:rgb(244 63 94 / 0.3)}.hover\:bg-sky-500\/25:hover{background-color:rgb(14 165 233 / 0.25)}.hover\:bg-violet-500\/30:hover{background-color:rgb(139 92 246 / 0.3)}.hover\:bg-sky-500\/30:hover{background-color:rgb(14 165 233 / 0.3)}.hover\:bg-emerald-500\/20:hover{background-color:rgb(16 185 129 / 0.2)}.hover\:bg-red-500\/20:hover{background-color:rgb(239 68 68 / 0.2)}.hover\:bg-sky-500\/20:hover{background-color:rgb(14 165 233 / 0.2)}.hover\:text-\[var\(--text-heading\)\]:hover{color:var(--text-heading)}.hover\:text-sky-400:hover{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.focus\:border-sky-500\/60:focus{border-color:rgb(14 165 233 / 0.6)}.focus\:border-sky-500:focus{--tw-border-opacity:1;border-color:rgb(14 165 233 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}@media (min-width: 640px){.sm\:inline{display:inline}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:p-5{padding:1.25rem}.sm\:px-5{padding-left:1.25rem;padding-right:1.25rem}.sm\:px-8{padding-left:2rem;padding-right:2rem}.sm\:py-10{padding-top:2.5rem;padding-bottom:2.5rem}.sm\:pl-5{padding-left:1.25rem}.sm\:pl-6{padding-left:1.5rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 1024px){.lg\:hidden{display:none}.lg\:shadow-none{--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}}</style></head>
+<body class="min-h-screen selection:bg-sky-500/30 edit-mode">
 
   <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden"></div>
 
@@ -859,7 +855,10 @@
 
     <div class="p-3 flex-1 overflow-y-auto space-y-1.5">
       <div class="text-[11px] font-semibold uppercase tracking-wider theme-muted px-2 pb-1">Saved Chapters</div>
-      <div id="chapter-list" class="space-y-1"></div>
+      <div id="chapter-list" class="space-y-1"><div class="group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition bg-sky-500/15 text-sky-400 font-semibold border border-sky-500/30">
+          <div onclick="switchChapter('ch-15')" class="truncate flex-1 py-0.5" title="Chapter 15: Body Fluids and Circulation">Chapter 15: Body Fluids and Circulation</div>
+          
+        </div></div>
     </div>
 
     <div class="p-3 border-t border-[var(--border-color)] space-y-2">
@@ -893,8 +892,8 @@
         <span>🕒</span> Snapshot Recovery / Undo History
       </button>
 
-      <input type="file" id="chapter-import-input" accept=".json" class="hidden" onchange="importSingleChapterJSON(event)" />
-      <input type="file" id="backup-import-input" accept=".json" class="hidden" onchange="importBackupJSON(event)" />
+      <input type="file" id="chapter-import-input" accept=".json" class="hidden" onchange="importSingleChapterJSON(event)">
+      <input type="file" id="backup-import-input" accept=".json" class="hidden" onchange="importBackupJSON(event)">
     </div>
   </aside>
 
@@ -915,23 +914,24 @@
             <button type="button" onclick="noteRedo()" class="px-2 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-sm" title="Redo (Ctrl+Y)">↷</button>
           </div>
 
-          <button id="btn-mode-switch" onclick="toggleEditMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition">
-            <span id="mode-icon">🧠</span>
-            <span id="mode-text">Recall Mode</span>
+          <button id="btn-mode-switch" onclick="toggleEditMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition">
+            <span id="mode-icon">✏️</span>
+            <span id="mode-text">Edit Mode</span>
           </button>
 
-          <div id="recall-controls" class="flex items-center gap-1 bg-[var(--bg-nested)] border border-[var(--border-color)] rounded-lg p-1">
+          <div id="recall-controls" class="flex items-center gap-1 bg-[var(--bg-nested)] border border-[var(--border-color)] rounded-lg p-1 opacity-50">
             <button onclick="hideAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition">🙈 Hide</button>
             <button onclick="hideHardClozesOnly()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-rose-400 transition" title="Mask only Hard-flagged clozes (double-tap or right-click any cloze to flag)">🎯 Hard</button>
             <button onclick="revealAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-sky-400 transition">👁️ Reveal</button>
-            <span id="cloze-counter" class="px-2 py-0.5 text-[11px] font-mono theme-muted border-l border-[var(--border-color)]">0/0</span>
+            <span id="cloze-counter" class="px-2 py-0.5 text-[11px] font-mono theme-muted border-l border-[var(--border-color)]">0/157</span>
           </div>
         </div>
 
         <div class="flex items-center gap-1.5">
-          <button onclick="openGDriveModal()" id="header-sync-btn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 hover:bg-blue-500/25 transition">
-            <span id="drive-sync-icon" class="text-sm">☁️</span>
-            <span class="hidden lg:inline">Drive Sync</span>
+          <button onclick="openGDriveModal()" id="header-sync-btn" class="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 hover:bg-blue-500/25 transition" title="Local edits ready to sync (auto-backs up on close)">
+            <span id="drive-sync-icon" class="text-sm sync-pending">↻</span>
+            <span class="hidden sm:inline" id="drive-sync-label">Unsynced</span>
+            <span id="drive-remote-badge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white leading-tight animate-pulse">Restore</span>
           </button>
 
           <button onclick="enterReadingMode()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition">
@@ -942,9 +942,7 @@
           <button onclick="expandAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Expand All Sections">▼</button>
           <button onclick="collapseAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Collapse All Sections">▶</button>
 
-          <button onclick="cycleColorTheme()" id="theme-toggle-btn" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition font-medium">
-            🌙 Dark
-          </button>
+          <button onclick="cycleColorTheme()" id="theme-toggle-btn" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition font-medium">☀️ Light</button>
 
           <button onclick="exportPrintablePDF()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/35 hover:bg-rose-500/25 transition">
             <span>🖨️</span>
@@ -969,7 +967,7 @@
       </div>
 
       <!-- EDIT MODE FORMATTING & BUILDER RIBBON -->
-      <div id="edit-toolbar-group" class="hidden max-w-7xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs">
+      <div id="edit-toolbar-group" class="max-w-7xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs flex">
         <button onmousedown="event.preventDefault(); wrapSelectionInCloze()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition">[+ Cloze]</button>
         <button onmousedown="event.preventDefault(); unwrapSelectionCloze()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] theme-muted">−Uncloze</button>
         <button onclick="autoClozeNumbersAndTerms()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] text-sky-400 font-medium">⚡ Auto-Cloze</button>
@@ -1039,7 +1037,7 @@
       <button onclick="hideAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition">🙈 Hide</button>
       <button onclick="revealAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] text-sky-400 font-semibold transition">👁️ Reveal</button>
       <span class="w-[1px] h-3.5 bg-[var(--border-strong)] mx-0.5"></span>
-      <button onclick="cycleColorTheme()" id="reading-theme-btn" class="px-2.5 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-heading font-medium transition">🌙 Dark</button>
+      <button onclick="cycleColorTheme()" id="reading-theme-btn" class="px-2.5 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-heading font-medium transition">☀️ Light</button>
       <button onclick="exitReadingMode()" class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 font-semibold transition">✕ Exit</button>
     </div>
 
@@ -1055,26 +1053,22 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 no-print">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">NEET UG Biology</span>
-            <span id="chapter-badge" class="px-2.5 py-0.5 rounded text-[11px] font-medium theme-panel border">NCERT Class XI</span>
+            <span id="chapter-badge" class="px-2.5 py-0.5 rounded text-[11px] font-medium theme-panel border">NCERT Class XI • Ch. 15</span>
           </div>
           <div class="flex items-center gap-2 text-[11px] theme-muted">
-            <span id="save-indicator">✓ Saved locally</span>
+            <span id="save-indicator">Saving...</span>
             <button onclick="openVersionHistoryModal()" class="underline hover:text-sky-400 transition">History</button>
           </div>
         </div>
 
-        <h1 id="chapter-title" contenteditable="false" class="text-2xl sm:text-3xl font-bold theme-heading tracking-tight mb-1.5">
-          Chapter 15: Body Fluids and Circulation
-        </h1>
-        <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
-          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.
-        </p>
+        <h1 id="chapter-title" contenteditable="true" class="text-2xl sm:text-3xl font-bold theme-heading tracking-tight mb-1.5">Chapter 15: Body Fluids and Circulation</h1>
+        <p id="chapter-subtitle" contenteditable="true" class="text-xs sm:text-sm theme-muted">Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, resize tables.</p>
       </div>
 
       <!-- Search & Quick Action Strip -->
       <div id="search-filter-bar" class="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
         <div class="relative flex-1">
-          <input id="keyword-search" type="text" oninput="filterNotes(this.value)" placeholder="Filter sections by keyword (e.g., Pacemaker, Erythroblastosis, Lub, Tunica media)..." class="w-full theme-panel border rounded-lg pl-9 pr-4 py-2 text-xs focus:border-sky-500/60 focus:outline-none" />
+          <input id="keyword-search" type="text" oninput="filterNotes(this.value)" placeholder="Filter sections by keyword (e.g., Pacemaker, Erythroblastosis, Lub, Tunica media)..." class="w-full theme-panel border rounded-lg pl-9 pr-4 py-2 text-xs focus:border-sky-500/60 focus:outline-none">
           <svg class="w-4 h-4 theme-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
         <div class="flex items-center gap-2">
@@ -1085,10 +1079,678 @@
       </div>
 
       <!-- Notes Canvas Container -->
-      <div id="notes-canvas" class="space-y-4"></div>
+      <div id="notes-canvas" class="space-y-4">
+
+    <!-- 1. BLOOD & COMPOSITION -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">1. Blood &amp; Its Composition (15.1)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="true">
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li><strong>Blood:</strong> Special <span class="cloze cloze-hidden">connective tissue</span> = <strong>Fluid matrix (<span class="cloze cloze-hidden">Plasma, 55%</span>)</strong> + <strong>Formed elements (<span class="cloze cloze-hidden">45%</span>)</strong>.</li>
+            <li><em>Lower organisms transport:</em> <span class="cloze cloze-hidden">Sponges</span> &amp; <span class="cloze cloze-hidden">coelenterates</span> circulate water from surroundings through body cavities.</li>
+          </ul>
+        </div>
+
+        <!-- 15.1.1 Plasma -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="true" class="font-semibold text-sky-400">15.1.1 Plasma (55% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div contenteditable="true" class="space-y-1">
+              <p>• <strong>Appearance:</strong> <span class="cloze cloze-hidden">Straw-coloured</span>, viscous fluid.</p>
+              <p>• <strong>Composition:</strong> <span class="cloze cloze-hidden">90–92%</span> Water | <span class="cloze cloze-hidden">6–8%</span> Proteins | Small minerals (<span class="font-mono text-xs">Na⁺, Ca²⁺, Mg²⁺, HCO₃⁻, Cl⁻</span>) | Transit glucose, amino acids, lipids | Inactive clotting factors.</p>
+            </div>
+
+            <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="true" style="width: 34%;">Major Plasma Protein<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 66%;">Primary Function (NCERT Keywords)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Fibrinogen</td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Clotting or coagulation</span> of blood</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Globulins</td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Defense mechanisms</span> of the body</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Albumins</td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Osmotic balance</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+
+            <div contenteditable="true" class="px-3.5 py-2 rounded-lg border-l-4 border-amber-400 bg-amber-500/10 font-mono text-xs sm:text-sm">
+              <strong>Formula:</strong> Serum = Plasma − <span class="cloze cloze-hidden">Clotting factors</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 15.1.2 Formed Elements -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="true" class="font-semibold text-rose-400">15.1.2 Formed Elements (45% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="true" style="width: 22%;">Formed Element<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 20%;">Count (mm⁻³)<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 28%;">Lifespan / Formation<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 30%;">Key Features &amp; Function</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold text-rose-400">Erythrocytes (RBC)</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">5 – 5.5 million</span><br><span class="theme-muted">(Most abundant)</span></td>
+                      <td contenteditable="true">• Avg lifespan: <span class="cloze cloze-hidden">120 days</span><br>• Formed: <span class="cloze cloze-hidden">Red bone marrow</span><br>• Destroyed: <span class="cloze cloze-hidden">Spleen</span> (graveyard)</td>
+                      <td contenteditable="true">• Biconcave, <span class="cloze cloze-hidden">devoid of nucleus</span><br>• Hb: <span class="cloze cloze-hidden">12–16 g / 100 mL</span> blood<br>• Respiratory gas transport</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold text-sky-400">Leucocytes (WBC)</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">6000 – 8000</span></td>
+                      <td contenteditable="true">• Generally <span class="cloze cloze-hidden">short-lived</span></td>
+                      <td contenteditable="true">• <span class="cloze cloze-hidden">Nucleated</span>, colourless (lack Hb)<br>• Immunity &amp; defense</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold text-purple-400">Platelets (Thrombocytes)</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">1,50,000 – 3,50,000</span></td>
+                      <td contenteditable="true">• Fragments of <span class="cloze cloze-hidden">megakaryocytes</span> (bone marrow)</td>
+                      <td contenteditable="true">• Release factors for <span class="cloze cloze-hidden">coagulation/clotting</span><br>• Reduction → clotting disorders</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+
+            <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="true" style="width: 20%;">WBC Type<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 18%;">% of WBC<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 22%;">Category<div class="col-resizer no-print" contenteditable="false"></div></th>
+                      <th contenteditable="true" style="width: 40%;">Key NCERT Function / Secretion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Neutrophils</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">60–65%</span> (Max)</td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Lymphocytes</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">20–25%</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">'B' and 'T' forms</span> → <span class="cloze cloze-hidden">Immune responses</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Monocytes</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">6–8%</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Eosinophils</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">2–3%</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Resist infections</span>; associated with <span class="cloze cloze-hidden">allergic reactions</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="true" class="font-semibold">Basophils</td>
+                      <td contenteditable="true" class="font-mono text-xs"><span class="cloze cloze-hidden">0.5–1%</span> (Min)</td>
+                      <td contenteditable="true"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="true">Secrete <span class="cloze cloze-hidden">histamine, serotonin, heparin</span> → <span class="cloze cloze-hidden">Inflammatory reactions</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BLOOD GROUPING (ABO & Rh) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">2. Blood Grouping: ABO &amp; Rh Systems (15.1.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="true" style="width: 28%;">Blood Group<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 24%;">Antigens on RBCs<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 24%;">Antibodies in Plasma<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 24%;">Donor's Group</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="true" class="font-bold">A</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">A</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">anti-B</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">A, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-bold">B</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">B</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">anti-A</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-bold text-emerald-400">AB (Universal Recipient)</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">A, B</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">AB, A, B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-bold text-sky-400">O (Universal Donor)</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">anti-A, B</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">O</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+
+        <div contenteditable="true" class="p-4 rounded-lg theme-nested border space-y-2.5 text-center text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400 uppercase tracking-wider text-xs">Rh Incompatibility &amp; Erythroblastosis Foetalis</div>
+          <p class="text-left text-xs theme-muted">• Rh antigen (from Rhesus monkey) present in <span class="cloze cloze-hidden">~80%</span> humans (Rh⁺ᵛᵉ); absent in <span class="cloze cloze-hidden">~20%</span> (Rh⁻ᵛᵉ).</p>
+          <div class="pt-1">
+            <strong><span class="cloze cloze-hidden">Rh⁻ᵛᵉ Mother</span></strong> + <strong><span class="cloze cloze-hidden">Rh⁺ᵛᵉ Foetus</span></strong> (1st Pregnancy) ⟶ Separated by <span class="cloze cloze-hidden">placenta</span> (1st child normal)
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>During 1st Delivery</strong> ⟶ Maternal blood exposed to foetal Rh⁺ᵛᵉ blood ⟶ Mother forms <span class="cloze cloze-hidden">anti-Rh antibodies</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>Subsequent Rh⁺ᵛᵉ Pregnancy</strong> ⟶ Maternal antibodies leak into foetal blood ⟶ Destroy <span class="cloze cloze-hidden">foetal RBCs</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div class="text-rose-400 font-semibold">
+            Causes: Severe <span class="cloze cloze-hidden">anaemia and jaundice</span> or fatal (<span class="cloze cloze-hidden">Erythroblastosis foetalis</span>)
+          </div>
+          <div class="pt-2 border-t border-[var(--border-color)] text-emerald-400 text-xs">
+            <strong>Prevention:</strong> Administer <span class="cloze cloze-hidden">anti-Rh antibodies</span> to mother immediately after 1st delivery.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BLOOD CLOTTING CASCADE & LYMPH -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">3. Blood Clotting Cascade &amp; Lymph (15.1.4 &amp; 15.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="space-y-2">
+          <h3 contenteditable="true" class="font-semibold theme-heading">Coagulation Cascade</h3>
+          <div contenteditable="true" class="p-5 rounded-lg theme-nested border text-center space-y-5">
+            <div>
+              Injury / Trauma <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Platelets / Tissues</span> release clotting factors
+            </div>
+            <div>
+              Series of linked enzymatic reactions (Cascade process) <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Thrombokinase complex</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Prothrombin</span> (inactive)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombokinase</span></span>
+                <span class="theme-muted tracking-tighter">─────────→</span>
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Ca²⁺</span></span>
+              </span>
+              <span><span class="cloze cloze-hidden">Thrombin</span> (active)</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Fibrinogen</span> (soluble)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombin</span></span>
+                <span class="theme-muted tracking-tighter">───────→</span>
+                <span class="text-[11px] opacity-0">.</span>
+              </span>
+              <span><span class="cloze cloze-hidden">Fibrin</span> (insoluble threads)</span>
+            </div>
+            <div class="pt-1">
+              <strong>Clot / Coagulam</strong> = <span class="cloze cloze-hidden">Fibrin meshwork</span> trapping dead &amp; damaged formed elements
+            </div>
+          </div>
+        </div>
+
+        <div contenteditable="true" class="p-3.5 rounded-lg theme-nested border space-y-1.5">
+          <div class="font-semibold text-teal-400">15.2 Lymph (Tissue / Interstitial Fluid)</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Blood in tissue capillaries → water + small water-soluble substances enter interstitial spaces (leaves <span class="cloze cloze-hidden">larger proteins &amp; most formed elements</span> in vessels).</li>
+            <li>Same <span class="cloze cloze-hidden">mineral distribution</span> as plasma; colourless fluid with specialised <span class="cloze cloze-hidden">lymphocytes</span> (immune response).</li>
+            <li><strong>Fats</strong> are absorbed through lymph in the <span class="cloze cloze-hidden">lacteals</span> present in <span class="cloze cloze-hidden">intestinal villi</span>; drains back into <span class="cloze cloze-hidden">major veins</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CIRCULATORY PATHWAYS & VERTEBRATE HEART EVOLUTION -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">4. Circulatory Pathways &amp; Vertebrate Heart Evolution (15.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="true" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-amber-400 mb-1">Open Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Arthropods, Molluscs</span></p>
+            <p>• Blood pumped into open spaces / cavities called <span class="cloze cloze-hidden">sinuses</span>.</p>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-emerald-400 mb-1">Closed Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Annelids, Chordates</span></p>
+            <p>• Advantageous: fluid flow is <span class="cloze cloze-hidden">more precisely regulated</span>.</p>
+          </div>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="true" style="width: 24%;">Heart Chambers<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 24%;">Animals<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 24%;">Circulation Type<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 28%;">Pathway</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="true"><strong>2 Chambers</strong><br>(<span class="cloze cloze-hidden">1 Atrium, 1 Ventricle</span>)</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Fishes</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Single Circulation</span></td>
+                  <td contenteditable="true">Heart (deoxygenated) → <span class="cloze cloze-hidden">Gills</span> (oxygenated) → Body → Heart</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true"><strong>3 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 1 Ventricle</span>)</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Amphibians, Reptiles</span> <em>(except <span class="cloze cloze-hidden">crocodiles</span>)</em></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Incomplete Double Circulation</span></td>
+                  <td contenteditable="true">Left Atrium (O₂) + Right Atrium (de-O₂) <span class="cloze cloze-hidden">mix in single ventricle</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="true"><strong>4 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 2 Ventricles</span>)</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Crocodiles, Birds, Mammals</span></td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Complete Double Circulation</span></td>
+                  <td contenteditable="true">Independent pulmonary &amp; systemic circuits (<span class="cloze cloze-hidden">no mixing</span>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+      </div>
+    </section>
+
+    <!-- 5. HUMAN HEART, CONDUCTING SYSTEM & CARDIAC CYCLE -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">5. Human Heart, Conducting System &amp; Cardiac Cycle (15.3.1 – 15.3.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="true" class="space-y-1">
+          <p>• <strong>Origin &amp; Protection:</strong> <span class="cloze cloze-hidden">Mesodermally</span> derived; thoracic cavity between lungs, tilted to <span class="cloze cloze-hidden">left</span>; double-walled <span class="cloze cloze-hidden">pericardium</span> enclosing pericardial fluid.</p>
+          <p>• <strong>Valves:</strong> RA → RV guarded by <span class="cloze cloze-hidden">Tricuspid valve</span> (3 muscular flaps/cusps); LA → LV guarded by <span class="cloze cloze-hidden">Bicuspid / Mitral valve</span>; RV → Pulmonary artery &amp; LV → Aorta guarded by <span class="cloze cloze-hidden">Semilunar valves</span>.</p>
+        </div>
+
+        <div contenteditable="true" class="p-4 rounded-lg theme-nested border space-y-2 text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400">Autoexcitable Nodal Conduction Pathway</div>
+          <div class="flex flex-wrap items-center justify-center gap-2 text-center pt-1">
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong>SAN</strong> (Right upper corner of RA; <span class="cloze cloze-hidden">70–75 min⁻¹</span> = <span class="cloze cloze-hidden">Pacemaker</span>)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AVN</span></strong> (Lower left corner of RA)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AV Bundle / Bundle of His</span></strong></span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">Purkinje Fibres</span></strong> (Ventricular walls)</span>
+          </div>
+        </div>
+
+        <div contenteditable="true" class="space-y-3">
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Joint Diastole:</strong> All 4 chambers relaxed; Tricuspid &amp; Bicuspid <span class="cloze cloze-hidden">open</span>; Semilunar <span class="cloze cloze-hidden">closed</span>.</li>
+            <li><strong>Atrial Systole:</strong> SAN action potential → both atria contract → increases blood flow into ventricles by <span class="cloze cloze-hidden">30%</span>.</li>
+            <li><strong>Ventricular Systole:</strong> Ventricles contract (atria relax) → closure of <span class="cloze cloze-hidden">tricuspid &amp; bicuspid valves</span> produces 1st sound <span class="cloze cloze-hidden">"LUB"</span> → semilunar valves forced open.</li>
+            <li><strong>Ventricular Diastole:</strong> Ventricular pressure falls → closure of <span class="cloze cloze-hidden">semilunar valves</span> produces 2nd sound <span class="cloze cloze-hidden">"DUB"</span> → AV valves pushed open.</li>
+          </ol>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Cycle Duration</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">0.8 seconds</span> (at 72 bpm)</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Stroke Volume (SV)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~70 mL</span> / ventricle</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Output (SV × HR)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~5000 mL (5 L/min)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ELECTROCARDIOGRAPH (ECG) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">6. Electrocardiograph (ECG) (15.3.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="true">
+          • <strong>Standard ECG Leads:</strong> <span class="cloze cloze-hidden">3 electrical leads</span> — one to <span class="cloze cloze-hidden">each wrist</span> and to the <span class="cloze cloze-hidden">left ankle</span>.
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="true" style="width: 22%;">ECG Wave<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 34%;">Electrical Event<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 44%;">Mechanical / Clinical Significance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="true" class="font-bold text-sky-400">P-wave</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Depolarisation</span> (excitation) of <span class="cloze cloze-hidden">atria</span></td>
+                  <td contenteditable="true">Leads to contraction of both atria</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-bold text-emerald-400">QRS complex</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Depolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="true">Initiates ventricular contraction; counting <span class="cloze cloze-hidden">QRS complexes</span> gives heartbeat rate</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-bold text-amber-400">T-wave</td>
+                  <td contenteditable="true"><span class="cloze cloze-hidden">Repolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="true">End of T-wave marks the <span class="cloze cloze-hidden">end of systole</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+      </div>
+    </section>
+
+    <!-- 7. DOUBLE CIRCULATION & BLOOD VESSELS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition collapsed">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">7. Double Circulation &amp; Blood Vessels (15.4)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="true" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold theme-heading">3 Layers of Arteries &amp; Veins:</div>
+          <p>1. <strong>Tunica intima:</strong> Inner lining of <span class="cloze cloze-hidden">squamous endothelium</span>.</p>
+          <p>2. <strong>Tunica media:</strong> Middle layer of <span class="cloze cloze-hidden">smooth muscle &amp; elastic fibres</span> (comparatively thin in <span class="cloze cloze-hidden">veins</span>).</p>
+          <p>3. <strong>Tunica externa:</strong> External layer of <span class="cloze cloze-hidden">fibrous connective tissue with collagen fibres</span>.</p>
+        </div>
+
+        <div contenteditable="true" class="space-y-2 text-xs sm:text-sm">
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-sky-400">
+            <strong class="text-sky-400">Pulmonary Circulation:</strong> <span class="cloze cloze-hidden">Right Ventricle</span> → Pulmonary artery → <span class="cloze cloze-hidden">Lungs</span> → Pulmonary veins → <span class="cloze cloze-hidden">Left Atrium</span>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-rose-400">
+            <strong class="text-rose-400">Systemic Circulation:</strong> <span class="cloze cloze-hidden">Left Ventricle</span> → <span class="cloze cloze-hidden">Aorta</span> → Arteries → Arterioles → Capillaries → Tissues → Venules → Veins → <span class="cloze cloze-hidden">Vena cava</span> → <span class="cloze cloze-hidden">Right Atrium</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-amber-400">Hepatic Portal System:</strong> <span class="cloze cloze-hidden">Hepatic portal vein</span> carries blood from <span class="cloze cloze-hidden">intestine to liver</span> before systemic circulation.
+            </div>
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-emerald-400">Coronary System:</strong> Exclusive blood vessels supplying blood to and from <span class="cloze cloze-hidden">cardiac musculature</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. REGULATION OF CARDIAC ACTIVITY & DISORDERS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">8. Regulation of Cardiac Activity &amp; Disorders (15.5 &amp; 15.6)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="true" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold text-purple-400">15.5 Regulation (Myogenic Heart)</div>
+          <p>• Neural centre in <span class="cloze cloze-hidden">Medulla oblongata</span> moderates cardiac function via <span class="cloze cloze-hidden">ANS</span>:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Sympathetic nerves:</strong> <span class="cloze cloze-hidden">Increases</span> heart rate, strength of ventricular contraction &amp; cardiac output.</li>
+            <li><strong>Parasympathetic nerves:</strong> <span class="cloze cloze-hidden">Decreases</span> heart rate, speed of conduction of action potential &amp; cardiac output.</li>
+            <li><strong>Adrenal medullary hormones:</strong> <span class="cloze cloze-hidden">Increases</span> cardiac output.</li>
+          </ul>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;"><div class="table-toolbar no-print" contenteditable="false">
+            <span class="theme-muted font-semibold mr-1">Table:</span>
+            <button type="button" onclick="setTableWidth(this, '60%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">60%</button>
+            <button type="button" onclick="setTableWidth(this, '80%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">80%</button>
+            <button type="button" onclick="setTableWidth(this, '100%')" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)]">100%</button>
+            <span class="w-[1px] h-3 bg-[var(--border-strong)] mx-1"></span>
+            <button type="button" onclick="modifyTableRows(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-sky-500/20 text-sky-400">+Row</button>
+            <button type="button" onclick="modifyTableRows(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Row</button>
+            <button type="button" onclick="modifyTableCols(this, 1)" class="px-1.5 py-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">+Col</button>
+            <button type="button" onclick="modifyTableCols(this, -1)" class="px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">−Col</button>
+            <button type="button" onclick="recordRollingSnapshot('Before deleting table'); this.closest('.table-wrapper').remove(); scheduleAutoSave(true);" class="ml-auto px-1.5 py-0.5 rounded hover:bg-red-500/20 text-red-400">✕</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="true" style="width: 26%;">Disorder<div class="col-resizer no-print" contenteditable="false"></div></th>
+                  <th contenteditable="true" style="width: 74%;">NCERT Key Facts &amp; Clinical Distinctions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="true" class="font-semibold">Hypertension (High BP)</td>
+                  <td contenteditable="true">Normal = <span class="cloze cloze-hidden">120/80 mm Hg</span> (120 = systolic, 80 = diastolic). Repeated checks <span class="cloze cloze-hidden">≥ 140/90 mm Hg</span> = hypertension; affects <span class="cloze cloze-hidden">brain &amp; kidney</span>.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-semibold">CAD (Atherosclerosis)</td>
+                  <td contenteditable="true">Deposits of <span class="cloze cloze-hidden">calcium, fat, cholesterol and fibrous tissues</span> make lumen of coronary arteries narrower.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-semibold">Angina (Angina pectoris)</td>
+                  <td contenteditable="true">Symptom of <span class="cloze cloze-hidden">acute chest pain</span> when insufficient <span class="cloze cloze-hidden">O₂</span> reaches heart muscle (more common in middle-aged &amp; elderly).</td>
+                </tr>
+                <tr>
+                  <td contenteditable="true" class="font-semibold">Heart Failure</td>
+                  <td contenteditable="true">Heart not pumping blood effectively enough; main symptom: <span class="cloze cloze-hidden">congestion of the lungs</span>.<br>• <span class="cloze cloze-hidden">Cardiac arrest</span> = heart stops beating | <span class="cloze cloze-hidden">Heart attack</span> = heart muscle suddenly damaged by inadequate blood supply.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <div class="table-edge-resizer no-print" contenteditable="false"></div></div>
+      </div>
+    </section>
+
+  <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+        <div class="toggle-header flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-1">
+            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">New Topic Heading</h2>
+          </div>
+          <div class="edit-only items-center gap-1">
+            <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+            <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+          </div>
+        <button type="button" class="topic-open-page no-print" onclick="event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);">↗ Full page</button></div>
+        <div contenteditable="true" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-1.5">
+          <ul class="list-disc pl-5 space-y-1">
+            <li><br></li>
+          </ul>
+        </div>
+      </section></div>
 
       <!-- Hidden File Input for Image Insertion -->
-      <input type="file" id="image-file-input" accept="image/*" multiple class="hidden" onchange="handleImageFileSelected(event)" />
+      <input type="file" id="image-file-input" accept="image/*" multiple="" class="hidden" onchange="handleImageFileSelected(event)">
 
       <!-- Bottom Quick Builder & Storage Bar -->
       <div id="bottom-quick-add" class="mt-10 pt-5 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-3 text-xs theme-muted no-print">
@@ -1126,7 +1788,7 @@
   </div>
 
   <!-- GOOGLE DRIVE BACKUP / RESTORE MODAL -->
-  <div id="gdrive-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="gdrive-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="theme-panel border border-[var(--border-strong)] rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
       <div class="px-5 py-3.5 border-b border-[var(--border-color)] flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -1139,14 +1801,18 @@
         <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
       </div>
       <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <div id="gdrive-remote-alert" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/45 text-rose-300 space-y-2">
+          <div class="font-bold text-rose-400 flex items-center gap-1.5"><span>🔴</span> Newer Cloud Backup Detected from Another Device!</div>
+          <p class="text-[11px]">Click <strong>Restore Latest</strong> below to load the newest notes &amp; settings onto this device.</p>
+        </div>
         <div class="p-3 rounded-xl theme-nested border border-[var(--border-color)] space-y-1">
-          <div class="font-semibold theme-heading" id="gdrive-status-text">Not connected to Google Drive</div>
-          <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last successful backup: Never</div>
-          <div class="text-[11px] theme-muted" id="gdrive-remote-changes">The latest Drive backup can be restored on any device.</div>
+          <div class="font-semibold theme-heading" id="gdrive-status-text">Add your Apps Script URL to connect Drive</div>
+          <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last synced on this device: Never on this device (Unsynced local edits pending)</div>
+          <div class="text-[11px] theme-muted" id="gdrive-remote-changes">Checking cloud status...</div>
         </div>
         <div>
           <label class="block font-semibold theme-heading mb-1">Google Apps Script Web App URL</label>
-          <input id="gdrive-script-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
+          <input id="gdrive-script-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none">
         </div>
         <details class="rounded-lg theme-nested border border-[var(--border-color)] p-3">
           <summary class="cursor-pointer font-semibold text-sky-400">Setup Google Drive backup</summary>
@@ -1156,13 +1822,45 @@
             <li>Deploy as Web app. Execute as <b>Me</b>; access <b>Anyone</b>.</li>
             <li>Paste the /exec URL above. Use the same URL on your tablet and PC.</li>
           </ol>
-          <pre id="apps-script-snippet" class="mt-2 p-2.5 rounded bg-black/50 text-[10px] font-mono overflow-x-auto text-emerald-300 select-all"></pre>
+          <pre id="apps-script-snippet" class="mt-2 p-2.5 rounded bg-black/50 text-[10px] font-mono overflow-x-auto text-emerald-300 select-all">const MAIN_FILE = 'NEET_BioNotes_Latest_Backup.json';
+const BACKUP_PREFIX = 'NEET_BioNotes_Backup_';
+function doGet(e) {
+  const action = (e.parameter &amp;&amp; e.parameter.action) || 'meta';
+  const file = getMainFile_();
+  let result;
+  if (action === 'get') {
+    if (!file) result = {ok:true, exists:false, backup:null, updatedAt:null};
+    else { const data = JSON.parse(file.getBlob().getDataAsString() || '{}'); result = {ok:true, exists:true, backup:data.backup || data, updatedAt:data.updatedAt || data.exportedAt || null}; }
+  } else {
+    result = {ok:true, exists:!!file, updatedAt:file ? file.getLastUpdated().toISOString() : null, fileName:MAIN_FILE};
+  }
+  const json = JSON.stringify(result); const cb = e.parameter &amp;&amp; e.parameter.callback;
+  return ContentService.createTextOutput(cb ? cb + '(' + json + ');' : json).setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+}
+function doPost(e) {
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    const body = JSON.parse((e.parameter &amp;&amp; e.parameter.payload) || '{}');
+    if (body.action !== 'saveBackup' || !body.backup || body.backup.app !== 'NEET_BioNotes') throw new Error('Invalid BioNotes backup payload');
+    const now = new Date(); const existing = getMainFile_();
+    if (existing) {
+      const stamp = Utilities.formatDate(existing.getLastUpdated(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
+      DriveApp.createFile(BACKUP_PREFIX + stamp + '.json', existing.getBlob().getDataAsString(), MimeType.PLAIN_TEXT);
+      existing.setContent(JSON.stringify({updatedAt:now.toISOString(), backup:body.backup}));
+    } else {
+      DriveApp.createFile(MAIN_FILE, JSON.stringify({updatedAt:now.toISOString(), backup:body.backup}), MimeType.PLAIN_TEXT);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ok:true,updatedAt:now.toISOString()})).setMimeType(ContentService.MimeType.JSON);
+  } finally { lock.releaseLock(); }
+}
+function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return files.hasNext()?files.next():null; }</pre>
           <button type="button" onclick="copyAppsScriptCode()" class="mt-1.5 px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 text-[11px] font-semibold">📋 Copy Apps Script Code</button>
         </details>
         <div class="grid grid-cols-2 gap-2 border-t border-[var(--border-color)] pt-3">
-          <button type="button" onclick="backupToGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 font-semibold">☁️ Backup Now</button>
-          <button type="button" onclick="restoreLatestFromGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 font-semibold">⬇ Restore Latest</button>
+          <button type="button" onclick="backupToGoogleDrive(false)" class="py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 font-semibold">☁️ Sync / Backup Now</button>
+          <button type="button" id="gdrive-restore-btn" onclick="restoreLatestFromGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 font-semibold">⬇ Restore Latest</button>
         </div>
+        <p class="text-[11px] theme-muted">Works like Anki Sync: click <strong>Sync / Backup Now</strong> anytime, or if you forget, any unsynced edits automatically back up when closing/leaving the app. On your second device, a red <strong>Restore</strong> badge appears when a newer backup is ready.</p>
       </div>
     </div>
   </div>
@@ -1770,8 +2468,7 @@
     let lastSnapshotTime = 0;
     let persistQueue = Promise.resolve();
 
-    let gdriveConfig = { scriptUrl: '', autoBackup: true, lastSync: '' };
-    let gdriveAutoSyncTimer = null;
+    let gdriveConfig = { scriptUrl: '', autoBackupOnClose: true, lastSync: '', lastKnownRemoteAt: '', hasUnsyncedChanges: false, remoteUpdateAvailable: false };
     let gdriveBackupInProgress = false;
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1784,12 +2481,13 @@
       setupEventListeners();
       updateClozeCounter();
       updateDriveSyncIndicator();
-      if (navigator.onLine && gdriveConfig.scriptUrl && gdriveConfig.autoBackup) {
-        setTimeout(() => backupToGoogleDrive(true), 2500);
+      // On app open: check if another device pushed a newer backup (never auto-overwrite; show red Restore badge)
+      if (navigator.onLine && gdriveConfig.scriptUrl) {
+        setTimeout(() => checkRemoteBackupStatus(true), 800);
       }
       window.addEventListener('online', () => {
         updateDriveSyncIndicator();
-        if (gdriveConfig.autoBackup && gdriveConfig.scriptUrl) setTimeout(() => backupToGoogleDrive(true), 1200);
+        if (gdriveConfig.scriptUrl) setTimeout(() => checkRemoteBackupStatus(true), 1000);
       });
       window.addEventListener('offline', updateDriveSyncIndicator);
     });
@@ -1866,10 +2564,7 @@
           theme: currentTheme
         }));
       } catch (e) {}
-      if (gdriveConfig && gdriveConfig.autoBackup && gdriveConfig.scriptUrl) {
-        clearTimeout(gdriveAutoSyncTimer);
-        gdriveAutoSyncTimer = setTimeout(() => { if (navigator.onLine) backupToGoogleDrive(true); }, 1800);
-      }
+      markLocalChangesPendingSync();
     }
 
     async function loadLibraryFromStorage() {
@@ -1966,12 +2661,16 @@
 
       persistQueue = writeTask.catch(() => {});
       writeTask.then(() => {
-        if (gdriveConfig && gdriveConfig.autoBackup && gdriveConfig.scriptUrl && !gdriveBackupInProgress) {
-          clearTimeout(gdriveAutoSyncTimer);
-          gdriveAutoSyncTimer = setTimeout(() => { if (navigator.onLine) backupToGoogleDrive(true); else updateDriveSyncIndicator(); }, 6000);
-        }
+        markLocalChangesPendingSync();
       }).catch(() => {});
       return writeTask;
+    }
+
+    function markLocalChangesPendingSync() {
+      if (!gdriveConfig) return;
+      gdriveConfig.hasUnsyncedChanges = true;
+      try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
+      updateDriveSyncIndicator();
     }
 
     async function flushNow() {
@@ -1994,11 +2693,6 @@
           if (forceSnapshot || Date.now() - lastSnapshotTime > 20000) {
             recordRollingSnapshot(forceSnapshot ? 'Before deletion / structural change' : 'Auto-checkpoint');
           }
-          if (gdriveConfig.autoBackup && gdriveConfig.scriptUrl) {
-            updateDriveSyncIndicator('pending');
-            clearTimeout(gdriveAutoSyncTimer);
-            gdriveAutoSyncTimer = setTimeout(() => { if (navigator.onLine) backupToGoogleDrive(true); else updateDriveSyncIndicator(); }, 5000);
-          }
         } catch (err) {
           console.error('NEET BioNotes save failed:', err);
           const status = document.getElementById('save-indicator');
@@ -2008,8 +2702,29 @@
       }, 300);
     }
 
+    // Anki-style auto-backup when leaving/closing the app if local changes were not manually synced
+    function triggerAutoBackupOnExit() {
+      if (saveTimer !== null) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        captureActiveChapterFromDOM();
+        persistLibrary().catch(() => {});
+      }
+      if (navigator.onLine && gdriveConfig.scriptUrl && gdriveConfig.hasUnsyncedChanges && !gdriveBackupInProgress) {
+        backupToGoogleDrive(true);
+      }
+    }
+
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') flushNow().catch(() => {});
+      if (document.visibilityState === 'hidden') {
+        flushNow().catch(() => {});
+        triggerAutoBackupOnExit();
+      } else if (document.visibilityState === 'visible' && navigator.onLine && gdriveConfig.scriptUrl) {
+        checkRemoteBackupStatus(true);
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      triggerAutoBackupOnExit();
     });
     window.addEventListener('pagehide', () => {
       if (saveTimer !== null) {
@@ -2660,9 +3375,10 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function saveGDriveConfig() {
       const el = document.getElementById('gdrive-script-url');
       if (el) gdriveConfig.scriptUrl = el.value.trim();
-      gdriveConfig.autoBackup = true;
+      gdriveConfig.autoBackupOnClose = true;
       try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
       updateGDriveUI();
+      updateDriveSyncIndicator();
     }
 
     function loadGDriveConfig() {
@@ -2674,10 +3390,39 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     function updateDriveSyncIndicator(state) {
       const el = document.getElementById('drive-sync-icon');
-      if (!el) return;
-      const offline = !navigator.onLine, pending = state === 'pending';
-      el.className = 'text-sm ' + (offline ? 'sync-offline' : pending ? 'sync-pending' : 'sync-online');
-      el.textContent = offline ? '☁︎' : pending ? '↻' : '☁️';
+      const btn = document.getElementById('header-sync-btn');
+      const badge = document.getElementById('drive-remote-badge');
+      const label = document.getElementById('drive-sync-label');
+      if (!el || !btn) return;
+
+      const offline = !navigator.onLine;
+      const hasRemoteNew = !!gdriveConfig.remoteUpdateAvailable;
+      const hasLocalUnsynced = !!gdriveConfig.hasUnsyncedChanges;
+
+      btn.classList.toggle('has-remote-update', hasRemoteNew);
+      if (badge) badge.classList.toggle('hidden', !hasRemoteNew);
+
+      if (hasRemoteNew) {
+        el.className = 'text-sm sync-remote-new';
+        el.textContent = '🔴';
+        if (label) label.textContent = 'Sync Needed';
+        btn.title = 'Newer backup found on Google Drive! Click to restore.';
+      } else if (offline) {
+        el.className = 'text-sm sync-offline';
+        el.textContent = '☁︎';
+        if (label) label.textContent = 'Offline';
+        btn.title = 'Offline — changes saved locally';
+      } else if (state === 'pending' || hasLocalUnsynced) {
+        el.className = 'text-sm sync-pending';
+        el.textContent = '↻';
+        if (label) label.textContent = hasLocalUnsynced ? 'Unsynced' : 'Syncing…';
+        btn.title = 'Local edits ready to sync (auto-backs up on close)';
+      } else {
+        el.className = 'text-sm sync-online';
+        el.textContent = '☁️';
+        if (label) label.textContent = 'Synced';
+        btn.title = 'All notes & settings synced with Google Drive';
+      }
     }
 
     function updateGDriveUI() {
@@ -2685,19 +3430,31 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const status = document.getElementById('gdrive-status-text');
       const last = document.getElementById('gdrive-last-sync');
       const code = document.getElementById('apps-script-snippet');
+      const alertBox = document.getElementById('gdrive-remote-alert');
+      const restoreBtn = document.getElementById('gdrive-restore-btn');
+
       if (url && url.value !== gdriveConfig.scriptUrl) url.value = gdriveConfig.scriptUrl || '';
       if (status) {
         status.textContent = gdriveConfig.scriptUrl ? 'Google Drive backup is configured' : 'Add your Apps Script URL to connect Drive';
         status.className = gdriveConfig.scriptUrl ? 'font-semibold text-emerald-400' : 'font-semibold theme-heading';
       }
-      if (last) last.textContent = gdriveConfig.lastSync ? 'Last successful backup: ' + new Date(gdriveConfig.lastSync).toLocaleString() : 'Last successful backup: Not recorded on this device';
+      if (last) {
+        const syncStr = gdriveConfig.lastSync ? new Date(gdriveConfig.lastSync).toLocaleString() : 'Never on this device';
+        last.textContent = `Last synced on this device: ${syncStr}${gdriveConfig.hasUnsyncedChanges ? ' (Unsynced local edits pending)' : ''}`;
+      }
+      if (alertBox) alertBox.classList.toggle('hidden', !gdriveConfig.remoteUpdateAvailable);
+      if (restoreBtn) {
+        restoreBtn.className = gdriveConfig.remoteUpdateAvailable
+          ? 'py-2.5 px-3 rounded-xl bg-rose-500 text-white border border-rose-400 font-bold shadow-lg animate-pulse'
+          : 'py-2.5 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 font-semibold';
+      }
       if (code) code.textContent = BIO_APPS_SCRIPT_CODE;
     }
 
     function openGDriveModal() {
       updateGDriveUI();
       document.getElementById('gdrive-modal').classList.remove('hidden');
-      if (navigator.onLine && gdriveConfig.scriptUrl) refreshDriveBackupTime(true);
+      if (navigator.onLine && gdriveConfig.scriptUrl) checkRemoteBackupStatus(false);
     }
 
     function closeGDriveModal() {
@@ -2714,17 +3471,39 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       captureActiveChapterFromDOM();
       let prefs = {};
       try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') || {}; } catch (e) {}
-      return { app: 'NEET_BioNotes', version: 7, exportedAt: new Date().toISOString(), preferences: prefs, library };
+      return { app: 'NEET_BioNotes', version: 8, exportedAt: new Date().toISOString(), preferences: prefs, library };
     }
 
-    async function refreshDriveBackupTime(silent = false) {
+    async function checkRemoteBackupStatus(silent = true) {
       if (!gdriveConfig.scriptUrl || !navigator.onLine) return;
       try {
         const r = await scriptGet('meta');
         const el = document.getElementById('gdrive-remote-changes');
-        if (el) el.textContent = r.exists ? 'Latest Drive backup: ' + new Date(r.updatedAt).toLocaleString() : 'No backup exists in Drive yet.';
-        if (!silent) showToast(r.exists ? 'Drive backup found.' : 'No Drive backup exists yet.');
-      } catch (e) { if (!silent) showToast('Could not check Drive: ' + e.message); }
+        if (r && r.exists && r.updatedAt) {
+          const remoteTs = new Date(r.updatedAt).getTime();
+          const localTs = gdriveConfig.lastSync ? new Date(gdriveConfig.lastSync).getTime() : 0;
+          // If remote backup is newer than this device's last sync by > 3 seconds, flag red Restore indicator
+          const isNewerOnRemote = remoteTs > (localTs + 3000);
+          gdriveConfig.remoteUpdateAvailable = isNewerOnRemote;
+          gdriveConfig.lastKnownRemoteAt = r.updatedAt;
+          localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig));
+
+          if (el) {
+            el.textContent = isNewerOnRemote
+              ? `🔴 Newer Drive backup available from ${new Date(r.updatedAt).toLocaleString()} — click Restore Latest.`
+              : `Latest Drive backup: ${new Date(r.updatedAt).toLocaleString()} (Up to date)`;
+          }
+          updateGDriveUI();
+          updateDriveSyncIndicator();
+          if (isNewerOnRemote && silent) {
+            showToast('Newer cloud backup detected! Click the red Sync button to restore.', 4000);
+          }
+        } else {
+          if (el) el.textContent = 'No backup exists in Drive yet.';
+        }
+      } catch (e) {
+        if (!silent) showToast('Could not check Drive: ' + e.message);
+      }
     }
 
     async function backupToGoogleDrive(silent = false) {
@@ -2738,10 +3517,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const backup = buildFullBackupPayload();
         const result = await scriptPostBackup(backup);
         if (!result || !result.ok || !result.exists) throw new Error('Drive did not confirm backup.');
-        gdriveConfig.lastSync = result.updatedAt || new Date().toISOString();
+        const stamp = result.updatedAt || backup.exportedAt;
+        gdriveConfig.lastSync = stamp;
+        gdriveConfig.lastKnownRemoteAt = stamp;
+        gdriveConfig.hasUnsyncedChanges = false;
+        gdriveConfig.remoteUpdateAvailable = false;
         localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig));
         updateGDriveUI();
-        if (!silent) showToast('Complete BioNotes backup uploaded to Google Drive.');
+        if (!silent) showToast('All notes, edits & settings synced to Google Drive!');
       } catch (e) {
         if (!silent) showToast('Backup failed: ' + e.message);
       } finally {
@@ -2760,7 +3543,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const backup = response.backup;
         if (backup.app !== 'NEET_BioNotes' || !backup.library || !backup.library.chapters) throw new Error('Invalid BioNotes backup.');
         const when = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString() : 'unknown date';
-        if (!confirm(`Restore latest Google Drive backup from ${when}?\n\nCurrent local data will first be saved in a recovery snapshot.`)) return;
+        if (!confirm(`Restore latest Google Drive backup from ${when}?\n\nYour current local data will first be saved in a recovery snapshot.`)) return;
         recordRollingSnapshot('Before restoring latest Google Drive backup');
         library = JSON.parse(JSON.stringify(backup.library));
         if (backup.preferences) {
@@ -2770,10 +3553,16 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         await persistLibrary();
         renderSidebar();
         loadActiveChapterIntoDOM();
-        gdriveConfig.lastSync = response.updatedAt || backup.exportedAt || new Date().toISOString();
+        const stamp = response.updatedAt || backup.exportedAt || new Date().toISOString();
+        gdriveConfig.lastSync = stamp;
+        gdriveConfig.lastKnownRemoteAt = stamp;
+        gdriveConfig.hasUnsyncedChanges = false;
+        gdriveConfig.remoteUpdateAvailable = false;
         localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig));
         updateGDriveUI();
-        showToast('Latest Google Drive backup restored successfully.');
+        updateDriveSyncIndicator();
+        closeGDriveModal();
+        showToast('Restored latest notes & settings from Google Drive!');
       } catch (e) { showToast('Restore failed: ' + e.message); }
     }
 
@@ -3532,6 +4321,9 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       document.getElementById('pt-tools').innerHTML = flow
         ? `<button type="button" class="pt-btn" onclick="ptAddNode()">＋ Node</button>
            <button type="button" class="pt-btn ${ptState.drawArrow ? 'primary' : ''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow ? 'Drawing Arrow…' : 'Draw Arrow'}</button>
+           ${ptState.activeNode >= 0 ? `
+             <button type="button" class="pt-btn" onclick="ptToggleNodeStyle()" title="Toggle Pill Box vs Clean Text-Only Node">⬚ Box/Text</button>
+           ` : ''}
            ${ptState.activeArrow >= 0 ? `
              <button type="button" class="pt-btn" onclick="ptSetArrowColor('var(--text-muted)')" title="Default Arrow">●</button>
              <button type="button" class="pt-btn" style="color:#38bdf8" onclick="ptSetArrowColor('#38bdf8')" title="Sky Arrow">●</button>
@@ -3572,9 +4364,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
                   ${edges}
                 </svg>
                 ${ptState.nodes.map((v, i) => `
-                  <div class="pt-node ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px">
-                    <div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" title="Drag node">⠿⠿</div>
-                    <div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div>
+                  <div class="pt-node ${v.borderless ? 'borderless' : ''} ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" onpointerdown="ptNodePointerDown(event,${i})" style="left:${v.x}px;top:${v.y}px">
+                    <div contenteditable="true" spellcheck="false" onfocus="ptSelectNodeOnly(${i})" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -3608,11 +4399,28 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const baseY = vp ? Math.round((vp.scrollTop + 60) / z) : 60;
       ptState.nodes.push({
         text: String(text || 'New node'),
-        x: baseX + (i % 3) * 260,
-        y: baseY + Math.floor(i / 3) * 120
+        x: baseX + (i % 3) * 240,
+        y: baseY + Math.floor(i / 3) * 90,
+        borderless: false
       });
       ptState.activeNode = i;
       ptState.activeArrow = -1;
+      renderParagraphTransformer();
+    }
+
+    function ptSelectNodeOnly(i) {
+      if (ptState.activeNode === i) return;
+      ptState.activeNode = i;
+      ptState.activeArrow = -1;
+      document.querySelectorAll('#pt-canvas .pt-node').forEach((el, idx) => {
+        el.classList.toggle('selected', idx === i);
+      });
+    }
+
+    function ptToggleNodeStyle() {
+      const n = ptState.nodes[ptState.activeNode];
+      if (!n) return;
+      n.borderless = !n.borderless;
       renderParagraphTransformer();
     }
 
@@ -3690,34 +4498,44 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     function ptNodePointerDown(e, i) {
-      if (ptState.drawArrow || e.target.isContentEditable) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const handle = e.currentTarget;
-      const node = handle.closest('.pt-node');
+      if (ptState.drawArrow) return;
+      const targetNode = ptState.nodes && ptState.nodes[i];
+      if (!targetNode) return;
+      // Allow clicking directly into text to type without dragging, while dragging anywhere on the node moves it
+      const node = e.currentTarget;
       const z = ptState.zoom || 1;
       ptState.activeNode = i;
       ptState.activeArrow = -1;
       const sx = e.clientX;
       const sy = e.clientY;
-      const ox = ptState.nodes[i].x;
-      const oy = ptState.nodes[i].y;
-      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      const ox = targetNode.x;
+      const oy = targetNode.y;
+      let moved = false;
 
       const move = ev => {
-        const n = ptState.nodes[i];
-        n.x = Math.max(0, Math.min(1520, ox + (ev.clientX - sx) / z));
-        n.y = Math.max(18, Math.min(1060, oy + (ev.clientY - sy) / z));
+        const n = ptState.nodes && ptState.nodes[i];
+        if (!n) return;
+        const dx = (ev.clientX - sx) / z;
+        const dy = (ev.clientY - sy) / z;
+        if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 4) return;
+        if (!moved) {
+          moved = true;
+          if (document.activeElement && node.contains(document.activeElement)) {
+            document.activeElement.blur();
+          }
+        }
+        n.x = Math.max(0, Math.min(1520, ox + dx));
+        n.y = Math.max(4, Math.min(1060, oy + dy));
         node.style.left = n.x + 'px';
         node.style.top = n.y + 'px';
       };
       const up = () => {
-        handle.removeEventListener('pointermove', move);
-        handle.removeEventListener('pointerup', up);
-        renderParagraphTransformer();
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        if (moved) renderParagraphTransformer();
       };
-      handle.addEventListener('pointermove', move);
-      handle.addEventListener('pointerup', up);
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
     }
 
     function ptBindCanvasDrawing() {
@@ -3996,7 +4814,10 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           const node = document.createElement('span');
           node.className = 'pt-saved-node';
           node.textContent = String(n.text || '');
-          node.style.cssText = `position:absolute;left:${Math.max(4, Math.round(n.x - offsetX))}px;top:${Math.max(4, Math.round(n.y - offsetY))}px;display:block;width:max-content;min-width:75px;max-width:300px;box-sizing:border-box;padding:9px 13px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:14.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 2px 6px rgba(0,0,0,0.08);`;
+          const boxStyle = n.borderless
+            ? 'border:none;background:transparent;box-shadow:none;padding:2px 6px;'
+            : 'border:1px solid var(--border-strong);border-radius:7px;background:var(--bg-panel);padding:5px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);';
+          node.style.cssText = `position:absolute;left:${Math.max(4, Math.round(n.x - offsetX))}px;top:${Math.max(4, Math.round(n.y - offsetY))}px;display:block;width:max-content;min-width:48px;max-width:320px;box-sizing:border-box;${boxStyle}color:var(--text-main);text-align:center;font-size:14px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;`;
           inner.appendChild(node);
         });
         replacement.appendChild(inner);
@@ -4263,7 +5084,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const clone = document.documentElement.cloneNode(true);
       const toast = clone.querySelector('#toast-banner');
       if (toast) toast.classList.add('hidden');
-      clone.querySelectorAll('.topic-open-page').forEach(b => b.remove());
+      clone.querySelectorAll('.topic-open-page, #paragraph-transformer, #diagram-occlusion-modal, #topic-reading-overlay').forEach(b => b.remove());
       const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
