@@ -7,9 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>NEET BioNotes — Active Recall & Fullscreen Reader</title>
+  <title>NEET BioNotes — Active Recall &amp; Fullscreen Reader</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -521,6 +519,8 @@
       color: var(--text-muted);
       font-size: 11px;
       line-height: 1.5;
+      cursor: pointer;
+      user-select: none;
     }
     .topic-open-page:hover { color: var(--text-heading); background: var(--bg-hover); }
     body.edit-mode .topic-open-page { display: none !important; }
@@ -568,11 +568,11 @@
     #topic-reading-overlay .tro-content .toggle-body { display: block !important; padding: 0 !important; margin: 0 !important; }
 
     /* Paragraph Transformer (Flowchart & Table Builder) */
-    #paragraph-transformer { position: fixed; inset: 0; z-index: 1300; display: none; background: rgba(0, 0, 0, .78); padding: 12px; }
+    #paragraph-transformer { position: fixed; inset: 0; z-index: 1300; display: none; background: rgba(0, 0, 0, .82); padding: 10px; }
     #paragraph-transformer.open { display: flex; align-items: center; justify-content: center; }
     #paragraph-transformer .pt-shell {
-      width: min(1400px, 100%);
-      height: min(90vh, 900px);
+      width: min(1480px, 100%);
+      height: min(92vh, 940px);
       display: flex;
       flex-direction: column;
       background: var(--bg-panel);
@@ -591,80 +591,137 @@
       gap: 8px;
       border-bottom: 1px solid var(--border-color);
       background: var(--bg-panel);
+      flex-shrink: 0;
     }
     #paragraph-transformer .pt-foot { border-top: 1px solid var(--border-color); border-bottom: 0; }
-    #paragraph-transformer .pt-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-    #paragraph-transformer .pt-pane { min-width: 0; min-height: 0; overflow: auto; padding: 14px; overscroll-behavior: contain; }
-    #paragraph-transformer .pt-pane:first-child { display: flex; flex-direction: column; gap: 8px; position: relative; }
+    /* Locked side-by-side layout across desktop, tablet & portrait */
+    #paragraph-transformer .pt-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(220px, 38%) minmax(0, 62%);
+      gap: 0;
+      overflow: hidden;
+    }
+    #paragraph-transformer .pt-pane {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
     #paragraph-transformer .pt-pane + .pt-pane { border-left: 1px solid var(--border-color); }
+    #paragraph-transformer .pt-source-bar {
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      background: var(--bg-panel);
+      padding-bottom: 8px;
+      flex-shrink: 0;
+    }
     #paragraph-transformer .pt-source {
       flex: 1;
-      min-height: 120px;
-      overflow: auto;
+      min-height: 80px;
+      overflow-y: auto;
       white-space: pre-wrap;
-      line-height: 1.8;
+      line-height: 1.75;
       padding: 12px;
       border: 1px solid var(--border-strong);
       border-radius: 9px;
       background: var(--bg-nested);
       user-select: text;
+      -webkit-user-select: text;
     }
     #paragraph-transformer .pt-source-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     #paragraph-transformer #pt-tools {
-      position: sticky;
-      top: 0;
-      z-index: 25;
-      padding: 6px;
-      background: var(--bg-panel);
+      flex-shrink: 0;
+      padding: 6px 8px;
+      background: var(--bg-nested);
       border: 1px solid var(--border-color);
       border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    #paragraph-transformer #pt-workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     #paragraph-transformer .pt-viewport {
-      max-height: 55vh;
+      flex: 1;
+      min-height: 0;
       overflow: auto;
       border: 1px solid var(--border-strong);
       border-radius: 9px;
+      background: var(--bg-nested);
+      position: relative;
       touch-action: pan-x pan-y;
+      overscroll-behavior: contain;
+    }
+    #paragraph-transformer .pt-zoom-sizer {
+      position: relative;
+      width: 1600px;
+      height: 1100px;
     }
     #paragraph-transformer .pt-canvas {
-      position: relative;
-      width: 1100px;
-      height: 720px;
-      min-width: 1100px;
-      min-height: 720px;
-      background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-      background-size: 18px 18px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1600px;
+      height: 1100px;
+      transform-origin: 0 0;
+      background-image: radial-gradient(var(--border-color) 1.15px, transparent 1.15px);
+      background-size: 20px 20px;
       overflow: hidden;
-      touch-action: pan-x pan-y;
+      cursor: grab;
     }
+    #paragraph-transformer .pt-canvas.panning { cursor: grabbing; }
     #paragraph-transformer .pt-canvas.drawing { touch-action: none; cursor: crosshair; }
-    #paragraph-transformer .pt-canvas svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none !important; }
+    #paragraph-transformer .pt-canvas svg { position: absolute; inset: 0; width: 1600px; height: 1100px; overflow: visible; }
+    #paragraph-transformer .pt-canvas svg .pt-arrow-hit { pointer-events: stroke; cursor: move; }
+    #paragraph-transformer .pt-canvas svg .pt-arrow-handle { pointer-events: all; cursor: grab; }
+    #paragraph-transformer .pt-canvas svg .pt-arrow-handle:active { cursor: grabbing; }
     #paragraph-transformer .pt-node {
       position: absolute;
       margin: 0;
       width: max-content !important;
       height: auto !important;
-      min-width: 72px;
-      max-width: 360px;
-      padding: 9px 13px !important;
+      min-width: 80px;
+      max-width: 380px;
+      padding: 8px 13px !important;
       border-radius: 9px;
-      background: var(--bg-nested) !important;
+      background: var(--bg-panel) !important;
       color: var(--text-main) !important;
-      border: 1px solid var(--border-strong) !important;
+      border: 1.5px solid var(--border-strong) !important;
       text-align: center;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
       box-sizing: border-box;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
       user-select: none;
       -webkit-user-select: none;
+      z-index: 3;
     }
-    #paragraph-transformer .pt-node.selected { outline: 2px solid #38bdf8; z-index: 5; }
-    #paragraph-transformer .pt-node-handle { height: 14px; line-height: 12px; text-align: left; font-size: 11px; opacity: .7; cursor: grab; touch-action: none; }
+    #paragraph-transformer .pt-node.selected { outline: 2px solid #38bdf8; z-index: 6; }
+    #paragraph-transformer .pt-node-handle {
+      height: 15px;
+      line-height: 13px;
+      text-align: center;
+      font-size: 11px;
+      opacity: .65;
+      cursor: grab;
+      touch-action: none;
+      letter-spacing: 2px;
+      border-bottom: 1px dashed var(--border-color);
+      margin-bottom: 4px;
+    }
     #paragraph-transformer .pt-node-handle:active { cursor: grabbing; }
     #paragraph-transformer .pt-node [contenteditable="true"] {
       display: block;
-      min-width: 35px;
-      min-height: 18px;
+      min-width: 40px;
+      min-height: 20px;
       outline: none;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -672,7 +729,8 @@
       -webkit-user-select: text;
       cursor: text;
     }
-    #paragraph-transformer .pt-btn { padding: 6px 9px; border-radius: 7px; border: 1px solid var(--border-strong); font-size: 12px; }
+    #paragraph-transformer .pt-btn { padding: 5px 9px; border-radius: 7px; border: 1px solid var(--border-strong); font-size: 12px; background: var(--bg-panel); cursor: pointer; }
+    #paragraph-transformer .pt-btn:hover { background: var(--bg-hover); }
     #paragraph-transformer .pt-btn.primary { background: #0369a1; color: white; border-color: #0284c7; }
     #paragraph-transformer .pt-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     #paragraph-transformer .pt-table td,
@@ -682,17 +740,16 @@
     .pt-generated-flow { isolation: isolate; contain: layout paint; }
     .pt-generated-flow .pt-saved-node { z-index: 1; }
 
-    @media (max-width: 820px), (orientation: portrait) and (max-width: 1024px) {
+    @media (max-width: 900px) {
       #top-toolbar { max-height: 48vh; }
       #topic-reading-overlay .tro-content { padding: 14px 12px 40px; }
-      #paragraph-transformer { padding: 0 !important; align-items: stretch !important; justify-content: stretch !important; }
+      #paragraph-transformer { padding: 0 !important; }
       #paragraph-transformer .pt-shell { width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; }
-      #paragraph-transformer .pt-grid { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(190px, 42dvh) minmax(260px, 1fr) !important; overflow: hidden; }
-      #paragraph-transformer .pt-pane { padding: 10px !important; min-height: 0 !important; overflow: auto !important; }
-      #paragraph-transformer .pt-pane + .pt-pane { border-left: 0 !important; border-top: 1px solid var(--border-color) !important; }
+      /* Keep side-by-side split even on compact screens */
+      #paragraph-transformer .pt-grid { grid-template-columns: minmax(150px, 42%) minmax(0, 58%) !important; grid-template-rows: 1fr !important; }
+      #paragraph-transformer .pt-pane { padding: 8px !important; }
       #paragraph-transformer .pt-head { flex-wrap: wrap; padding: 8px 10px !important; }
       #paragraph-transformer .pt-foot { padding: 8px 10px !important; }
-      #paragraph-transformer .pt-viewport { max-height: 100%; overflow: auto !important; }
     }
 
     @media print {
@@ -942,7 +999,7 @@
           Chapter 15: Body Fluids and Circulation
         </h1>
         <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
-          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts & sizes anywhere, convert long sentences into bullets, resize tables.
+          Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.
         </p>
       </div>
 
@@ -1042,28 +1099,588 @@
     </div>
   </div>
 
-  <!-- PRE-LOADED CHAPTER 15 TEMPLATE -->
+  <!-- =====================================================================
+       COMPLETE PRE-LOADED CHAPTER 15 TEMPLATE (ALL 8 SECTIONS)
+       ===================================================================== -->
   <template id="default-chapter-15-template">
+
+    <!-- 1. BLOOD & COMPOSITION -->
     <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
       <div class="toggle-header flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 flex-1">
           <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Blood & Its Composition (15.1)</h2>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Blood &amp; Its Composition (15.1)</h2>
         </div>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
+
       <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
         <div contenteditable="false">
           <ul class="list-disc pl-5 space-y-1.5">
             <li><strong>Blood:</strong> Special <span class="cloze cloze-hidden">connective tissue</span> = <strong>Fluid matrix (<span class="cloze cloze-hidden">Plasma, 55%</span>)</strong> + <strong>Formed elements (<span class="cloze cloze-hidden">45%</span>)</strong>.</li>
-            <li><em>Lower organisms transport:</em> <span class="cloze cloze-hidden">Sponges</span> & <span class="cloze cloze-hidden">coelenterates</span> circulate water from surroundings through body cavities.</li>
+            <li><em>Lower organisms transport:</em> <span class="cloze cloze-hidden">Sponges</span> &amp; <span class="cloze cloze-hidden">coelenterates</span> circulate water from surroundings through body cavities.</li>
+          </ul>
+        </div>
+
+        <!-- 15.1.1 Plasma -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="false" class="font-semibold text-sky-400">15.1.1 Plasma (55% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          </div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div contenteditable="false" class="space-y-1">
+              <p>• <strong>Appearance:</strong> <span class="cloze cloze-hidden">Straw-coloured</span>, viscous fluid.</p>
+              <p>• <strong>Composition:</strong> <span class="cloze cloze-hidden">90–92%</span> Water | <span class="cloze cloze-hidden">6–8%</span> Proteins | Small minerals (<span class="font-mono text-xs">Na⁺, Ca²⁺, Mg²⁺, HCO₃⁻, Cl⁻</span>) | Transit glucose, amino acids, lipids | Inactive clotting factors.</p>
+            </div>
+
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 34%;">Major Plasma Protein</th>
+                      <th contenteditable="false" style="width: 66%;">Primary Function (NCERT Keywords)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Fibrinogen</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Clotting or coagulation</span> of blood</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Globulins</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Defense mechanisms</span> of the body</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Albumins</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Osmotic balance</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div contenteditable="false" class="px-3.5 py-2 rounded-lg border-l-4 border-amber-400 bg-amber-500/10 font-mono text-xs sm:text-sm">
+              <strong>Formula:</strong> Serum = Plasma − <span class="cloze cloze-hidden">Clotting factors</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 15.1.2 Formed Elements -->
+        <div class="toggle-block rounded-lg theme-nested border p-3.5">
+          <div class="toggle-header flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+              <h3 contenteditable="false" class="font-semibold text-rose-400">15.1.2 Formed Elements (45% of Blood)</h3>
+            </div>
+            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
+          </div>
+          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 22%;">Formed Element</th>
+                      <th contenteditable="false" style="width: 20%;">Count (mm⁻³)</th>
+                      <th contenteditable="false" style="width: 28%;">Lifespan / Formation</th>
+                      <th contenteditable="false" style="width: 30%;">Key Features &amp; Function</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-rose-400">Erythrocytes (RBC)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">5 – 5.5 million</span><br><span class="theme-muted">(Most abundant)</span></td>
+                      <td contenteditable="false">• Avg lifespan: <span class="cloze cloze-hidden">120 days</span><br>• Formed: <span class="cloze cloze-hidden">Red bone marrow</span><br>• Destroyed: <span class="cloze cloze-hidden">Spleen</span> (graveyard)</td>
+                      <td contenteditable="false">• Biconcave, <span class="cloze cloze-hidden">devoid of nucleus</span><br>• Hb: <span class="cloze cloze-hidden">12–16 g / 100 mL</span> blood<br>• Respiratory gas transport</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-sky-400">Leucocytes (WBC)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">6000 – 8000</span></td>
+                      <td contenteditable="false">• Generally <span class="cloze cloze-hidden">short-lived</span></td>
+                      <td contenteditable="false">• <span class="cloze cloze-hidden">Nucleated</span>, colourless (lack Hb)<br>• Immunity &amp; defense</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold text-purple-400">Platelets (Thrombocytes)</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">1,50,000 – 3,50,000</span></td>
+                      <td contenteditable="false">• Fragments of <span class="cloze cloze-hidden">megakaryocytes</span> (bone marrow)</td>
+                      <td contenteditable="false">• Release factors for <span class="cloze cloze-hidden">coagulation/clotting</span><br>• Reduction → clotting disorders</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- WBC Classification Sub-table -->
+            <div class="table-wrapper" style="width: 100%;">
+              <div class="overflow-x-auto">
+                <table class="notion-table">
+                  <thead>
+                    <tr>
+                      <th contenteditable="false" style="width: 20%;">WBC Type</th>
+                      <th contenteditable="false" style="width: 18%;">% of WBC</th>
+                      <th contenteditable="false" style="width: 22%;">Category</th>
+                      <th contenteditable="false" style="width: 40%;">Key NCERT Function / Secretion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Neutrophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">60–65%</span> (Max)</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Lymphocytes</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">20–25%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">'B' and 'T' forms</span> → <span class="cloze cloze-hidden">Immune responses</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Monocytes</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">6–8%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Agranulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Phagocytic</span> cells (destroy foreign organisms)</td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Eosinophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">2–3%</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Resist infections</span>; associated with <span class="cloze cloze-hidden">allergic reactions</span></td>
+                    </tr>
+                    <tr>
+                      <td contenteditable="false" class="font-semibold">Basophils</td>
+                      <td contenteditable="false" class="font-mono text-xs"><span class="cloze cloze-hidden">0.5–1%</span> (Min)</td>
+                      <td contenteditable="false"><span class="cloze cloze-hidden">Granulocyte</span></td>
+                      <td contenteditable="false">Secrete <span class="cloze cloze-hidden">histamine, serotonin, heparin</span> → <span class="cloze cloze-hidden">Inflammatory reactions</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BLOOD GROUPING (ABO & Rh) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">2. Blood Grouping: ABO &amp; Rh Systems (15.1.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 28%;">Blood Group</th>
+                  <th contenteditable="false" style="width: 24%;">Antigens on RBCs</th>
+                  <th contenteditable="false" style="width: 24%;">Antibodies in Plasma</th>
+                  <th contenteditable="false" style="width: 24%;">Donor's Group</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-bold">A</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold">B</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-A</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-emerald-400">AB (Universal Recipient)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">A, B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">AB, A, B, O</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-sky-400">O (Universal Donor)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">nil</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">anti-A, B</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">O</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rh Grouping & Erythroblastosis Foetalis Flowchart -->
+        <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2.5 text-center text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400 uppercase tracking-wider text-xs">Rh Incompatibility &amp; Erythroblastosis Foetalis</div>
+          <p class="text-left text-xs theme-muted">• Rh antigen (from Rhesus monkey) present in <span class="cloze cloze-hidden">~80%</span> humans (Rh⁺ᵛᵉ); absent in <span class="cloze cloze-hidden">~20%</span> (Rh⁻ᵛᵉ).</p>
+          <div class="pt-1">
+            <strong><span class="cloze cloze-hidden">Rh⁻ᵛᵉ Mother</span></strong> + <strong><span class="cloze cloze-hidden">Rh⁺ᵛᵉ Foetus</span></strong> (1st Pregnancy) ⟶ Separated by <span class="cloze cloze-hidden">placenta</span> (1st child normal)
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>During 1st Delivery</strong> ⟶ Maternal blood exposed to foetal Rh⁺ᵛᵉ blood ⟶ Mother forms <span class="cloze cloze-hidden">anti-Rh antibodies</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div>
+            <strong>Subsequent Rh⁺ᵛᵉ Pregnancy</strong> ⟶ Maternal antibodies leak into foetal blood ⟶ Destroy <span class="cloze cloze-hidden">foetal RBCs</span>
+          </div>
+          <div class="theme-muted">↓</div>
+          <div class="text-rose-400 font-semibold">
+            Causes: Severe <span class="cloze cloze-hidden">anaemia and jaundice</span> or fatal (<span class="cloze cloze-hidden">Erythroblastosis foetalis</span>)
+          </div>
+          <div class="pt-2 border-t border-[var(--border-color)] text-emerald-400 text-xs">
+            <strong>Prevention:</strong> Administer <span class="cloze cloze-hidden">anti-Rh antibodies</span> to mother immediately after 1st delivery.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BLOOD CLOTTING CASCADE & LYMPH -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">3. Blood Clotting Cascade &amp; Lymph (15.1.4 &amp; 15.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div class="space-y-2">
+          <h3 contenteditable="false" class="font-semibold theme-heading">Coagulation Cascade</h3>
+          <div contenteditable="false" class="p-5 rounded-lg theme-nested border text-center space-y-5">
+            <div>
+              Injury / Trauma <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Platelets / Tissues</span> release clotting factors
+            </div>
+            <div>
+              Series of linked enzymatic reactions (Cascade process) <span class="mx-2 theme-muted">⟶</span> <span class="cloze cloze-hidden">Thrombokinase complex</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Prothrombin</span> (inactive)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombokinase</span></span>
+                <span class="theme-muted tracking-tighter">─────────→</span>
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Ca²⁺</span></span>
+              </span>
+              <span><span class="cloze cloze-hidden">Thrombin</span> (active)</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <span><span class="cloze cloze-hidden">Fibrinogen</span> (soluble)</span>
+              <span class="inline-flex flex-col items-center mx-2 leading-none">
+                <span class="text-[11px]"><span class="cloze cloze-hidden">Thrombin</span></span>
+                <span class="theme-muted tracking-tighter">───────→</span>
+                <span class="text-[11px] opacity-0">.</span>
+              </span>
+              <span><span class="cloze cloze-hidden">Fibrin</span> (insoluble threads)</span>
+            </div>
+            <div class="pt-1">
+              <strong>Clot / Coagulam</strong> = <span class="cloze cloze-hidden">Fibrin meshwork</span> trapping dead &amp; damaged formed elements
+            </div>
+          </div>
+        </div>
+
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1.5">
+          <div class="font-semibold text-teal-400">15.2 Lymph (Tissue / Interstitial Fluid)</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Blood in tissue capillaries → water + small water-soluble substances enter interstitial spaces (leaves <span class="cloze cloze-hidden">larger proteins &amp; most formed elements</span> in vessels).</li>
+            <li>Same <span class="cloze cloze-hidden">mineral distribution</span> as plasma; colourless fluid with specialised <span class="cloze cloze-hidden">lymphocytes</span> (immune response).</li>
+            <li><strong>Fats</strong> are absorbed through lymph in the <span class="cloze cloze-hidden">lacteals</span> present in <span class="cloze cloze-hidden">intestinal villi</span>; drains back into <span class="cloze cloze-hidden">major veins</span>.</li>
           </ul>
         </div>
       </div>
     </section>
+
+    <!-- 4. CIRCULATORY PATHWAYS & VERTEBRATE HEART EVOLUTION -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">4. Circulatory Pathways &amp; Vertebrate Heart Evolution (15.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-amber-400 mb-1">Open Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Arthropods, Molluscs</span></p>
+            <p>• Blood pumped into open spaces / cavities called <span class="cloze cloze-hidden">sinuses</span>.</p>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border">
+            <div class="font-semibold text-emerald-400 mb-1">Closed Circulatory System</div>
+            <p>• <strong>Examples:</strong> <span class="cloze cloze-hidden">Annelids, Chordates</span></p>
+            <p>• Advantageous: fluid flow is <span class="cloze cloze-hidden">more precisely regulated</span>.</p>
+          </div>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 24%;">Heart Chambers</th>
+                  <th contenteditable="false" style="width: 24%;">Animals</th>
+                  <th contenteditable="false" style="width: 24%;">Circulation Type</th>
+                  <th contenteditable="false" style="width: 28%;">Pathway</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false"><strong>2 Chambers</strong><br>(<span class="cloze cloze-hidden">1 Atrium, 1 Ventricle</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Fishes</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Single Circulation</span></td>
+                  <td contenteditable="false">Heart (deoxygenated) → <span class="cloze cloze-hidden">Gills</span> (oxygenated) → Body → Heart</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false"><strong>3 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 1 Ventricle</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Amphibians, Reptiles</span> <em>(except <span class="cloze cloze-hidden">crocodiles</span>)</em></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Incomplete Double Circulation</span></td>
+                  <td contenteditable="false">Left Atrium (O₂) + Right Atrium (de-O₂) <span class="cloze cloze-hidden">mix in single ventricle</span></td>
+                </tr>
+                <tr>
+                  <td contenteditable="false"><strong>4 Chambers</strong><br>(<span class="cloze cloze-hidden">2 Atria, 2 Ventricles</span>)</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Crocodiles, Birds, Mammals</span></td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Complete Double Circulation</span></td>
+                  <td contenteditable="false">Independent pulmonary &amp; systemic circuits (<span class="cloze cloze-hidden">no mixing</span>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. HUMAN HEART, CONDUCTING SYSTEM & CARDIAC CYCLE -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">5. Human Heart, Conducting System &amp; Cardiac Cycle (15.3.1 – 15.3.2)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="space-y-1">
+          <p>• <strong>Origin &amp; Protection:</strong> <span class="cloze cloze-hidden">Mesodermally</span> derived; thoracic cavity between lungs, tilted to <span class="cloze cloze-hidden">left</span>; double-walled <span class="cloze cloze-hidden">pericardium</span> enclosing pericardial fluid.</p>
+          <p>• <strong>Valves:</strong> RA → RV guarded by <span class="cloze cloze-hidden">Tricuspid valve</span> (3 muscular flaps/cusps); LA → LV guarded by <span class="cloze cloze-hidden">Bicuspid / Mitral valve</span>; RV → Pulmonary artery &amp; LV → Aorta guarded by <span class="cloze cloze-hidden">Semilunar valves</span>.</p>
+        </div>
+
+        <!-- Nodal Conduction Pathway Flowchart -->
+        <div contenteditable="false" class="p-4 rounded-lg theme-nested border space-y-2 text-xs sm:text-sm">
+          <div class="font-semibold text-amber-400">Autoexcitable Nodal Conduction Pathway</div>
+          <div class="flex flex-wrap items-center justify-center gap-2 text-center pt-1">
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong>SAN</strong> (Right upper corner of RA; <span class="cloze cloze-hidden">70–75 min⁻¹</span> = <span class="cloze cloze-hidden">Pacemaker</span>)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AVN</span></strong> (Lower left corner of RA)</span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">AV Bundle / Bundle of His</span></strong></span>
+            <span>⟶</span>
+            <span class="px-2.5 py-1 rounded border border-[var(--border-strong)]"><strong><span class="cloze cloze-hidden">Purkinje Fibres</span></strong> (Ventricular walls)</span>
+          </div>
+        </div>
+
+        <!-- Cardiac Cycle & Metrics -->
+        <div contenteditable="false" class="space-y-3">
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Joint Diastole:</strong> All 4 chambers relaxed; Tricuspid &amp; Bicuspid <span class="cloze cloze-hidden">open</span>; Semilunar <span class="cloze cloze-hidden">closed</span>.</li>
+            <li><strong>Atrial Systole:</strong> SAN action potential → both atria contract → increases blood flow into ventricles by <span class="cloze cloze-hidden">30%</span>.</li>
+            <li><strong>Ventricular Systole:</strong> Ventricles contract (atria relax) → closure of <span class="cloze cloze-hidden">tricuspid &amp; bicuspid valves</span> produces 1st sound <span class="cloze cloze-hidden">"LUB"</span> → semilunar valves forced open.</li>
+            <li><strong>Ventricular Diastole:</strong> Ventricular pressure falls → closure of <span class="cloze cloze-hidden">semilunar valves</span> produces 2nd sound <span class="cloze cloze-hidden">"DUB"</span> → AV valves pushed open.</li>
+          </ol>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Cycle Duration</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">0.8 seconds</span> (at 72 bpm)</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Stroke Volume (SV)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~70 mL</span> / ventricle</div>
+            </div>
+            <div class="p-2.5 rounded-lg theme-nested border">
+              <div class="theme-muted">Cardiac Output (SV × HR)</div>
+              <div class="font-bold text-sm mt-0.5"><span class="cloze cloze-hidden">~5000 mL (5 L/min)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ELECTROCARDIOGRAPH (ECG) -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">6. Electrocardiograph (ECG) (15.3.3)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="false">
+          • <strong>Standard ECG Leads:</strong> <span class="cloze cloze-hidden">3 electrical leads</span> — one to <span class="cloze cloze-hidden">each wrist</span> and to the <span class="cloze cloze-hidden">left ankle</span>.
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 22%;">ECG Wave</th>
+                  <th contenteditable="false" style="width: 34%;">Electrical Event</th>
+                  <th contenteditable="false" style="width: 44%;">Mechanical / Clinical Significance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-sky-400">P-wave</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Depolarisation</span> (excitation) of <span class="cloze cloze-hidden">atria</span></td>
+                  <td contenteditable="false">Leads to contraction of both atria</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-emerald-400">QRS complex</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Depolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="false">Initiates ventricular contraction; counting <span class="cloze cloze-hidden">QRS complexes</span> gives heartbeat rate</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-bold text-amber-400">T-wave</td>
+                  <td contenteditable="false"><span class="cloze cloze-hidden">Repolarisation</span> of <span class="cloze cloze-hidden">ventricles</span></td>
+                  <td contenteditable="false">End of T-wave marks the <span class="cloze cloze-hidden">end of systole</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. DOUBLE CIRCULATION & BLOOD VESSELS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">7. Double Circulation &amp; Blood Vessels (15.4)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold theme-heading">3 Layers of Arteries &amp; Veins:</div>
+          <p>1. <strong>Tunica intima:</strong> Inner lining of <span class="cloze cloze-hidden">squamous endothelium</span>.</p>
+          <p>2. <strong>Tunica media:</strong> Middle layer of <span class="cloze cloze-hidden">smooth muscle &amp; elastic fibres</span> (comparatively thin in <span class="cloze cloze-hidden">veins</span>).</p>
+          <p>3. <strong>Tunica externa:</strong> External layer of <span class="cloze cloze-hidden">fibrous connective tissue with collagen fibres</span>.</p>
+        </div>
+
+        <div contenteditable="false" class="space-y-2 text-xs sm:text-sm">
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-sky-400">
+            <strong class="text-sky-400">Pulmonary Circulation:</strong> <span class="cloze cloze-hidden">Right Ventricle</span> → Pulmonary artery → <span class="cloze cloze-hidden">Lungs</span> → Pulmonary veins → <span class="cloze cloze-hidden">Left Atrium</span>
+          </div>
+          <div class="p-3 rounded-lg theme-nested border-l-4 border-rose-400">
+            <strong class="text-rose-400">Systemic Circulation:</strong> <span class="cloze cloze-hidden">Left Ventricle</span> → <span class="cloze cloze-hidden">Aorta</span> → Arteries → Arterioles → Capillaries → Tissues → Venules → Veins → <span class="cloze cloze-hidden">Vena cava</span> → <span class="cloze cloze-hidden">Right Atrium</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-amber-400">Hepatic Portal System:</strong> <span class="cloze cloze-hidden">Hepatic portal vein</span> carries blood from <span class="cloze cloze-hidden">intestine to liver</span> before systemic circulation.
+            </div>
+            <div class="p-3 rounded-lg theme-nested border">
+              <strong class="text-emerald-400">Coronary System:</strong> Exclusive blood vessels supplying blood to and from <span class="cloze cloze-hidden">cardiac musculature</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. REGULATION OF CARDIAC ACTIVITY & DISORDERS -->
+    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
+      <div class="toggle-header flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1">
+          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
+          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">8. Regulation of Cardiac Activity &amp; Disorders (15.5 &amp; 15.6)</h2>
+        </div>
+        <div class="edit-only items-center gap-1">
+          <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
+          <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
+        </div>
+      </div>
+
+      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+        <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
+          <div class="font-semibold text-purple-400">15.5 Regulation (Myogenic Heart)</div>
+          <p>• Neural centre in <span class="cloze cloze-hidden">Medulla oblongata</span> moderates cardiac function via <span class="cloze cloze-hidden">ANS</span>:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Sympathetic nerves:</strong> <span class="cloze cloze-hidden">Increases</span> heart rate, strength of ventricular contraction &amp; cardiac output.</li>
+            <li><strong>Parasympathetic nerves:</strong> <span class="cloze cloze-hidden">Decreases</span> heart rate, speed of conduction of action potential &amp; cardiac output.</li>
+            <li><strong>Adrenal medullary hormones:</strong> <span class="cloze cloze-hidden">Increases</span> cardiac output.</li>
+          </ul>
+        </div>
+
+        <div class="table-wrapper" style="width: 100%;">
+          <div class="overflow-x-auto">
+            <table class="notion-table">
+              <thead>
+                <tr>
+                  <th contenteditable="false" style="width: 26%;">Disorder</th>
+                  <th contenteditable="false" style="width: 74%;">NCERT Key Facts &amp; Clinical Distinctions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Hypertension (High BP)</td>
+                  <td contenteditable="false">Normal = <span class="cloze cloze-hidden">120/80 mm Hg</span> (120 = systolic, 80 = diastolic). Repeated checks <span class="cloze cloze-hidden">≥ 140/90 mm Hg</span> = hypertension; affects <span class="cloze cloze-hidden">brain &amp; kidney</span>.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">CAD (Atherosclerosis)</td>
+                  <td contenteditable="false">Deposits of <span class="cloze cloze-hidden">calcium, fat, cholesterol and fibrous tissues</span> make lumen of coronary arteries narrower.</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Angina (Angina pectoris)</td>
+                  <td contenteditable="false">Symptom of <span class="cloze cloze-hidden">acute chest pain</span> when insufficient <span class="cloze cloze-hidden">O₂</span> reaches heart muscle (more common in middle-aged &amp; elderly).</td>
+                </tr>
+                <tr>
+                  <td contenteditable="false" class="font-semibold">Heart Failure</td>
+                  <td contenteditable="false">Heart not pumping blood effectively enough; main symptom: <span class="cloze cloze-hidden">congestion of the lungs</span>.<br>• <span class="cloze cloze-hidden">Cardiac arrest</span> = heart stops beating | <span class="cloze cloze-hidden">Heart attack</span> = heart muscle suddenly damaged by inadequate blood supply.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </template>
 
   <script>
@@ -1221,13 +1838,21 @@
             id: 'ch-15',
             badge: 'NCERT Class XI • Ch. 15',
             title: 'Chapter 15: Body Fluids and Circulation',
-            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts & sizes anywhere, convert long sentences into bullets, resize tables.',
+            subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.',
             html: defaultHtml,
             updatedAt: Date.now()
           }
         }
       };
       await persistLibrary();
+    }
+
+    function getCleanNotesCanvasHTML() {
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas) return '';
+      const clone = canvas.cloneNode(true);
+      clone.querySelectorAll('.topic-open-page').forEach(btn => btn.remove());
+      return clone.innerHTML;
     }
 
     function captureActiveChapterFromDOM() {
@@ -1239,7 +1864,7 @@
       if (!title || !subtitle || !canvas) return false;
       ch.title = title.innerHTML;
       ch.subtitle = subtitle.innerHTML;
-      ch.html = canvas.innerHTML;
+      ch.html = getCleanNotesCanvasHTML();
       ch.updatedAt = Date.now();
       return true;
     }
@@ -1410,7 +2035,6 @@
       return blocks.map(b => {
         const safeTitle = b.title || 'Section';
         const collapsedCls = b.collapsed ? ' collapsed' : '';
-        // Ensure every <span class="cloze"> starts masked when imported
         const bodyHtml = (b.html || '').replace(/class="cloze"/g, 'class="cloze cloze-hidden"');
         return `
           <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition${collapsedCls}">
@@ -1491,6 +2115,7 @@
       syncEditableAttributes();
       enhanceAllTables();
       rebindInsertedImages();
+      injectTopicFullPageButtons();
       updateClozeCounter();
     }
 
@@ -1674,7 +2299,7 @@
     }
 
     function escapeHTML(str) {
-      return str.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     /* --- Theme Cycling & Reading Mode --- */
@@ -1839,8 +2464,6 @@
         if (parsed.library && parsed.library.chapters && typeof parsed.library.chapters === 'object') {
           const entries = Object.values(parsed.library.chapters);
           if (!entries.length) { showToast('This backup contains no chapters.'); return; }
-          if (!confirm(`Import ${entries.length} chapter(s) as NEW copies? Existing chapters will not be overwritten.`)) return;
-
           const additions = {};
           entries.forEach((ch, index) => {
             if (!ch || typeof ch !== 'object') return;
@@ -1860,7 +2483,6 @@
           return;
         }
 
-        // Support both `html` string and `blocks` array formats
         const resolvedHtml = typeof parsed.html === 'string'
           ? parsed.html
           : (Array.isArray(parsed.blocks) ? convertBlocksArrayToHTML(parsed.blocks) : '');
@@ -2020,7 +2642,12 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     function copyAppsScriptCode() {
       const code = document.getElementById('apps-script-snippet').textContent;
-      navigator.clipboard?.writeText(code).catch(() => {});
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
       showToast('Apps Script backup code copied.');
     }
 
@@ -2073,8 +2700,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         if (!response || !response.ok || !response.backup) { showToast('No valid BioNotes backup found in Drive.'); return; }
         const backup = response.backup;
         if (backup.app !== 'NEET_BioNotes' || !backup.library || !backup.library.chapters) throw new Error('Invalid BioNotes backup.');
-        const when = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString() : 'unknown date';
-        if (!confirm(`Restore latest Google Drive backup from ${when}?\n\nCurrent local data will first be saved in a recovery snapshot.`)) return;
         recordRollingSnapshot('Before restoring latest Google Drive backup');
         library = JSON.parse(JSON.stringify(backup.library));
         if (backup.preferences) {
@@ -2596,7 +3221,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
 
-    /* --- Toggle, Format, Paragraph Transformer, Q->A & Diagram Occlusion --- */
+    /* --- Toggle, Format & Paragraph Transformer --- */
     function toggleBlock(arrowEl) {
       const block = arrowEl.closest('.toggle-block');
       if (!block) return;
@@ -2670,7 +3295,20 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       scheduleAutoSave();
     }
 
-    let ptState = { mode: 'flowchart', range: null, source: '', nodes: [], arrows: [], activeNode: -1, rows: 2, cols: 2, nextCell: 0 };
+    let ptState = {
+      mode: 'flowchart',
+      range: null,
+      source: '',
+      nodes: [],
+      arrows: [],
+      activeNode: -1,
+      activeArrow: -1,
+      drawArrow: false,
+      zoom: 1,
+      rows: 2,
+      cols: 2,
+      nextCell: 0
+    };
 
     function openParagraphTransformer(mode) {
       if (!isEditMode) toggleEditMode();
@@ -2690,7 +3328,20 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         showToast('Select the paragraph or exact text inside a note block first.');
         return;
       }
-      ptState = { mode, range, source: range.toString().trim(), nodes: [], arrows: [], activeNode: -1, rows: 2, cols: 2, nextCell: 0 };
+      ptState = {
+        mode,
+        range,
+        source: range.toString().trim(),
+        nodes: [],
+        arrows: [],
+        activeNode: -1,
+        activeArrow: -1,
+        drawArrow: false,
+        zoom: window.innerWidth < 768 ? 0.65 : 0.9,
+        rows: 2,
+        cols: 2,
+        nextCell: 0
+      };
       renderParagraphTransformer();
       document.getElementById('paragraph-transformer').classList.add('open');
       if (sel) sel.removeAllRanges();
@@ -2704,28 +3355,35 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       modal.innerHTML = `
         <div class="pt-shell">
           <div class="pt-head">
-            <div><div id="pt-title" class="font-bold text-sm">Paragraph Transformer</div><div class="text-[11px] theme-muted">Select source phrases and build your own structure.</div></div>
-            <button class="pt-btn" onclick="closeParagraphTransformer()">✕ Close</button>
+            <div><div id="pt-title" class="font-bold text-sm">Paragraph Transformer</div><div class="text-[11px] theme-muted">Left: NCERT source text • Right: Stable zoomable sheet.</div></div>
+            <button type="button" class="pt-btn" onclick="closeParagraphTransformer()">✕ Close</button>
           </div>
           <div class="pt-grid">
             <div class="pt-pane">
-              <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                <div><b class="text-xs">Original text</b><span class="text-[10px] theme-muted ml-2">Select any phrase</span></div>
+              <div class="pt-source-bar">
+                <div class="flex items-center justify-between gap-1 mb-1.5 flex-wrap">
+                  <b class="text-xs">Original Text</b>
+                  <span class="text-[10px] theme-muted">Highlight phrase &amp; add</span>
+                </div>
                 <div class="pt-source-actions">
-                  <button class="pt-btn primary" onmousedown="event.preventDefault()" onclick="ptAddSelection()">＋ Add selected text</button>
-                  <button class="pt-btn" onmousedown="event.preventDefault()" onclick="ptAddWholeSource()">＋ Add entire text</button>
+                  <button type="button" class="pt-btn primary" onmousedown="event.preventDefault()" onclick="ptAddSelection()">＋ Add selected</button>
+                  <button type="button" class="pt-btn" onmousedown="event.preventDefault()" onclick="ptAddWholeSource()">＋ Add all</button>
                 </div>
               </div>
-              <div id="pt-source" class="pt-source text-sm"></div>
+              <div id="pt-source" class="pt-source text-xs sm:text-sm"></div>
             </div>
             <div class="pt-pane">
-              <div class="flex items-center justify-between gap-2 mb-3"><b id="pt-work-title" class="text-xs">Workspace</b><div id="pt-tools" class="flex flex-wrap gap-1"></div></div>
-              <div id="pt-workspace" class="min-h-40"></div>
+              <div class="flex items-center justify-between gap-2 mb-1.5 flex-shrink-0">
+                <b id="pt-work-title" class="text-xs">Flowchart Sheet</b>
+                <div id="pt-zoom-bar" class="flex items-center gap-1"></div>
+              </div>
+              <div id="pt-tools" class="flex flex-wrap gap-1 items-center"></div>
+              <div id="pt-workspace"></div>
             </div>
           </div>
           <div class="pt-foot">
-            <span class="text-[10px] theme-muted">Only the selected content will be replaced.</span>
-            <div class="flex gap-2"><button class="pt-btn" onclick="closeParagraphTransformer()">Cancel</button><button class="pt-btn primary" onclick="applyParagraphTransformer()">✓ Apply</button></div>
+            <span class="text-[10px] theme-muted">Pinch or use −/+ to zoom • Drag empty sheet to pan • Drag arrow endpoints to resize.</span>
+            <div class="flex gap-2"><button type="button" class="pt-btn" onclick="closeParagraphTransformer()">Cancel</button><button type="button" class="pt-btn primary" onclick="applyParagraphTransformer()">✓ Apply to Notes</button></div>
           </div>
         </div>`;
       modal.addEventListener('mousedown', e => { if (e.target === modal) closeParagraphTransformer(); });
@@ -2733,26 +3391,107 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       return modal;
     }
 
+    function ptSetZoom(newZoom, preserveScroll = true) {
+      const vp = document.getElementById('pt-viewport');
+      const oldZoom = ptState.zoom || 1;
+      const clamped = Math.min(2.2, Math.max(0.4, Number(newZoom.toFixed(2))));
+      let centerX = 0, centerY = 0;
+      if (vp && preserveScroll) {
+        centerX = (vp.scrollLeft + vp.clientWidth / 2) / oldZoom;
+        centerY = (vp.scrollTop + vp.clientHeight / 2) / oldZoom;
+      }
+      ptState.zoom = clamped;
+      const sizer = document.getElementById('pt-zoom-sizer');
+      const canvas = document.getElementById('pt-canvas');
+      const lbl = document.getElementById('pt-zoom-label');
+      if (sizer) {
+        sizer.style.width = Math.round(1600 * clamped) + 'px';
+        sizer.style.height = Math.round(1100 * clamped) + 'px';
+      }
+      if (canvas) {
+        canvas.style.transform = `scale(${clamped})`;
+      }
+      if (lbl) lbl.textContent = Math.round(clamped * 100) + '%';
+      if (vp && preserveScroll) {
+        vp.scrollLeft = Math.max(0, centerX * clamped - vp.clientWidth / 2);
+        vp.scrollTop = Math.max(0, centerY * clamped - vp.clientHeight / 2);
+      }
+    }
+
     function renderParagraphTransformer() {
       ensureParagraphTransformer();
+      const vp = document.getElementById('pt-viewport');
+      const prevScrollLeft = vp ? vp.scrollLeft : 0;
+      const prevScrollTop = vp ? vp.scrollTop : 0;
+
       const flow = ptState.mode === 'flowchart';
       document.getElementById('pt-title').textContent = flow ? 'Flowchart Builder' : 'Table Builder';
-      document.getElementById('pt-work-title').textContent = flow ? 'Flowchart workspace' : 'Table workspace';
+      document.getElementById('pt-work-title').textContent = flow ? 'Blank Flowchart Sheet' : 'Table Workspace';
       document.getElementById('pt-source').textContent = ptState.source;
+
+      const zoomBar = document.getElementById('pt-zoom-bar');
+      zoomBar.innerHTML = flow ? `
+        <button type="button" class="pt-btn" onclick="ptSetZoom(ptState.zoom - 0.15)" title="Zoom Out">−</button>
+        <button type="button" id="pt-zoom-label" class="pt-btn font-mono" onclick="ptSetZoom(1)" title="Reset 100%">${Math.round((ptState.zoom || 1) * 100)}%</button>
+        <button type="button" class="pt-btn" onclick="ptSetZoom(ptState.zoom + 0.15)" title="Zoom In">+</button>
+      ` : '';
+
       document.getElementById('pt-tools').innerHTML = flow
-        ? `<button class="pt-btn" onclick="ptAddNode()">＋ Node</button><button class="pt-btn ${ptState.drawArrow ? 'primary' : ''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow ? 'Drawing…' : 'Draw arrow'}</button><button class="pt-btn" onclick="ptDeleteArrow()">✕ Delete arrow</button><button class="pt-btn" onclick="ptDeleteNode()">✕ Delete node</button>`
-        : `<button class="pt-btn" onclick="ptAddRow()">＋ Row</button><button class="pt-btn" onclick="ptAddColumn()">＋ Column</button><button class="pt-btn" onclick="ptRemoveRow()">− Row</button><button class="pt-btn" onclick="ptRemoveColumn()">− Column</button>`;
+        ? `<button type="button" class="pt-btn" onclick="ptAddNode()">＋ Node</button>
+           <button type="button" class="pt-btn ${ptState.drawArrow ? 'primary' : ''}" onclick="ptToggleDrawArrow()">↗ ${ptState.drawArrow ? 'Drawing Arrow…' : 'Draw Arrow'}</button>
+           <button type="button" class="pt-btn" onclick="ptDeleteArrow()">✕ Arrow</button>
+           <button type="button" class="pt-btn" onclick="ptDeleteNode()">✕ Node</button>`
+        : `<button type="button" class="pt-btn" onclick="ptAddRow()">＋ Row</button>
+           <button type="button" class="pt-btn" onclick="ptAddColumn()">＋ Column</button>
+           <button type="button" class="pt-btn" onclick="ptRemoveRow()">− Row</button>
+           <button type="button" class="pt-btn" onclick="ptRemoveColumn()">− Column</button>`;
+
       if (flow) {
-        const edges = ptState.arrows.map(ar => `<line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" marker-end="url(#pt-arrowhead)" />`).join('');
+        const z = ptState.zoom || 1;
+        const edges = ptState.arrows.map((ar, idx) => {
+          const isSel = ptState.activeArrow === idx;
+          const strokeCol = isSel ? '#38bdf8' : 'var(--text-muted)';
+          const markerRef = isSel ? 'url(#pt-arrowhead-sel)' : 'url(#pt-arrowhead)';
+          const handles = isSel ? `
+            <circle class="pt-arrow-handle" data-arrow="${idx}" data-end="start" cx="${ar.x1}" cy="${ar.y1}" r="8" fill="#38bdf8" stroke="#ffffff" stroke-width="2" />
+            <circle class="pt-arrow-handle" data-arrow="${idx}" data-end="end" cx="${ar.x2}" cy="${ar.y2}" r="8" fill="#38bdf8" stroke="#ffffff" stroke-width="2" />
+          ` : '';
+          return `<g>
+            <line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="${strokeCol}" stroke-width="${isSel ? 2.6 : 2}" stroke-linecap="round" marker-end="${markerRef}" />
+            <line class="pt-arrow-hit" data-arrow="${idx}" x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="transparent" stroke-width="18" />
+            ${handles}
+          </g>`;
+        }).join('');
+
         document.getElementById('pt-workspace').innerHTML = `
-          <div class="text-[10px] theme-muted mb-1">${ptState.drawArrow ? 'Draw mode: drag from arrow tail to head.' : 'Drag ⠿ handle to move nodes. Click Draw arrow to connect.'}</div>
-          <div class="pt-viewport" id="pt-viewport"><div class="pt-canvas ${ptState.drawArrow ? 'drawing' : ''}" id="pt-canvas">
-            <svg id="pt-svg" viewBox="0 0 1100 720" preserveAspectRatio="none"><defs><marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>${edges}</svg>
-            ${ptState.nodes.map((v, i) => `<div class="pt-node ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})">⠿</div><div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div></div>`).join('')}
-          </div></div>`;
-        ptBindCanvasDrawing();
+          <div class="pt-viewport" id="pt-viewport">
+            <div class="pt-zoom-sizer" id="pt-zoom-sizer" style="width:${Math.round(1600 * z)}px;height:${Math.round(1100 * z)}px;">
+              <div class="pt-canvas ${ptState.drawArrow ? 'drawing' : ''}" id="pt-canvas" style="transform:scale(${z});">
+                <svg id="pt-svg" viewBox="0 0 1600 1100" preserveAspectRatio="none">
+                  <defs>
+                    <marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker>
+                    <marker id="pt-arrowhead-sel" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="#38bdf8"/></marker>
+                  </defs>
+                  ${edges}
+                </svg>
+                ${ptState.nodes.map((v, i) => `
+                  <div class="pt-node ${ptState.activeNode === i ? 'selected' : ''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px" onpointerdown="ptSelectNodeOnly(event,${i})">
+                    <div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" title="Drag node">⠿⠿</div>
+                    <div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>`;
+
+        const newVp = document.getElementById('pt-viewport');
+        if (newVp) {
+          newVp.scrollLeft = prevScrollLeft;
+          newVp.scrollTop = prevScrollTop;
+        }
+        ptBindCanvasInteractions();
       } else {
-        let html = '<table class="pt-table"><tbody>';
+        let html = '<div class="overflow-auto flex-1"><table class="pt-table"><tbody>';
         for (let r = 0; r < ptState.rows; r++) {
           html += '<tr>';
           for (let c = 0; c < ptState.cols; c++) {
@@ -2761,7 +3500,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           }
           html += '</tr>';
         }
-        document.getElementById('pt-workspace').innerHTML = html + '</tbody></table>';
+        document.getElementById('pt-workspace').innerHTML = html + '</tbody></table></div>';
       }
     }
 
@@ -2793,62 +3532,259 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     function ptCreateNode(text) {
+      const vp = document.getElementById('pt-viewport');
+      const z = ptState.zoom || 1;
       const i = ptState.nodes.length;
-      ptState.nodes.push({ text: String(text || 'New node'), x: 70 + (i % 3) * 320, y: 70 + Math.floor(i / 3) * 160 });
+      const baseX = vp ? Math.round(vp.scrollLeft / z + 60 + (i % 3) * 260) : (60 + (i % 3) * 280);
+      const baseY = vp ? Math.round(vp.scrollTop / z + 60 + Math.floor(i / 3) * 140) : (60 + Math.floor(i / 3) * 140);
+      ptState.nodes.push({ text: String(text || 'New node'), x: Math.min(1300, baseX), y: Math.min(950, baseY) });
       ptState.activeNode = i;
+      ptState.activeArrow = -1;
       renderParagraphTransformer();
     }
     function ptAddNode() { ptCreateNode('New node'); }
     function ptNodeText(i, el) { if (ptState.nodes[i]) ptState.nodes[i].text = el.innerText; }
-    function ptToggleDrawArrow() { ptState.drawArrow = !ptState.drawArrow; renderParagraphTransformer(); }
-    function ptDeleteArrow() { if (ptState.arrows.length) { ptState.arrows.pop(); renderParagraphTransformer(); } }
-    function ptDeleteNode() { if (ptState.activeNode >= 0) { ptState.nodes.splice(ptState.activeNode, 1); ptState.activeNode = -1; renderParagraphTransformer(); } }
+    function ptToggleDrawArrow() { ptState.drawArrow = !ptState.drawArrow; ptState.activeArrow = -1; renderParagraphTransformer(); }
+    function ptDeleteArrow() {
+      if (ptState.activeArrow >= 0 && ptState.arrows[ptState.activeArrow]) {
+        ptState.arrows.splice(ptState.activeArrow, 1);
+        ptState.activeArrow = -1;
+        renderParagraphTransformer();
+      } else if (ptState.arrows.length) {
+        ptState.arrows.pop();
+        renderParagraphTransformer();
+      }
+    }
+    function ptDeleteNode() {
+      if (ptState.activeNode >= 0) {
+        ptState.nodes.splice(ptState.activeNode, 1);
+        ptState.activeNode = -1;
+        renderParagraphTransformer();
+      }
+    }
+    function ptSelectNodeOnly(e, i) {
+      e.stopPropagation();
+      if (ptState.activeNode !== i || ptState.activeArrow !== -1) {
+        ptState.activeNode = i;
+        ptState.activeArrow = -1;
+        document.querySelectorAll('#pt-canvas .pt-node').forEach((el, idx) => el.classList.toggle('selected', idx === i));
+      }
+    }
 
     function ptNodePointerDown(e, i) {
       if (ptState.drawArrow || e.target.isContentEditable) return;
       e.preventDefault(); e.stopPropagation();
-      const handle = e.currentTarget, node = handle.closest('.pt-node'), canvas = document.getElementById('pt-canvas'), rect = canvas.getBoundingClientRect();
+      const handle = e.currentTarget;
+      const node = handle.closest('.pt-node');
       ptState.activeNode = i;
-      const sx = e.clientX, sy = e.clientY, ox = ptState.nodes[i].x, oy = ptState.nodes[i].y;
-      const scaleX = rect.width / 1100, scaleY = rect.height / 720;
+      ptState.activeArrow = -1;
+      document.querySelectorAll('#pt-canvas .pt-node').forEach((el, idx) => el.classList.toggle('selected', idx === i));
+
+      const z = ptState.zoom || 1;
+      const sx = e.clientX, sy = e.clientY;
+      const ox = ptState.nodes[i].x, oy = ptState.nodes[i].y;
       try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+
       const move = ev => {
         const n = ptState.nodes[i];
-        n.x = Math.max(0, ox + (ev.clientX - sx) / Math.max(.01, scaleX));
-        n.y = Math.max(0, oy + (ev.clientY - sy) / Math.max(.01, scaleY));
-        node.style.left = n.x + 'px'; node.style.top = n.y + 'px';
+        n.x = Math.max(0, Math.min(1520, ox + (ev.clientX - sx) / z));
+        n.y = Math.max(0, Math.min(1040, oy + (ev.clientY - sy) / z));
+        node.style.left = n.x + 'px';
+        node.style.top = n.y + 'px';
       };
       const up = () => {
         handle.removeEventListener('pointermove', move);
         handle.removeEventListener('pointerup', up);
-        renderParagraphTransformer();
+        handle.removeEventListener('pointercancel', up);
       };
       handle.addEventListener('pointermove', move);
       handle.addEventListener('pointerup', up);
+      handle.addEventListener('pointercancel', up);
     }
 
-    function ptBindCanvasDrawing() {
+    function ptBindCanvasInteractions() {
+      const vp = document.getElementById('pt-viewport');
       const canvas = document.getElementById('pt-canvas');
-      if (!canvas) return;
-      const point = ev => { const r = canvas.getBoundingClientRect(); return { x: (ev.clientX - r.left) * 1100 / r.width, y: (ev.clientY - r.top) * 720 / r.height }; };
-      canvas.addEventListener('pointerdown', e => {
-        if (!ptState.drawArrow || e.target.closest('.pt-node')) return;
-        e.preventDefault(); e.stopPropagation();
-        const p = point(e);
-        const preview = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        preview.setAttribute('x1', p.x); preview.setAttribute('y1', p.y); preview.setAttribute('x2', p.x); preview.setAttribute('y2', p.y);
-        preview.setAttribute('stroke', 'var(--text-muted)'); preview.setAttribute('stroke-width', '2'); preview.setAttribute('marker-end', 'url(#pt-arrowhead)');
-        document.getElementById('pt-svg')?.appendChild(preview);
-        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-        const move = ev => { const q = point(ev); preview.setAttribute('x2', q.x); preview.setAttribute('y2', q.y); };
-        const up = ev => {
-          canvas.removeEventListener('pointermove', move); canvas.removeEventListener('pointerup', up);
-          const q = point(ev); preview.remove();
-          if (Math.hypot(q.x - p.x, q.y - p.y) > 12) ptState.arrows.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y });
-          ptState.drawArrow = false; renderParagraphTransformer();
+      if (!vp || !canvas) return;
+
+      const toCanvasCoords = (clientX, clientY) => {
+        const r = canvas.getBoundingClientRect();
+        const z = ptState.zoom || 1;
+        return {
+          x: Math.max(0, Math.min(1600, (clientX - r.left) / z)),
+          y: Math.max(0, Math.min(1100, (clientY - r.top) / z))
         };
-        canvas.addEventListener('pointermove', move);
-        canvas.addEventListener('pointerup', up);
+      };
+
+      // Two-finger Pinch-to-Zoom on Viewport
+      const activePointers = new Map();
+      let initialPinchDist = 0;
+      let initialPinchZoom = ptState.zoom || 1;
+
+      vp.addEventListener('pointerdown', (e) => {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2) {
+          const pts = Array.from(activePointers.values());
+          initialPinchDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+          initialPinchZoom = ptState.zoom || 1;
+        }
+      });
+
+      vp.addEventListener('pointermove', (e) => {
+        if (!activePointers.has(e.pointerId)) return;
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2 && initialPinchDist > 10) {
+          e.preventDefault();
+          const pts = Array.from(activePointers.values());
+          const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+          ptSetZoom(initialPinchZoom * (dist / initialPinchDist), true);
+        }
+      });
+
+      const removePointer = (e) => {
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) initialPinchDist = 0;
+      };
+      vp.addEventListener('pointerup', removePointer);
+      vp.addEventListener('pointercancel', removePointer);
+
+      // Ctrl + Wheel Zoom
+      vp.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          ptSetZoom((ptState.zoom || 1) * (e.deltaY < 0 ? 1.1 : 0.9), true);
+        }
+      }, { passive: false });
+
+      // Canvas Pointer Interactions: Draw Arrow, Resize Arrow Endpoints, Drag Arrow, or Pan Sheet
+      canvas.addEventListener('pointerdown', (e) => {
+        if (activePointers.size >= 2) return;
+        if (e.target.closest('.pt-node')) return;
+
+        // 1. Resize Arrow Endpoint Handle
+        const endHandle = e.target.closest('.pt-arrow-handle');
+        if (endHandle) {
+          e.preventDefault(); e.stopPropagation();
+          const idx = Number(endHandle.dataset.arrow);
+          const endType = endHandle.dataset.end; // 'start' | 'end'
+          const ar = ptState.arrows[idx];
+          if (!ar) return;
+          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+          const move = (ev) => {
+            if (activePointers.size >= 2) return;
+            const q = toCanvasCoords(ev.clientX, ev.clientY);
+            if (endType === 'start') { ar.x1 = q.x; ar.y1 = q.y; }
+            else { ar.x2 = q.x; ar.y2 = q.y; }
+            renderParagraphTransformer();
+          };
+          const up = () => {
+            canvas.removeEventListener('pointermove', move);
+            canvas.removeEventListener('pointerup', up);
+            canvas.removeEventListener('pointercancel', up);
+          };
+          canvas.addEventListener('pointermove', move);
+          canvas.addEventListener('pointerup', up);
+          canvas.addEventListener('pointercancel', up);
+          return;
+        }
+
+        // 2. Select & Move Existing Arrow Shaft
+        const arrowHit = e.target.closest('.pt-arrow-hit');
+        if (arrowHit && !ptState.drawArrow) {
+          e.preventDefault(); e.stopPropagation();
+          const idx = Number(arrowHit.dataset.arrow);
+          ptState.activeArrow = idx;
+          ptState.activeNode = -1;
+          renderParagraphTransformer();
+          const ar = ptState.arrows[idx];
+          if (!ar) return;
+          const startPt = toCanvasCoords(e.clientX, e.clientY);
+          const orig = { ...ar };
+          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+          const move = (ev) => {
+            if (activePointers.size >= 2) return;
+            const q = toCanvasCoords(ev.clientX, ev.clientY);
+            const dx = q.x - startPt.x;
+            const dy = q.y - startPt.y;
+            ar.x1 = Math.max(0, Math.min(1600, orig.x1 + dx));
+            ar.y1 = Math.max(0, Math.min(1100, orig.y1 + dy));
+            ar.x2 = Math.max(0, Math.min(1600, orig.x2 + dx));
+            ar.y2 = Math.max(0, Math.min(1100, orig.y2 + dy));
+            renderParagraphTransformer();
+          };
+          const up = () => {
+            canvas.removeEventListener('pointermove', move);
+            canvas.removeEventListener('pointerup', up);
+            canvas.removeEventListener('pointercancel', up);
+          };
+          canvas.addEventListener('pointermove', move);
+          canvas.addEventListener('pointerup', up);
+          canvas.addEventListener('pointercancel', up);
+          return;
+        }
+
+        // 3. Draw New Arrow Mode
+        if (ptState.drawArrow) {
+          e.preventDefault(); e.stopPropagation();
+          const p = toCanvasCoords(e.clientX, e.clientY);
+          const preview = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          preview.setAttribute('x1', p.x); preview.setAttribute('y1', p.y);
+          preview.setAttribute('x2', p.x); preview.setAttribute('y2', p.y);
+          preview.setAttribute('stroke', '#38bdf8'); preview.setAttribute('stroke-width', '2.5');
+          preview.setAttribute('marker-end', 'url(#pt-arrowhead-sel)');
+          document.getElementById('pt-svg')?.appendChild(preview);
+          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+          const move = (ev) => {
+            const q = toCanvasCoords(ev.clientX, ev.clientY);
+            preview.setAttribute('x2', q.x); preview.setAttribute('y2', q.y);
+          };
+          const up = (ev) => {
+            canvas.removeEventListener('pointermove', move);
+            canvas.removeEventListener('pointerup', up);
+            canvas.removeEventListener('pointercancel', up);
+            const q = toCanvasCoords(ev.clientX, ev.clientY);
+            preview.remove();
+            if (Math.hypot(q.x - p.x, q.y - p.y) > 12) {
+              ptState.arrows.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y });
+              ptState.activeArrow = ptState.arrows.length - 1;
+            }
+            ptState.drawArrow = false;
+            renderParagraphTransformer();
+          };
+          canvas.addEventListener('pointermove', move);
+          canvas.addEventListener('pointerup', up);
+          canvas.addEventListener('pointercancel', up);
+          return;
+        }
+
+        // 4. Empty Sheet Background: Deselect & Pan Viewport Smoothly
+        if (ptState.activeNode !== -1 || ptState.activeArrow !== -1) {
+          ptState.activeNode = -1;
+          ptState.activeArrow = -1;
+          renderParagraphTransformer();
+        }
+        canvas.classList.add('panning');
+        const panStartX = e.clientX;
+        const panStartY = e.clientY;
+        const startScrollLeft = vp.scrollLeft;
+        const startScrollTop = vp.scrollTop;
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const panMove = (ev) => {
+          if (activePointers.size >= 2) return;
+          vp.scrollLeft = startScrollLeft - (ev.clientX - panStartX);
+          vp.scrollTop = startScrollTop - (ev.clientY - panStartY);
+        };
+        const panUp = () => {
+          canvas.classList.remove('panning');
+          canvas.removeEventListener('pointermove', panMove);
+          canvas.removeEventListener('pointerup', panUp);
+          canvas.removeEventListener('pointercancel', panUp);
+        };
+        canvas.addEventListener('pointermove', panMove);
+        canvas.addEventListener('pointerup', panUp);
+        canvas.addEventListener('pointercancel', panUp);
       });
     }
 
@@ -2872,25 +3808,51 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       let replacement;
       if (ptState.mode === 'flowchart') {
         if (!ptState.nodes.length) { showToast('Add at least one flowchart node first.'); return; }
+
+        // Compute tight bounding box around placed nodes and arrows so saved diagram fits cleanly
+        let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+        ptState.nodes.forEach(n => {
+          minX = Math.min(minX, n.x);
+          minY = Math.min(minY, n.y);
+          maxX = Math.max(maxX, n.x + 280);
+          maxY = Math.max(maxY, n.y + 85);
+        });
+        ptState.arrows.forEach(a => {
+          minX = Math.min(minX, a.x1, a.x2);
+          minY = Math.min(minY, a.y1, a.y2);
+          maxX = Math.max(maxX, a.x1, a.x2);
+          maxY = Math.max(maxY, a.y1, a.y2);
+        });
+        const pad = 24;
+        const offsetX = Math.max(0, minX - pad);
+        const offsetY = Math.max(0, minY - pad);
+        const boxW = Math.max(360, Math.round(maxX - offsetX + pad));
+        const boxH = Math.max(180, Math.round(maxY - offsetY + pad));
+
         const markerId = 'bioFlowArrow' + Date.now();
         replacement = document.createElement('span');
         replacement.className = 'pt-generated-flow';
         replacement.setAttribute('contenteditable', 'false');
-        replacement.style.cssText = 'display:block;position:relative;width:100%;max-width:1100px;height:720px;min-height:420px;overflow:auto;margin:16px 0;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--border-color);border-radius:12px;';
+        replacement.style.cssText = `display:block;position:relative;width:100%;overflow-x:auto;margin:14px 0;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--border-color);border-radius:12px;`;
+
+        const inner = document.createElement('span');
+        inner.style.cssText = `display:block;position:relative;width:${boxW}px;height:${boxH}px;min-width:100%;`;
+
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 1100 720');
-        svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;';
+        svg.setAttribute('viewBox', `0 0 ${boxW} ${boxH}`);
+        svg.style.cssText = `position:absolute;top:0;left:0;width:${boxW}px;height:${boxH}px;overflow:visible;pointer-events:none;`;
         svg.innerHTML = `<defs><marker id="${markerId}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>` +
-          ptState.arrows.map(a => `<line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="var(--text-muted)" stroke-width="1.6" stroke-linecap="round" marker-end="url(#${markerId})" />`).join('');
-        replacement.appendChild(svg);
+          ptState.arrows.map(a => `<line x1="${(a.x1 - offsetX).toFixed(1)}" y1="${(a.y1 - offsetY).toFixed(1)}" x2="${(a.x2 - offsetX).toFixed(1)}" y2="${(a.y2 - offsetY).toFixed(1)}" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#${markerId})" />`).join('');
+        inner.appendChild(svg);
+
         ptState.nodes.forEach(n => {
           const node = document.createElement('span');
           node.className = 'pt-saved-node';
           node.textContent = String(n.text || '');
-          node.style.cssText = `position:absolute;left:${Math.max(0, Number(n.x) || 0)}px;top:${Math.max(0, Number(n.y) || 0)}px;display:block;width:max-content;min-width:70px;max-width:260px;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:15px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;`;
-          replacement.appendChild(node);
+          node.style.cssText = `position:absolute;left:${Math.max(0, Math.round(n.x - offsetX))}px;top:${Math.max(0, Math.round(n.y - offsetY))}px;display:block;width:max-content;min-width:75px;max-width:280px;box-sizing:border-box;padding:9px 13px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:14.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 2px 6px rgba(0,0,0,0.12);`;
+          inner.appendChild(node);
         });
+        replacement.appendChild(inner);
       } else {
         ptEnsureCells();
         replacement = document.createElement('span');
@@ -2938,7 +3900,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       showToast('Tap-to-reveal Q&A inserted.');
     }
 
-    /* --- Diagram Label Occlusion (Fixed Image Layout Timing) --- */
+    /* --- Diagram Label Occlusion --- */
     let domState = { img: null, rects: [], start: null };
     function openDiagramOcclusion() {
       if (!isEditMode) { showToast('Switch to Edit Mode and click a diagram image first.'); return; }
@@ -3135,16 +4097,23 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     });
 
     function exportStandaloneHTML() {
+      captureActiveChapterFromDOM();
       const clone = document.documentElement.cloneNode(true);
       const toast = clone.querySelector('#toast-banner');
       if (toast) toast.classList.add('hidden');
+      // Strip dynamically injected full-page buttons & overlays so exported file initializes cleanly on load
+      clone.querySelectorAll('.topic-open-page, #topic-reading-overlay, #paragraph-transformer, #diagram-occlusion-modal').forEach(el => el.remove());
+      clone.body.classList.remove('edit-mode', 'reading-mode', 'sidebar-open');
+      clone.body.style.overflow = '';
       const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'neet_bionotes_offline.html';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('Standalone HTML exported!');
     }
 
@@ -3167,7 +4136,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         id: 'ch-15',
         badge: 'NCERT Class XI • Ch. 15',
         title: 'Chapter 15: Body Fluids and Circulation',
-        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts & sizes anywhere, convert long sentences into bullets, resize tables.',
+        subtitle: 'Tap any blank underline to reveal that keyword. Switch to <strong>Edit Mode</strong> to customize fonts &amp; sizes anywhere, convert long sentences into bullets, or build flowcharts &amp; tables.',
         html: defaultHtml,
         updatedAt: Date.now()
       };
@@ -3197,6 +4166,20 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     /* --- Topic Full-Page Reading Overlay & Dynamic Toolbar Height --- */
+    function injectTopicFullPageButtons() {
+      const canvas = document.getElementById('notes-canvas');
+      if (!canvas) return;
+      canvas.querySelectorAll('.toggle-block > .toggle-header').forEach(header => {
+        if (header.querySelector(':scope > .topic-open-page')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'topic-open-page no-print';
+        btn.textContent = '↗ Full page';
+        btn.setAttribute('onclick', 'window.openTopicInWindow(this)');
+        header.appendChild(btn);
+      });
+    }
+
     (function () {
       function sizeToolbar() {
         const bar = document.getElementById('top-toolbar');
@@ -3284,18 +4267,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         document.body.style.overflow = 'hidden';
       };
 
-      function addButtons(root) {
-        root.querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header => {
-          if (header.querySelector(':scope > .topic-open-page')) return;
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'topic-open-page';
-          btn.textContent = '↗ Full page';
-          btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.openTopicInWindow(btn); });
-          header.appendChild(btn);
-        });
-      }
-
       window.addEventListener('DOMContentLoaded', () => {
         sizeToolbar();
         const bar = document.getElementById('top-toolbar');
@@ -3304,17 +4275,19 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
         const canvas = document.getElementById('notes-canvas');
         if (canvas) {
-          addButtons(document);
-          new MutationObserver(() => addButtons(document)).observe(canvas, { childList: true, subtree: true });
+          injectTopicFullPageButtons();
+          canvas.addEventListener('click', (e) => {
+            const btn = e.target.closest('.topic-open-page');
+            if (btn) {
+              e.preventDefault();
+              e.stopPropagation();
+              window.openTopicInWindow(btn);
+            }
+          }, true);
+          new MutationObserver(() => injectTopicFullPageButtons()).observe(canvas, { childList: true, subtree: true });
         }
       });
     })();
-
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-      });
-    }
   </script>
 </body>
 </html>
