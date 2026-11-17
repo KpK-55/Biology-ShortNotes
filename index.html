@@ -3882,7 +3882,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         document.getElementById('pt-workspace').innerHTML=
           `<div class="text-[10px] theme-muted mb-1">${ptState.drawArrow?'Draw mode: touch/click and drag from the arrow tail to its head.':'Drag the node handle to move it. Select Draw arrow to make directional connections.'}</div>
            <div class="pt-viewport" id="pt-viewport"><div class="pt-canvas ${ptState.drawArrow?'drawing':''}" id="pt-canvas">
-             <svg id="pt-svg" viewBox="0 0 1800 1200" preserveAspectRatio="none"><defs><marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#pt-arrowhead)" style="display:none"/></svg>
+             <svg id="pt-svg" viewBox="0 0 1100 720" preserveAspectRatio="none"><defs><marker id="pt-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>${edges}<line id="pt-preview-arrow" x1="0" y1="0" x2="0" y2="0" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#pt-arrowhead)" style="display:none"/></svg>
              ${ptState.nodes.map((v,i)=>`<div class="pt-node ${ptState.activeNode===i?'selected':''}" data-node="${i}" style="left:${v.x}px;top:${v.y}px"><div class="pt-node-handle" onpointerdown="ptNodePointerDown(event,${i})" title="Drag node">⠿</div><div contenteditable="true" spellcheck="false" oninput="ptNodeText(${i},this)">${escapeHTML(v.text)}</div></div>`).join('')}
            </div></div>`;
         ptBindCanvasDrawing();
@@ -3906,7 +3906,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const handle=e.currentTarget,node=handle.closest('.pt-node'),canvas=document.getElementById('pt-canvas'),rect=canvas.getBoundingClientRect();
       ptState.activeNode=i;ptState.activeArrow=-1;
       const sx=e.clientX,sy=e.clientY,ox=ptState.nodes[i].x,oy=ptState.nodes[i].y;
-      const scaleX=rect.width/1800,scaleY=rect.height/1200;
+      const scaleX=rect.width/1100,scaleY=rect.height/720;
       try{handle.setPointerCapture(e.pointerId);}catch(_){}
       const move=ev=>{const n=ptState.nodes[i];n.x=Math.max(0,ox+(ev.clientX-sx)/Math.max(.01,scaleX));n.y=Math.max(0,oy+(ev.clientY-sy)/Math.max(.01,scaleY));node.style.left=n.x+'px';node.style.top=n.y+'px';};
       const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);renderParagraphTransformer();};
@@ -3916,7 +3916,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptBindCanvasDrawing(){
       const canvas=document.getElementById('pt-canvas');
       if(!canvas)return;
-      const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1800/r.width,y:(ev.clientY-r.top)*1200/r.height};};
+      const point=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*1100/r.width,y:(ev.clientY-r.top)*720/r.height};};
       const distToSegment=(p,a)=>{const dx=a.x2-a.x1,dy=a.y2-a.y1,l=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-a.x1)*dx+(p.y-a.y1)*dy)/l));return Math.hypot(p.x-(a.x1+t*dx),p.y-(a.y1+t*dy));};
       canvas.addEventListener('pointerdown',e=>{
         if(e.target.closest('.pt-node'))return;
@@ -3958,23 +3958,70 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function ptRemoveColumn(){if(ptState.cols<=1)return;ptState.cols--;ptEnsureCells();renderParagraphTransformer();}
     function closeParagraphTransformer(){const m=document.getElementById('paragraph-transformer');if(m)m.classList.remove('open');}
     function applyParagraphTransformer(){
-      if(!ptState.range || !ptState.range.commonAncestorContainer.isConnected){showToast('Original text is no longer available. Cancel and select it again.');return;}
-      let html='';
+      const originalRange = ptState.range && ptState.range.cloneRange ? ptState.range.cloneRange() : null;
+      if(!originalRange || !originalRange.startContainer.isConnected || !originalRange.endContainer.isConnected){
+        showToast('Original text is no longer available. Cancel and select it again.');
+        return;
+      }
+      let replacement;
       if(ptState.mode==='flowchart'){
         if(!ptState.nodes.length){showToast('Add at least one flowchart node first.');return;}
-        html='<div class="pt-generated-flow my-3" style="position:relative;overflow:auto"><div style="position:relative;width:900px;height:600px;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px"><svg viewBox="0 0 1800 1200" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none"><defs><marker id="savedFlowArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"/></marker></defs>'+ptState.arrows.map(a=>`<line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#savedFlowArrow)"/>`).join('')+'</svg>'+ptState.nodes.map(n=>`<div style="position:absolute;left:${n.x/2}px;top:${n.y/2}px;width:max-content;max-width:180px;min-width:36px;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border-strong);border-radius:9px;background:var(--bg-nested);color:var(--text-main);text-align:center;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(n.text)}</div>`).join('')+'</div></div>';
-      }else{
+        const markerId='bioFlowArrow'+Date.now();
+        replacement=document.createElement('span');
+        replacement.className='pt-generated-flow';
+        replacement.setAttribute('contenteditable','false');
+        replacement.style.cssText='display:block;position:relative;width:100%;max-width:1100px;height:720px;min-height:420px;overflow:auto;margin:16px 0;background-image:radial-gradient(var(--border-color) 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--border-color);border-radius:12px;';
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox','0 0 1100 720');
+        svg.setAttribute('preserveAspectRatio','none');
+        svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;';
+        const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+        const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+        marker.setAttribute('id',markerId);marker.setAttribute('markerWidth','8');marker.setAttribute('markerHeight','8');
+        marker.setAttribute('refX','7');marker.setAttribute('refY','4');marker.setAttribute('orient','auto');marker.setAttribute('markerUnits','userSpaceOnUse');
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d','M0,0 L8,4 L0,8 z');path.setAttribute('fill','var(--text-muted)');
+        marker.appendChild(path);defs.appendChild(marker);svg.appendChild(defs);
+        ptState.arrows.forEach(a=>{
+          const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+          line.setAttribute('x1',String(a.x1));line.setAttribute('y1',String(a.y1));
+          line.setAttribute('x2',String(a.x2));line.setAttribute('y2',String(a.y2));
+          line.setAttribute('stroke','var(--text-muted)');line.setAttribute('stroke-width','1.6');
+          line.setAttribute('stroke-linecap','round');line.setAttribute('marker-end',`url(#${markerId})`);
+          svg.appendChild(line);
+        });
+        replacement.appendChild(svg);
+        ptState.nodes.forEach(n=>{
+          const node=document.createElement('span');
+          node.className='pt-saved-node';
+          node.textContent=String(n.text||'');
+          node.style.cssText=`position:absolute;left:${Math.max(0,Number(n.x)||0)}px;top:${Math.max(0,Number(n.y)||0)}px;display:block;width:max-content;min-width:70px;max-width:260px;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-panel);color:var(--text-main);text-align:center;font-size:15px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 1px 3px rgba(0,0,0,.05);`;
+          replacement.appendChild(node);
+        });
+      } else {
         ptEnsureCells();
-        html='<div class="table-wrapper my-3" style="width:100%"><div class="overflow-x-auto"><table class="notion-table"><thead><tr>'+ptState.cells[0].map(v=>`<th contenteditable="true">${escapeHTML(v)}</th>`).join('')+'</tr></thead><tbody>'+ptState.cells.slice(1).map(row=>'<tr>'+row.map(v=>`<td contenteditable="true">${escapeHTML(v)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div></div>';
+        replacement=document.createElement('span');
+        replacement.className='pt-generated-table';
+        replacement.style.cssText='display:block;width:100%;margin:12px 0;';
+        const table=document.createElement('table');table.className='notion-table';
+        const thead=document.createElement('thead'),tr=document.createElement('tr');
+        (ptState.cells[0]||[]).forEach(v=>{const th=document.createElement('th');th.textContent=v;th.setAttribute('contenteditable','true');tr.appendChild(th);});
+        thead.appendChild(tr);table.appendChild(thead);
+        const tbody=document.createElement('tbody');
+        ptState.cells.slice(1).forEach(row=>{const r=document.createElement('tr');row.forEach(v=>{const td=document.createElement('td');td.textContent=v;td.setAttribute('contenteditable','true');r.appendChild(td);});tbody.appendChild(r);});
+        table.appendChild(tbody);replacement.appendChild(table);
       }
-      recordRollingSnapshot('Before paragraph transformation');
-      ptState.range.deleteContents();
-      const holder=document.createElement('div');holder.innerHTML=html;
-      const frag=document.createDocumentFragment();while(holder.firstChild)frag.appendChild(holder.firstChild);
-      ptState.range.insertNode(frag);
-      closeParagraphTransformer();
-      enhanceAllTables(); syncEditableAttributes(); scheduleAutoSave(true);
-      showToast(ptState.mode==='flowchart'?'Selected text converted to flowchart.':'Selected text converted to table.');
+      try{
+        recordRollingSnapshot('Before paragraph transformation');
+        originalRange.deleteContents();
+        originalRange.insertNode(replacement);
+        closeParagraphTransformer();
+        enhanceAllTables();syncEditableAttributes();scheduleAutoSave(true);
+        showToast(ptState.mode==='flowchart'?'Selected text converted to flowchart.':'Selected text converted to table.');
+      }catch(err){
+        console.error('[BioNotes] Paragraph transformation failed:',err);
+        showToast('Could not apply this block. Please select text within one paragraph or table cell and try again.');
+      }
     }
 
     function createQuestionAnswer(){
@@ -4227,44 +4274,91 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 <script>
 (function(){
   function ensureTopicOverlay(){
-    let ov=document.getElementById('topic-reading-overlay');if(ov)return ov;
-    ov=document.createElement('div');ov.id='topic-reading-overlay';
-    ov.innerHTML=`<div class="tro-bar"><strong id="tro-title" style="flex:1">Topic</strong>
-      <button class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button><button class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
-      <button class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button><button class="pt-btn" onclick="closeTopicReading()">✕ Close</button></div>
-      <main class="tro-content" id="tro-content"></main>`;
+    let ov=document.getElementById('topic-reading-overlay');
+    if(ov) return ov;
+    ov=document.createElement('div');
+    ov.id='topic-reading-overlay';
+    ov.innerHTML=`<div class="tro-bar">
+      <strong id="tro-title" style="flex:1;min-width:140px">Topic</strong>
+      <button type="button" class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button>
+      <button type="button" class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
+      <button type="button" class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button>
+      <button type="button" class="pt-btn" onclick="closeTopicReading()">✕ Close</button>
+    </div><main class="tro-content" id="tro-content"></main>`;
     document.body.appendChild(ov);
-    ov.addEventListener('click',e=>{const qa=e.target.closest('.cloze-question');if(qa){e.preventDefault();const open=!qa.classList.contains('qa-open');qa.classList.toggle('qa-open',open);const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');if(q)q.style.display=open?'none':'';if(a)a.style.display=open?'inline':'none';return;}const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');});
+    ov.addEventListener('click',e=>{
+      const qa=e.target.closest('.cloze-question');
+      if(qa){e.preventDefault();const open=!qa.classList.contains('qa-open');qa.classList.toggle('qa-open',open);
+        const q=qa.querySelector('.qa-question'),a=qa.querySelector('.qa-answer');
+        if(q)q.style.display=open?'none':'';if(a)a.style.display=open?'inline':'none';return;}
+      const c=e.target.closest('.cloze');if(c)c.classList.toggle('cloze-hidden');
+    });
     return ov;
   }
-  window.closeTopicReading=function(){const ov=document.getElementById('topic-reading-overlay');if(ov){ov.classList.remove('open');ov.style.display='none';}document.body.style.overflow='';};
-  window.topicHideClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.add('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.remove('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='';if(a)a.style.display='none';});};
-  window.topicRevealClozes=function(){document.querySelectorAll('#tro-content .cloze').forEach(el=>el.classList.remove('cloze-hidden'));document.querySelectorAll('#tro-content .cloze-question').forEach(el=>{el.classList.add('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='none';if(a)a.style.display='inline';});};
-
-  function openTopicInWindow(button){
+  window.closeTopicReading=function(){
+    const ov=document.getElementById('topic-reading-overlay');
+    if(ov){ov.classList.remove('open');ov.style.display='none';}
+    document.body.style.overflow='';
+  };
+  window.topicHideClozes=function(){
+    const root=document.getElementById('tro-content');if(!root)return;
+    root.querySelectorAll('.cloze').forEach(el=>el.classList.add('cloze-hidden'));
+    root.querySelectorAll('.cloze-question').forEach(el=>{el.classList.remove('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='';if(a)a.style.display='none';});
+  };
+  window.topicRevealClozes=function(){
+    const root=document.getElementById('tro-content');if(!root)return;
+    root.querySelectorAll('.cloze').forEach(el=>el.classList.remove('cloze-hidden'));
+    root.querySelectorAll('.cloze-question').forEach(el=>{el.classList.add('qa-open');const q=el.querySelector('.qa-question'),a=el.querySelector('.qa-answer');if(q)q.style.display='none';if(a)a.style.display='inline';});
+  };
+  window.openTopicInWindow=function(button){
     if(document.body.classList.contains('edit-mode')){showToast('Switch to Reading Mode to open a topic full page.');return;}
-    const block=button.closest('.toggle-block');if(!block)return;
-    const header=block.querySelector(':scope > .toggle-header');
-    const heading=header&&header.querySelector('h1,h2,h3,h4,strong');
-    const title=heading?heading.innerText.trim():(header?header.innerText.replace(/↗\\s*Full page/i,'').trim():'Topic');
-    const source=block.querySelector(':scope > .toggle-body')||block.querySelector('.toggle-body');if(!source){showToast('Could not find this topic content.');return;}
+    const block=button && button.closest ? button.closest('.toggle-block') : null;
+    if(!block){showToast('Could not identify this topic.');return;}
+    const header=Array.from(block.children).find(el=>el.classList && el.classList.contains('toggle-header')) || block.querySelector('.toggle-header');
+    const heading=header && header.querySelector('h1,h2,h3,h4,h5,strong');
+    const title=heading ? heading.textContent.trim() : (header ? header.textContent.replace(/↗\s*Full page/i,'').trim() : 'Topic');
+    let source=Array.from(block.children).find(el=>el.classList && el.classList.contains('toggle-body'));
+    if(!source) source=block.querySelector('.toggle-body');
+    if(!source){
+      source=Array.from(block.children).find(el=>el!==header && !(el.classList&&el.classList.contains('topic-open-page')));
+    }
+    if(!source){showToast('Could not find this topic content.');return;}
     const content=source.cloneNode(true);
     content.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-    content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.toggle-arrow,.topic-open-page').forEach(el=>el.remove());
-    content.querySelectorAll('.toggle-block').forEach(el=>{el.classList.remove('collapsed');const body=el.querySelector(':scope > .toggle-body');if(body)body.style.display='block';});
-    const ov=ensureTopicOverlay();document.getElementById('tro-title').textContent=title;
-    const target=document.getElementById('tro-content');target.innerHTML='';target.appendChild(content);
-    ov.style.display='flex';ov.classList.add('open');document.body.style.overflow='hidden';
-  }
+    content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.topic-open-page').forEach(el=>el.remove());
+    content.querySelectorAll('.toggle-block').forEach(el=>{
+      el.classList.remove('collapsed');
+      const body=el.querySelector(':scope > .toggle-body');
+      if(body)body.style.display='block';
+    });
+    const ov=ensureTopicOverlay();
+    const titleEl=ov.querySelector('#tro-title'),target=ov.querySelector('#tro-content');
+    if(titleEl)titleEl.textContent=title;
+    target.replaceChildren(content);
+    ov.style.display='flex';ov.classList.add('open');
+    document.body.style.overflow='hidden';
+  };
   function addButtons(root){
-    (root||document).querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header=>{
+    root.querySelectorAll('#notes-canvas .toggle-block > .toggle-header').forEach(header=>{
       if(header.querySelector(':scope > .topic-open-page'))return;
-      const btn=document.createElement('button');btn.type='button';btn.className='topic-open-page';btn.textContent='↗ Full page';btn.title='Open this topic in a clean reading view';
-      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openTopicInWindow(btn);});
+      const btn=document.createElement('button');
+      btn.type='button';btn.className='topic-open-page';btn.textContent='↗ Full page';
+      btn.setAttribute('aria-label','Open topic in full-page reading view');
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();window.openTopicInWindow(btn);});
       header.appendChild(btn);
     });
   }
-  function start(){const canvas=document.getElementById('notes-canvas');if(!canvas)return;addButtons(canvas);new MutationObserver(()=>addButtons(canvas)).observe(canvas,{childList:true,subtree:true});}
+  function start(){
+    const canvas=document.getElementById('notes-canvas');if(!canvas)return;
+    addButtons(document);
+    // Event delegation survives chapter switches and regenerated topic headers.
+    canvas.addEventListener('click',e=>{
+      const btn=e.target.closest('.topic-open-page');
+      if(!btn)return;
+      e.preventDefault();e.stopPropagation();window.openTopicInWindow(btn);
+    },true);
+    if(window.MutationObserver)new MutationObserver(()=>addButtons(document)).observe(canvas,{childList:true,subtree:true});
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
@@ -4317,4 +4411,33 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 #topic-reading-overlay.open{display:flex!important}
 #topic-reading-overlay .tro-shell{height:100dvh;max-height:100dvh;overflow:hidden}
 #topic-reading-overlay #tro-content{overflow:auto;overscroll-behavior:contain}
+</style>
+
+<style id="bionotes-stability-patch">
+#paragraph-transformer .pt-canvas{width:1100px;height:720px;min-width:1100px;min-height:720px}
+.pt-generated-flow{isolation:isolate;contain:layout paint}
+.pt-generated-flow .pt-saved-node{z-index:1}
+#topic-reading-overlay{position:fixed!important;inset:0!important;z-index:99999!important;background:var(--bg-main)!important;color:var(--text-main)!important;display:none;flex-direction:column}
+#topic-reading-overlay.open{display:flex!important}
+#topic-reading-overlay .tro-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--bg-panel);border-bottom:1px solid var(--border-color)}
+#topic-reading-overlay .tro-content{display:block;overflow:auto;overscroll-behavior:contain;flex:1;width:min(1100px,100%);margin:0 auto;padding:20px 24px 60px}
+#topic-reading-overlay .tro-content .toggle-block{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important}
+#topic-reading-overlay .tro-content .toggle-header{display:flex!important;align-items:center;margin:8px 0!important}
+#topic-reading-overlay .tro-content .toggle-arrow{display:none!important}
+#topic-reading-overlay .tro-content .toggle-body{display:block!important;padding:0!important;margin:0!important}
+@media(max-width:700px){#topic-reading-overlay .tro-content{padding:14px 12px 40px}}
+</style>
+
+<style id="bionotes-transformer-mobile-layout">
+@media (max-width: 820px), (orientation: portrait) and (max-width: 1024px) {
+  #paragraph-transformer{padding:0!important;align-items:stretch!important;justify-content:stretch!important}
+  #paragraph-transformer .pt-shell{width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important}
+  #paragraph-transformer .pt-grid{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(190px,42dvh) minmax(260px,1fr)!important;overflow:hidden}
+  #paragraph-transformer .pt-pane{padding:10px!important;min-height:0!important;overflow:auto!important}
+  #paragraph-transformer .pt-pane + .pt-pane{border-left:0!important;border-top:1px solid var(--border-color)!important}
+  #paragraph-transformer .pt-head{flex-wrap:wrap;padding:8px 10px!important}
+  #paragraph-transformer #pt-tools{display:flex;gap:6px;flex-wrap:wrap}
+  #paragraph-transformer .pt-foot{padding:8px 10px!important}
+  #paragraph-transformer .pt-viewport{max-height:100%;overflow:auto!important}
+}
 </style>
