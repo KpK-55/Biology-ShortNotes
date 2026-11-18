@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#141417" />
+  <meta name="theme-color" content="#0d0e11" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>NEET BioNotes — Active Recall, Builders &amp; Fullscreen Reader</title>
+  <title>NEET BioNotes — Mind Map &amp; Active Recall Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,20 +29,27 @@
     };
   </script>
   <style>
+    /* =====================================================================
+       EYE-COMFORT PASTEL DARK THEME & ADAPTIVE PALETTES
+       ===================================================================== */
     :root {
-      --bg-main: #141417;
-      --bg-panel: #1d1d22;
-      --bg-nested: #18181c;
-      --bg-hover: #28282f;
-      --border-color: #2b2b33;
-      --border-strong: #3f3f4a;
-      --text-main: #e4e4e7;
+      --bg-main: #0d0e11;
+      --bg-panel: #15171c;
+      --bg-nested: #111318;
+      --bg-hover: #1f222a;
+      --border-color: #262932;
+      --border-strong: #373c49;
+      --text-main: #E0E0E0;
       --text-muted: #9ca3af;
-      --text-heading: #fafafa;
-      --table-th: #232329;
-      --table-td: #19191e;
-      --cloze-revealed: #38bdf8;
-      --cloze-line: #71717a;
+      --text-heading: #EAEAEA;
+      --table-th: #1b1e25;
+      --table-td: #121419;
+      --cloze-revealed: #7dd3fc;
+      --cloze-line: #6b7280;
+      --accent-green: #86efac;
+      --accent-rose: #fda4af;
+      --accent-amber: #fde047;
+      --accent-sky: #7dd3fc;
       --note-font: 'Inter', system-ui, sans-serif;
       --note-size: 15px;
     }
@@ -61,6 +68,10 @@
       --table-td: #ffffff;
       --cloze-revealed: #0284c7;
       --cloze-line: #94a3b8;
+      --accent-green: #15803d;
+      --accent-rose: #be123c;
+      --accent-amber: #b45309;
+      --accent-sky: #0369a1;
     }
 
     html.sepia {
@@ -77,6 +88,10 @@
       --table-td: #faf5eb;
       --cloze-revealed: #b45309;
       --cloze-line: #8c745a;
+      --accent-green: #166534;
+      --accent-rose: #9f1239;
+      --accent-amber: #92400e;
+      --accent-sky: #075985;
     }
 
     body {
@@ -88,6 +103,16 @@
       transition: background-color 0.2s ease, color 0.2s ease;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* Soften vivid Tailwind utility colors in Dark Mode for eye comfort */
+    html.dark .text-white { color: #E0E0E0 !important; }
+    html.dark .text-sky-400 { color: #7dd3fc !important; }
+    html.dark .text-emerald-400 { color: #86efac !important; }
+    html.dark .text-amber-400 { color: #fde68a !important; }
+    html.dark .text-rose-400 { color: #fda4af !important; }
+    html.dark .text-purple-400 { color: #d8b4fe !important; }
+    html.dark .text-teal-400 { color: #5eead4 !important; }
+    html.dark .text-blue-400 { color: #93c5fd !important; }
 
     #notes-canvas,
     #notes-canvas p,
@@ -101,18 +126,18 @@
     }
 
     #notes-canvas { font-size: var(--note-size); width: 100%; max-width: 100%; }
-    #notes-canvas h2 { font-size: calc(var(--note-size) * 1.22); }
-    #notes-canvas h3 { font-size: calc(var(--note-size) * 1.08); }
+    #notes-canvas h2 { font-size: calc(var(--note-size) * 1.24); }
+    #notes-canvas h3 { font-size: calc(var(--note-size) * 1.1); }
     #notes-canvas .notion-table { font-size: calc(var(--note-size) * 0.93); }
-    #notes-canvas > .toggle-block,
-    #notes-canvas .toggle-body,
-    #notes-canvas .toggle-body > * { width: 100%; max-width: 100%; }
+    #notes-canvas > .topic-section,
+    #notes-canvas .topic-body,
+    #notes-canvas .topic-body > * { width: 100%; max-width: 100%; }
     #notes-canvas .user-font-style { font-family: inherit; }
 
-    #drive-sync-icon.sync-online { color: #10b981; }
-    #drive-sync-icon.sync-pending { color: #f59e0b; }
+    #drive-sync-icon.sync-online { color: #86efac; }
+    #drive-sync-icon.sync-pending { color: #fde047; }
     #drive-sync-icon.sync-offline { color: #94a3b8; }
-    #drive-sync-icon.sync-remote-new { color: #fb7185; }
+    #drive-sync-icon.sync-remote-new { color: #fda4af; }
 
     .theme-panel { background-color: var(--bg-panel); border-color: var(--border-color); }
     .theme-nested { background-color: var(--bg-nested); border-color: var(--border-color); }
@@ -146,7 +171,7 @@
     }
     #main-wrapper {
       margin-left: 0;
-      padding-top: var(--toolbar-height, 72px) !important;
+      padding-top: var(--toolbar-height, 64px) !important;
       transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @media (min-width: 768px) {
@@ -154,22 +179,32 @@
       body.sidebar-open #top-toolbar { left: 18rem !important; }
     }
 
-    /* Notion Toggle Block Transitions */
-    .toggle-arrow {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border-radius: 5px;
-      transition: transform 0.16s ease, background-color 0.15s ease;
-      cursor: pointer;
-      user-select: none;
-      flex-shrink: 0;
+    /* Flat Topic Sections (No Notion Toggle Cards or Collapsing) */
+    .topic-section {
+      padding: 0.75rem 0 1.5rem 0;
+      border-bottom: 1px solid var(--border-color);
+      background: transparent !important;
+      border-top: none !important;
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: none !important;
     }
-    .toggle-arrow:hover { background-color: var(--bg-hover); }
-    .toggle-block.collapsed > .toggle-header .toggle-arrow { transform: rotate(-90deg); }
-    .toggle-block.collapsed > .toggle-body { display: none; }
+    .subtopic-section {
+      padding: 0.5rem 0 0.75rem 0;
+      background: transparent !important;
+      border: none !important;
+    }
+    .topic-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.65rem;
+    }
+    .topic-body {
+      display: block !important;
+      padding-left: 0 !important;
+    }
 
     /* Edit Mode Indicators */
     body.edit-mode [contenteditable="true"] {
@@ -179,8 +214,8 @@
     }
     body.edit-mode [contenteditable="true"]:hover { background-color: rgba(128, 128, 128, 0.08); }
     body.edit-mode [contenteditable="true"]:focus {
-      background-color: rgba(56, 189, 248, 0.07);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.38);
+      background-color: rgba(125, 211, 252, 0.07);
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.38);
     }
 
     .edit-only { display: none; }
@@ -202,17 +237,17 @@
     body:not(.edit-mode) .cloze.cloze-hidden {
       color: transparent !important;
       border-bottom: 1.5px solid var(--cloze-line);
-      padding: 0 4px;
+      padding: 0 6px;
     }
     body:not(.edit-mode) .cloze.cloze-hidden * { color: transparent !important; }
     body:not(.edit-mode) .cloze.cloze-hidden:hover { border-bottom-color: var(--cloze-revealed); }
 
     body:not(.edit-mode) .cloze[data-hard="1"].cloze-hidden {
-      border-bottom: 2px solid #fb7185 !important;
+      border-bottom: 2px solid #fda4af !important;
     }
     body:not(.edit-mode) .cloze[data-hard="1"]::after {
       content: "•";
-      color: #fb7185;
+      color: #fda4af;
       font-size: 11px;
       vertical-align: super;
       margin-left: 1px;
@@ -230,15 +265,15 @@
     }
 
     body.edit-mode .cloze {
-      border-bottom: 2px dotted #f59e0b;
-      color: #fbbf24;
+      border-bottom: 2px dotted #fbbf24;
+      color: #fde68a;
       font-weight: 600;
       user-select: text;
       cursor: text;
     }
     body.edit-mode .cloze[data-hard="1"] {
-      border-bottom-color: #fb7185;
-      color: #fb7185;
+      border-bottom-color: #fda4af;
+      color: #fda4af;
     }
     html.light body.edit-mode .cloze,
     html.sepia body.edit-mode .cloze {
@@ -250,10 +285,9 @@
     .cloze-question {
       display: inline;
       cursor: pointer;
-      border-bottom: 1.5px dashed #f59e0b;
+      border-bottom: 1.5px dashed #fbbf24;
       padding: 0 2px;
       touch-action: manipulation;
-      -webkit-tap-highlight-color: rgba(245, 158, 11, 0.2);
     }
     .cloze-question .qa-answer {
       display: none;
@@ -263,7 +297,7 @@
     .cloze-question.qa-open { border-bottom-color: var(--cloze-revealed); }
     .cloze-question.qa-open .qa-question { display: none !important; }
     .cloze-question.qa-open .qa-answer { display: inline !important; }
-    body.edit-mode .cloze-question { outline: 1px dashed #f59e0b; cursor: text; }
+    body.edit-mode .cloze-question { outline: 1px dashed #fbbf24; cursor: text; }
 
     /* Interactive Resizable Table System */
     .table-wrapper {
@@ -325,7 +359,7 @@
     }
     body.edit-mode .col-resizer { display: block; }
     body.edit-mode .col-resizer:hover,
-    body.edit-mode .col-resizer.resizing { background: rgba(56, 189, 248, 0.7); }
+    body.edit-mode .col-resizer.resizing { background: rgba(125, 211, 252, 0.7); }
 
     .table-edge-resizer {
       display: none;
@@ -336,7 +370,7 @@
       width: 8px;
       cursor: ew-resize;
       border-radius: 4px;
-      background: rgba(56, 189, 248, 0.28);
+      background: rgba(125, 211, 252, 0.28);
       opacity: 0;
       transition: opacity 0.15s;
     }
@@ -385,9 +419,9 @@
       text-align: center;
       background: var(--bg-nested);
     }
-    .toggle-block.drag-over-img {
-      outline: 2px dashed #38bdf8 !important;
-      background-color: rgba(56, 189, 248, 0.06) !important;
+    .topic-section.drag-over-img {
+      outline: 2px dashed #7dd3fc !important;
+      background-color: rgba(125, 211, 252, 0.06) !important;
     }
     .img-resize-handle {
       position: absolute;
@@ -395,7 +429,7 @@
       bottom: 4px;
       width: 18px;
       height: 18px;
-      background: #38bdf8;
+      background: #7dd3fc;
       border-radius: 4px;
       cursor: nwse-resize;
       opacity: 0;
@@ -467,128 +501,93 @@
     #diagram-occlusion-modal .dom-draw-layer { position: absolute; inset: 0; touch-action: none; cursor: crosshair; }
     #diagram-occlusion-modal .dom-rect {
       position: absolute;
-      border: 2px solid #38bdf8;
+      border: 2px solid #7dd3fc;
       background: var(--bg-panel);
       opacity: 0.85;
       pointer-events: none;
     }
 
-    /* Reading Mode */
-    body.reading-mode {
-      background-color: var(--bg-main) !important;
-      color: var(--text-main) !important;
-    }
-    body.reading-mode #chapter-sidebar,
-    body.reading-mode #sidebar-backdrop,
-    body.reading-mode #top-toolbar,
-    body.reading-mode #dashboard-view,
-    body.reading-mode #search-filter-bar,
-    body.reading-mode #bottom-quick-add,
-    body.reading-mode .edit-only,
-    body.reading-mode .table-toolbar,
-    body.reading-mode .table-edge-resizer,
-    body.reading-mode .col-resizer,
-    body.reading-mode .img-controls,
-    body.reading-mode .img-resize-handle,
-    body.reading-mode #chapter-subtitle,
-    body.reading-mode #save-indicator {
-      display: none !important;
-    }
-    body.reading-mode #main-wrapper {
-      margin-left: 0 !important;
-      padding-top: 0 !important;
-    }
-    body.reading-mode main {
-      max-width: min(96vw, 1500px) !important;
-      padding-top: 3.25rem !important;
-      padding-bottom: 5rem !important;
-    }
-    body.reading-mode .toggle-block,
-    body.reading-mode .theme-panel,
-    body.reading-mode .theme-nested,
-    body.reading-mode #notes-canvas section,
-    body.reading-mode #notes-canvas div.rounded-lg,
-    body.reading-mode #notes-canvas div.rounded-xl {
-      background: transparent !important;
-      border-top: none !important;
-      border-right: none !important;
-      border-bottom: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
-    body.reading-mode .border-l-4 { padding-left: 0.85rem !important; }
-    body.reading-mode #notes-canvas > .toggle-block {
-      border-bottom: 1px solid var(--border-color) !important;
-      padding-top: 0.75rem !important;
-      padding-bottom: 1.2rem !important;
-      margin-bottom: 0.75rem !important;
-    }
-    body.reading-mode .toggle-body { padding-left: 1.35rem !important; }
-
-    #reading-mode-dock { display: none; }
-    body.reading-mode #reading-mode-dock { display: flex; }
-
-    /* Topic Full-Page Reading Overlay */
-    .topic-open-page {
-      flex: 0 0 auto;
-      margin-left: auto;
-      padding: 2px 7px;
+    /* =====================================================================
+       CHAPTER MIND MAP WORKSPACE (DEFAULT WHEN OPENING ANY CHAPTER)
+       ===================================================================== */
+    .mm-viewport {
+      position: relative;
+      width: 100%;
+      height: calc(100dvh - 155px);
+      min-height: 460px;
+      overflow: auto;
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-muted);
-      font-size: 11px;
-      line-height: 1.5;
-      cursor: pointer;
+      border-radius: 14px;
+      background: var(--bg-nested);
+      background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+      background-size: 22px 22px;
+      touch-action: pan-x pan-y;
     }
-    .topic-open-page:hover { color: var(--text-heading); background: var(--bg-hover); }
-    body.edit-mode .topic-open-page { display: none !important; }
-
-    #topic-reading-overlay {
-      position: fixed !important;
-      inset: 0 !important;
-      z-index: 99999 !important;
-      background: var(--bg-main) !important;
-      color: var(--text-main) !important;
-      display: none;
-      flex-direction: column;
+    .mm-stage {
+      position: relative;
+      transform-origin: 0 0;
     }
-    #topic-reading-overlay.open { display: flex !important; }
-    #topic-reading-overlay .tro-bar {
-      position: sticky;
+    .mm-canvas {
+      position: absolute;
       top: 0;
-      z-index: 5;
+      left: 0;
+      transform-origin: 0 0;
+    }
+    .mm-root-circle {
+      position: absolute;
+      width: 136px;
+      height: 136px;
+      border-radius: 9999px;
+      background: #f5d887;
+      color: #1c1917;
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 10px 14px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border-color);
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.25;
+      padding: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      user-select: none;
     }
-    #topic-reading-overlay .tro-content {
-      display: block;
-      overflow: auto;
-      overscroll-behavior: contain;
-      flex: 1;
-      width: min(1100px, 100%);
-      margin: 0 auto;
-      padding: 20px 24px 60px;
+    .mm-branch-pill {
+      position: absolute;
+      min-width: 195px;
+      max-width: 265px;
+      padding: 9px 16px;
+      border-radius: 10px 14px 9px 13px;
+      background: #f5d887;
+      color: #1c1917;
+      font-weight: 600;
+      font-size: 13.5px;
+      line-height: 1.3;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
     }
-    #topic-reading-overlay .tro-content .toggle-block {
-      border: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
+    .mm-branch-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+      filter: brightness(1.03);
     }
-    #topic-reading-overlay .tro-content .toggle-header { display: flex !important; align-items: center; margin: 8px 0 !important; }
-    #topic-reading-overlay .tro-content .toggle-arrow { display: none !important; }
-    #topic-reading-overlay .tro-content .toggle-body { display: block !important; padding: 0 !important; margin: 0 !important; }
+    .mm-branch-pill.sub-pill {
+      min-width: 165px;
+      max-width: 235px;
+      padding: 6px 13px;
+      font-size: 12.5px;
+    }
+    .mm-branch-pill.mm-selected {
+      outline: 2.5px solid #7dd3fc;
+      outline-offset: 2px;
+    }
+    .mm-branch-pill[contenteditable="true"] {
+      cursor: text;
+    }
 
     /* =====================================================================
-       STABLE SIDE-BY-SIDE FLOWCHART & TABLE BUILDER (ZERO EXTRA SPACE)
+       STABLE SIDE-BY-SIDE FLOWCHART & TABLE BUILDER
        ===================================================================== */
     #paragraph-transformer {
       position: fixed;
@@ -732,7 +731,7 @@
       border-color: transparent !important;
       box-shadow: none !important;
     }
-    #paragraph-transformer .pt-node.selected { outline: 2px solid #38bdf8; z-index: 6; }
+    #paragraph-transformer .pt-node.selected { outline: 2px solid #7dd3fc; z-index: 6; }
     #paragraph-transformer .pt-node [contenteditable="true"] {
       display: block;
       min-width: 24px;
@@ -754,7 +753,7 @@
       cursor: pointer;
     }
     #paragraph-transformer .pt-btn:hover { background: var(--bg-hover); }
-    #paragraph-transformer .pt-btn.primary { background: #0369a1; color: white; border-color: #0284c7; }
+    #paragraph-transformer .pt-btn.primary { background: #0369a1; color: #f8fafc; border-color: #0284c7; }
     #paragraph-transformer .pt-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     #paragraph-transformer .pt-table td,
     #paragraph-transformer .pt-table th { border: 1px solid var(--border-strong); padding: 7px; min-width: 70px; vertical-align: top; }
@@ -801,6 +800,42 @@
       opacity: 0.85;
     }
 
+    /* =====================================================================
+       DISTRACTION-FREE FULLSCREEN OVERLAY BAR (MIND MAP & TOPIC NOTES)
+       ===================================================================== */
+    body.focus-fullscreen #top-toolbar,
+    body.focus-fullscreen #chapter-sidebar,
+    body.focus-fullscreen #sidebar-backdrop,
+    body.focus-fullscreen #mm-top-header,
+    body.focus-fullscreen #mm-edit-bar,
+    body.focus-fullscreen #study-top-header,
+    body.focus-fullscreen #search-filter-bar,
+    body.focus-fullscreen #bottom-quick-add,
+    body.focus-fullscreen #mm-enter-fs-btn {
+      display: none !important;
+    }
+    body.focus-fullscreen #main-wrapper {
+      margin-left: 0 !important;
+      padding-top: 3.35rem !important;
+    }
+    body.focus-fullscreen #mindmap-view {
+      max-width: 100% !important;
+      padding: 0 0.75rem 0.75rem 0.75rem !important;
+    }
+    body.focus-fullscreen .mm-viewport {
+      height: calc(100dvh - 4.25rem) !important;
+    }
+    body.focus-fullscreen #chapter-study-view {
+      max-width: 68rem !important;
+      padding-top: 0.5rem !important;
+    }
+    #fs-floating-bar {
+      display: none;
+    }
+    body.focus-fullscreen #fs-floating-bar {
+      display: flex;
+    }
+
     @media (max-width: 640px) {
       #paragraph-transformer { padding: 0 !important; }
       #paragraph-transformer .pt-shell { width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; }
@@ -811,17 +846,15 @@
     @media print {
       @page { size: A4 portrait; margin: 14mm 14mm 16mm 14mm; }
       html, body { background: #ffffff !important; color: #111111 !important; font-size: 11pt !important; line-height: 1.5 !important; }
-      #top-toolbar, #chapter-sidebar, #sidebar-backdrop, #dashboard-view, #search-filter-bar, #bottom-quick-add,
-      #reading-mode-dock, #history-modal, #gdrive-modal, #toast-banner, #paragraph-transformer,
-      #diagram-occlusion-modal, #topic-reading-overlay, .topic-open-page,
+      #top-toolbar, #chapter-sidebar, #sidebar-backdrop, #dashboard-view, #mindmap-view, #search-filter-bar, #bottom-quick-add,
+      #history-modal, #gdrive-modal, #toast-banner, #paragraph-transformer, #diagram-occlusion-modal,
       .edit-only, .no-print, .table-toolbar, .table-edge-resizer, .col-resizer, .img-controls, .img-resize-handle {
         display: none !important;
       }
+      #chapter-study-view { display: block !important; }
       #main-wrapper { margin-left: 0 !important; padding: 0 !important; max-width: 100% !important; }
-      .toggle-block.collapsed > .toggle-body { display: block !important; }
-      .toggle-arrow { transform: none !important; color: #444444 !important; }
       .theme-panel, .theme-nested, section, div { background-color: transparent !important; box-shadow: none !important; }
-      .toggle-block { border: none !important; border-bottom: 1px solid #d4d4d8 !important; border-radius: 0 !important; padding: 8px 0 !important; margin-bottom: 10px !important; }
+      .topic-section { border-bottom: 1px solid #d4d4d8 !important; padding: 8px 0 !important; margin-bottom: 10px !important; }
       h1, h2, h3, strong, b { color: #000000 !important; }
       p, li, td, th, span, div { color: #1a1a1a !important; }
       .cloze, .cloze.cloze-hidden { border: none !important; border-bottom: 1.5px solid #111111 !important; color: #000000 !important; font-weight: 700 !important; padding: 0 2px !important; }
@@ -900,6 +933,40 @@
     </div>
   </aside>
 
+  <!-- FLOATING FULLSCREEN TOP BAR (IMAGES 6 & 8) -->
+  <div id="fs-floating-bar" class="fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 py-2.5 items-center justify-between gap-2 bg-[var(--bg-main)]/92 backdrop-blur-md pointer-events-auto">
+    <!-- Left: CLOSE X Pill -->
+    <button type="button" onclick="exitFocusFullscreen()" class="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/30 text-xs font-extrabold tracking-wide shadow-sm transition">
+      CLOSE ✕
+    </button>
+
+    <!-- Center: Topic & Subtopic Switcher Dropdown (Shown in Study Fullscreen - Image 8) -->
+    <div id="fs-topic-dropdown-wrap" class="relative hidden max-w-[62vw] sm:max-w-md flex-1 flex justify-center">
+      <button type="button" onclick="toggleFsTopicDropdown()" class="w-full flex items-center justify-between gap-2.5 px-4 py-1.5 rounded-full theme-panel border border-[var(--border-strong)] hover:bg-[var(--bg-hover)] text-xs font-bold theme-heading shadow-sm transition truncate">
+        <span class="text-[10px] theme-muted">▶</span>
+        <span id="fs-current-topic-label" class="truncate">All Chapter Topics</span>
+        <span class="text-[10px] theme-muted">▾</span>
+      </button>
+      <div id="fs-topic-menu" class="hidden absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-80 sm:w-96 max-h-[65dvh] overflow-y-auto rounded-xl theme-panel border border-[var(--border-strong)] shadow-2xl py-1.5 z-50 text-xs"></div>
+    </div>
+
+    <!-- Right: Return to Normal View + Zoom In / Out -->
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="exitFocusFullscreen()" class="p-2 rounded-full hover:bg-[var(--bg-hover)] theme-heading border border-transparent hover:border-[var(--border-color)] transition" title="Return to normal view">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 14 10 14 10 20"></polyline>
+          <polyline points="20 10 14 10 14 4"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+      </button>
+      <div class="flex items-center gap-1 theme-panel border border-[var(--border-strong)] rounded-full px-2.5 py-1 shadow-sm">
+        <button type="button" onclick="handleFullscreenZoom(1)" class="px-1.5 py-0.5 rounded-full hover:bg-[var(--bg-hover)] text-xs font-bold" title="Zoom In">🔍+</button>
+        <button type="button" onclick="handleFullscreenZoom(-1)" class="px-1.5 py-0.5 rounded-full hover:bg-[var(--bg-hover)] text-xs font-bold" title="Zoom Out">🔍−</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Content Wrapper -->
   <div id="main-wrapper" class="min-h-screen flex flex-col">
 
@@ -917,19 +984,24 @@
             <span class="hidden md:inline">Dashboard</span>
           </button>
 
+          <button id="back-mindmap-btn" onclick="openChapterMindMap(library.activeChapterId)" class="hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-400/40 bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 text-xs font-semibold transition" title="Back to Chapter Mind Map">
+            <span>🗺️</span>
+            <span class="hidden sm:inline">Mind Map</span>
+          </button>
+
           <div class="flex items-center gap-0.5" aria-label="Undo and redo">
             <button type="button" onclick="noteUndo()" class="px-2 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-sm" title="Undo (Ctrl+Z)">↶</button>
             <button type="button" onclick="noteRedo()" class="px-2 py-1.5 rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-sm" title="Redo (Ctrl+Y)">↷</button>
           </div>
 
-          <button id="btn-mode-switch" onclick="toggleEditMode()" class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition">
+          <button id="btn-mode-switch" onclick="toggleEditMode()" class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35 hover:bg-sky-500/25 transition" title="Toggle between Recall Mode (R) and Edit Mode (E)">
             <span id="mode-icon">🧠</span>
             <span id="mode-text">Recall Mode</span>
           </button>
 
           <div id="recall-controls" class="hidden flex items-center gap-1 bg-[var(--bg-nested)] border border-[var(--border-color)] rounded-lg p-1">
             <button onclick="hideAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition">🙈 Hide</button>
-            <button onclick="hideHardClozesOnly()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-rose-400 transition" title="Mask only Hard-flagged clozes (double-tap or right-click any cloze to flag)">🎯 Hard</button>
+            <button onclick="hideHardClozesOnly()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-rose-400 transition" title="Mask only Hard-flagged clozes">🎯 Hard</button>
             <button onclick="revealAllClozes()" class="px-2 py-1 rounded text-[11px] font-medium hover:bg-[var(--bg-hover)] text-sky-400 transition">👁️ Reveal</button>
             <span id="cloze-counter" class="px-2 py-0.5 text-[11px] font-mono theme-muted border-l border-[var(--border-color)]">0/0</span>
           </div>
@@ -942,15 +1014,12 @@
             <span id="drive-sync-badge" class="hidden px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold leading-none animate-pulse">Restore</span>
           </button>
 
-          <button onclick="enterReadingMode()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition">
-            <span>📖</span>
-            <span class="hidden sm:inline">Reading</span>
+          <button id="btn-mindmap-edit" onclick="toggleMindMapEditMode()" class="hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition" title="Edit Mind Map branches, nodes & colors">
+            <span>✏️</span>
+            <span>Mind map edit</span>
           </button>
 
-          <button onclick="expandAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Expand All Sections">▼</button>
-          <button onclick="collapseAllToggles()" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition" title="Collapse All Sections">▶</button>
-
-          <button onclick="cycleColorTheme()" id="theme-toggle-btn" class="px-2 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition font-medium">
+          <button onclick="cycleColorTheme()" id="theme-toggle-btn" class="px-2.5 py-1.5 text-xs rounded-md border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition font-medium">
             🌙 Dark
           </button>
 
@@ -976,10 +1045,10 @@
         </div>
       </div>
 
-      <!-- EDIT MODE FORMATTING & BUILDER RIBBON -->
+      <!-- EDIT MODE FORMATTING & BUILDER RIBBON WITH SHORTCUT HINTS -->
       <div id="edit-toolbar-group" class="hidden max-w-7xl mx-auto mt-2 pt-2 border-t border-[var(--border-color)] flex-wrap items-center gap-1.5 text-xs">
-        <button onmousedown="event.preventDefault(); wrapSelectionInCloze()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition">[+ Cloze]</button>
-        <button onmousedown="event.preventDefault(); unwrapSelectionCloze()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] theme-muted">−Uncloze</button>
+        <button onmousedown="event.preventDefault(); wrapSelectionInCloze()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition" title="Shortcut: Ctrl + H">[+ Cloze] <span class="opacity-65 text-[10px]">⌃H</span></button>
+        <button onmousedown="event.preventDefault(); unwrapSelectionCloze()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] theme-muted" title="Shortcut: Ctrl + U">−Uncloze <span class="opacity-65 text-[10px]">⌃U</span></button>
         <button onclick="autoClozeNumbersAndTerms()" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] text-sky-400 font-medium">⚡ Auto-Cloze</button>
 
         <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
@@ -999,32 +1068,32 @@
         </select>
 
         <div class="flex items-center theme-nested border border-[var(--border-strong)] rounded overflow-hidden">
-          <button onmousedown="event.preventDefault(); adjustFontSize(-1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold">A−</button>
+          <button onmousedown="event.preventDefault(); adjustFontSize(-1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold" title="Shortcut: Ctrl + [">A−</button>
           <span id="font-size-label" class="px-1.5 text-[11px] font-mono theme-muted">15px</span>
-          <button onmousedown="event.preventDefault(); adjustFontSize(1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold">A+</button>
+          <button onmousedown="event.preventDefault(); adjustFontSize(1)" class="px-2 py-1 hover:bg-[var(--bg-hover)] font-semibold" title="Shortcut: Ctrl + ]">A+</button>
         </div>
 
         <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
 
-        <button onmousedown="event.preventDefault(); execFormat('bold')" class="px-2 py-1 font-bold rounded hover:bg-[var(--bg-hover)]">B</button>
-        <button onmousedown="event.preventDefault(); execFormat('italic')" class="px-2 py-1 italic font-serif rounded hover:bg-[var(--bg-hover)]">I</button>
+        <button onmousedown="event.preventDefault(); execFormat('bold')" class="px-2 py-1 font-bold rounded hover:bg-[var(--bg-hover)]" title="Shortcut: Ctrl + B">B</button>
+        <button onmousedown="event.preventDefault(); execFormat('italic')" class="px-2 py-1 italic font-serif rounded hover:bg-[var(--bg-hover)]" title="Shortcut: Ctrl + I">I</button>
         <button onmousedown="event.preventDefault(); execFormat('underline')" class="px-2 py-1 underline rounded hover:bg-[var(--bg-hover)]">U</button>
         <button onmousedown="event.preventDefault(); execFormat('strikeThrough')" class="px-2 py-1 line-through rounded hover:bg-[var(--bg-hover)]">S</button>
 
         <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
 
         <div class="flex items-center gap-1 px-1">
-          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#38bdf8')" class="w-3.5 h-3.5 rounded-full bg-sky-400 border border-white/20"></button>
-          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#34d399')" class="w-3.5 h-3.5 rounded-full bg-emerald-400 border border-white/20"></button>
-          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fbbf24')" class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-white/20"></button>
-          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fb7185')" class="w-3.5 h-3.5 rounded-full bg-rose-400 border border-white/20"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#7dd3fc')" class="w-3.5 h-3.5 rounded-full bg-sky-300 border border-white/20" title="Pastel Sky"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#86efac')" class="w-3.5 h-3.5 rounded-full bg-emerald-300 border border-white/20" title="Pastel Mint"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fde68a')" class="w-3.5 h-3.5 rounded-full bg-amber-200 border border-white/20" title="Pastel Amber"></button>
+          <button onmousedown="event.preventDefault(); execFormat('foreColor', '#fda4af')" class="w-3.5 h-3.5 rounded-full bg-rose-300 border border-white/20" title="Pastel Rose"></button>
           <button onmousedown="event.preventDefault(); execFormat('removeFormat')" class="text-[10px] px-1 rounded hover:bg-[var(--bg-hover)] theme-muted">Tx</button>
         </div>
 
         <div class="flex items-center gap-1 px-1 border-l border-[var(--border-strong)]">
-          <button onmousedown="event.preventDefault(); applyHighlight('rgba(250, 204, 21, 0.28)')" class="w-3.5 h-3.5 rounded bg-yellow-400/70"></button>
-          <button onmousedown="event.preventDefault(); applyHighlight('rgba(56, 189, 248, 0.25)')" class="w-3.5 h-3.5 rounded bg-sky-400/70"></button>
-          <button onmousedown="event.preventDefault(); applyHighlight('rgba(52, 211, 153, 0.25)')" class="w-3.5 h-3.5 rounded bg-emerald-400/70"></button>
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(253, 224, 71, 0.22)')" class="w-3.5 h-3.5 rounded bg-yellow-300/60"></button>
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(125, 211, 252, 0.22)')" class="w-3.5 h-3.5 rounded bg-sky-300/60"></button>
+          <button onmousedown="event.preventDefault(); applyHighlight('rgba(134, 239, 172, 0.22)')" class="w-3.5 h-3.5 rounded bg-emerald-300/60"></button>
         </div>
 
         <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-0.5"></span>
@@ -1035,22 +1104,12 @@
         <button onmousedown="event.preventDefault(); execFormat('insertOrderedList')" class="px-2 py-1 rounded hover:bg-[var(--bg-hover)] font-semibold">1. List</button>
 
         <button onmousedown="event.preventDefault(); convertSelectionToBullets()" class="px-2.5 py-1 rounded font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition">✨ Sentence → Bullets</button>
-        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('flowchart')" class="px-2.5 py-1 rounded font-semibold bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30">⇩ Flowchart Builder</button>
-        <button type="button" onmousedown="event.preventDefault(); createQuestionAnswer()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40">❔ Q → A</button>
-        <button type="button" onmousedown="event.preventDefault(); openDiagramOcclusion()" class="px-2.5 py-1 rounded font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/40">▧ Diagram Occlusion</button>
-        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('table')" class="px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30">▦ Table Builder</button>
+        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('flowchart')" class="px-2.5 py-1 rounded font-semibold bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30" title="Shortcut: Ctrl + F">⇩ Flowchart <span class="opacity-65 text-[10px]">⌃F</span></button>
+        <button type="button" onmousedown="event.preventDefault(); createQuestionAnswer()" class="px-2.5 py-1 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40" title="Shortcut: Ctrl + Q">❔ Q → A <span class="opacity-65 text-[10px]">⌃Q</span></button>
+        <button type="button" onmousedown="event.preventDefault(); openDiagramOcclusion()" class="px-2.5 py-1 rounded font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" title="Shortcut: Ctrl + O">▧ Occlusion <span class="opacity-65 text-[10px]">⌃O</span></button>
+        <button type="button" onmousedown="event.preventDefault(); openParagraphTransformer('table')" class="px-2.5 py-1 rounded font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30" title="Shortcut: Ctrl + T">▦ Table <span class="opacity-65 text-[10px]">⌃T</span></button>
       </div>
     </header>
-
-    <!-- TOP-RIGHT FLOATING READING MODE DOCK -->
-    <div id="reading-mode-dock" class="fixed top-4 right-4 z-50 items-center gap-1.5 theme-panel/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-[var(--border-strong)] text-xs">
-      <button onclick="hideAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] transition">🙈 Hide</button>
-      <button onclick="hideHardClozesOnly()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] text-rose-400 transition">🎯 Hard</button>
-      <button onclick="revealAllClozes()" class="px-2 py-1 rounded-full hover:bg-[var(--bg-hover)] text-sky-400 font-semibold transition">👁️ Reveal</button>
-      <span class="w-[1px] h-3.5 bg-[var(--border-strong)] mx-0.5"></span>
-      <button onclick="cycleColorTheme()" id="reading-theme-btn" class="px-2.5 py-1 rounded-full hover:bg-[var(--bg-hover)] theme-heading font-medium transition">🌙 Dark</button>
-      <button onclick="exitReadingMode()" class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 font-semibold transition">✕ Exit</button>
-    </div>
 
     <!-- Non-blocking Toast Banner -->
     <div id="toast-banner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 theme-panel border border-[var(--border-strong)] px-4 py-2.5 rounded-xl shadow-2xl text-xs max-w-md">
@@ -1059,51 +1118,129 @@
     </div>
 
     <!-- =====================================================================
-         DASHBOARD HOME VIEW (OPENS BY DEFAULT ON LAUNCH)
+         1. DASHBOARD HOME VIEW (OPENS BY DEFAULT ON LAUNCH)
          ===================================================================== -->
     <section id="dashboard-view" class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12 flex-1">
       <div class="text-center mb-8 sm:mb-10">
         <h1 class="dash-heading-font text-2xl sm:text-4xl font-extrabold theme-heading uppercase">DASHBOARD</h1>
-        <p class="text-xs theme-muted mt-2">Click any chapter card to open in <strong>Recall Mode</strong> • Hover or tap <strong>🖼️ Edit</strong> on any card to customize its thumbnail</p>
+        <p class="text-xs theme-muted mt-2">Click any chapter card to open its <strong>Mind Map</strong> • Hover or tap <strong>🖼️ Edit</strong> to change thumbnail</p>
       </div>
 
       <div id="dashboard-sections" class="space-y-10"></div>
 
-      <!-- Hidden File Input for Chapter Card Thumbnail Upload -->
       <input type="file" id="thumbnail-file-input" accept="image/*" class="hidden" onchange="handleChapterThumbnailSelected(event)" />
     </section>
 
-    <!-- Main Study & Edit Document Canvas (Hidden while Dashboard is open) -->
-    <main id="chapter-study-view" class="hidden max-w-4xl w-full mx-auto px-4 sm:px-8 py-7 sm:py-10 flex-1">
-      <div class="mb-6 pb-4 border-b border-[var(--border-color)]">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 no-print">
+    <!-- =====================================================================
+         2. CHAPTER MIND MAP VIEW (OPENS WHEN CLICKING ANY CHAPTER)
+         ===================================================================== -->
+    <section id="mindmap-view" class="hidden max-w-7xl w-full mx-auto px-4 sm:px-8 py-5 flex-1 flex flex-col">
+      <div id="mm-top-header" class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">NEET UG Biology</span>
+            <span id="mm-chapter-badge" class="px-2 py-0.5 rounded text-[11px] font-medium theme-panel border">NCERT Class XI</span>
+            <span id="mm-save-indicator" class="text-[11px] theme-muted">✓ Saved locally</span>
+          </div>
+          <h1 id="mm-chapter-title" class="text-xl sm:text-2xl font-bold theme-heading tracking-tight">Chapter Title</h1>
+        </div>
+
+        <!-- Zoom In / Out with % Level -->
+        <div class="flex items-center gap-1.5 theme-panel border border-[var(--border-strong)] rounded-full px-3 py-1 shadow-md">
+          <button type="button" onclick="zoomChapterMindMap(0.15)" class="px-2 py-0.5 rounded-full hover:bg-[var(--bg-hover)] text-sm font-bold" title="Zoom In">🔍+</button>
+          <span id="mm-zoom-label" class="text-xs font-mono font-semibold px-1.5 theme-heading">100%</span>
+          <button type="button" onclick="zoomChapterMindMap(-0.15)" class="px-2 py-0.5 rounded-full hover:bg-[var(--bg-hover)] text-sm font-bold" title="Zoom Out">🔍−</button>
+          <button type="button" onclick="zoomChapterMindMap(0)" class="px-2 py-0.5 rounded-full hover:bg-[var(--bg-hover)] text-[11px] theme-muted" title="Reset Zoom">Reset</button>
+        </div>
+      </div>
+
+      <!-- Mind Map Edit Ribbon (Shown when Mind map edit is toggled ON) -->
+      <div id="mm-edit-bar" class="hidden flex-wrap items-center gap-1.5 mb-3 p-2 rounded-xl theme-panel border border-emerald-400/35 text-xs">
+        <button type="button" onclick="mmAddMainBranch()" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-semibold">+ Add Topic Branch</button>
+        <button type="button" onclick="mmAddSubBranch()" class="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/40 font-semibold">+ Add Subtopic</button>
+        <button type="button" onclick="mmDeleteSelectedBranch()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 font-semibold">✕ Remove Selected</button>
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-1"></span>
+        <span class="theme-muted text-[11px]">Box Color:</span>
+        <button type="button" onclick="mmSetBranchColor('#f5d887', '#1c1917')" class="w-4 h-4 rounded-full border border-white/30" style="background:#f5d887" title="Pastel Gold"></button>
+        <button type="button" onclick="mmSetBranchColor('#86efac', '#14261c')" class="w-4 h-4 rounded-full border border-white/30" style="background:#86efac" title="Pastel Mint"></button>
+        <button type="button" onclick="mmSetBranchColor('#7dd3fc', '#0f2230')" class="w-4 h-4 rounded-full border border-white/30" style="background:#7dd3fc" title="Pastel Sky"></button>
+        <button type="button" onclick="mmSetBranchColor('#fda4af', '#2b1218')" class="w-4 h-4 rounded-full border border-white/30" style="background:#fda4af" title="Pastel Rose"></button>
+        <button type="button" onclick="mmSetBranchColor('#d8b4fe', '#221430')" class="w-4 h-4 rounded-full border border-white/30" style="background:#d8b4fe" title="Pastel Lavender"></button>
+        <span class="w-[1px] h-4 bg-[var(--border-strong)] mx-1"></span>
+        <span class="theme-muted text-[11px]">Font Color:</span>
+        <button type="button" onclick="mmSetFontColor('#1c1917')" class="w-4 h-4 rounded-full border border-white/30" style="background:#1c1917" title="Dark Ink"></button>
+        <button type="button" onclick="mmSetFontColor('#7f1d1d')" class="w-4 h-4 rounded-full border border-white/30" style="background:#7f1d1d" title="Deep Crimson"></button>
+        <button type="button" onclick="mmSetFontColor('#1e3a8a')" class="w-4 h-4 rounded-full border border-white/30" style="background:#1e3a8a" title="Deep Navy"></button>
+        <button type="button" onclick="mmSetFontColor('#14532d')" class="w-4 h-4 rounded-full border border-white/30" style="background:#14532d" title="Deep Forest"></button>
+        <button type="button" onclick="openAllTopicsInStudyView()" class="ml-auto px-2.5 py-1 rounded-lg theme-nested border border-[var(--border-strong)] hover:bg-[var(--bg-hover)] font-semibold">📄 Open Full Chapter Notes</button>
+      </div>
+
+      <div id="mm-viewport" class="mm-viewport">
+        <!-- Corner Fullscreen Expand Icon (Image 5) -->
+        <button id="mm-enter-fs-btn" type="button" onclick="enterFocusFullscreen()" class="sticky top-3 float-right mr-3 z-20 p-2 rounded-lg theme-panel/90 backdrop-blur border border-[var(--border-strong)] hover:bg-[var(--bg-hover)] theme-heading shadow-md transition" title="Expand Mind Map to Fullscreen">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+        <div id="mm-stage" class="mm-stage">
+          <div id="mm-canvas" class="mm-canvas"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         3. TOPIC / CHAPTER FULL-SCREEN RECALL & EDITOR VIEW
+         ===================================================================== -->
+    <main id="chapter-study-view" class="hidden max-w-5xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 flex-1">
+      <div id="study-top-header" class="mb-5 pb-3 border-b border-[var(--border-color)]">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">NEET UG Biology</span>
             <span id="chapter-badge" class="px-2.5 py-0.5 rounded text-[11px] font-medium theme-panel border">NCERT Class XI</span>
+            <span id="active-topic-pill" class="hidden px-2.5 py-0.5 rounded text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/35">Topic Focus</span>
           </div>
-          <div class="flex items-center gap-2 text-[11px] theme-muted">
+          <div class="flex items-center gap-3 text-[11px] theme-muted">
             <span id="save-indicator">✓ Saved locally</span>
             <button onclick="openVersionHistoryModal()" class="underline hover:text-sky-400 transition">History</button>
+            <!-- Zoom Controls + Fullscreen Expand Button (Image 7) -->
+            <div class="flex items-center gap-1 theme-panel border border-[var(--border-color)] rounded-full px-2 py-0.5">
+              <button type="button" onclick="adjustFontSize(1)" class="px-1.5 hover:text-sky-400 font-bold" title="Zoom In Text">🔍+</button>
+              <button type="button" onclick="adjustFontSize(-1)" class="px-1.5 hover:text-sky-400 font-bold" title="Zoom Out Text">🔍−</button>
+            </div>
+            <button type="button" onclick="enterFocusFullscreen()" class="p-1.5 rounded-lg theme-panel border border-[var(--border-color)] hover:bg-[var(--bg-hover)] theme-heading transition" title="Expand Notes to Fullscreen">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <h1 id="chapter-title" contenteditable="false" class="text-2xl sm:text-3xl font-bold theme-heading tracking-tight mb-1.5">
+        <h1 id="chapter-title" contenteditable="false" class="text-xl sm:text-2xl font-bold theme-heading tracking-tight mb-1">
           Chapter 15: Body Fluids and Circulation
         </h1>
-        <p id="chapter-subtitle" contenteditable="false" class="text-xs sm:text-sm theme-muted">
-          Tap any blank underline to reveal that keyword. Double-tap or right-click any cloze to flag as Hard.
+        <p id="chapter-subtitle" contenteditable="false" class="text-xs theme-muted">
+          Press <strong>E</strong> for Edit Mode • <strong>R</strong> for Recall Mode • Double-tap or right-click any cloze to flag as Hard.
         </p>
       </div>
 
       <!-- Search & Quick Action Strip -->
-      <div id="search-filter-bar" class="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
+      <div id="search-filter-bar" class="mb-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
         <div class="relative flex-1">
-          <input id="keyword-search" type="text" oninput="filterNotes(this.value)" placeholder="Filter sections by keyword (e.g., Pacemaker, Erythroblastosis, Lub, Tunica media)..." class="w-full theme-panel border rounded-lg pl-9 pr-4 py-2 text-xs focus:border-sky-500/60 focus:outline-none" />
+          <input id="keyword-search" type="text" oninput="filterNotes(this.value)" placeholder="Filter topics by keyword (e.g., Pacemaker, Erythroblastosis, Lub, Tunica media)..." class="w-full theme-panel border rounded-lg pl-9 pr-4 py-2 text-xs focus:border-sky-500/60 focus:outline-none" />
           <svg class="w-4 h-4 theme-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="addNewMainToggle()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-sky-400 transition whitespace-nowrap">
-            + Toggle Block
+          <button id="show-all-topics-btn" onclick="clearTopicFilter()" class="hidden px-3 py-2 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/35 text-xs font-semibold transition whitespace-nowrap">
+            Show All Chapter Topics
+          </button>
+          <button onclick="addNewTopicSection()" class="px-3 py-2 rounded-lg theme-panel border hover:bg-[var(--bg-hover)] text-xs font-medium text-sky-400 transition whitespace-nowrap">
+            + Topic Section
           </button>
         </div>
       </div>
@@ -1117,7 +1254,7 @@
       <!-- Bottom Quick Builder & Storage Bar -->
       <div id="bottom-quick-add" class="mt-10 pt-5 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-3 text-xs theme-muted no-print">
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="addNewMainToggle()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Toggle Section</button>
+          <button onclick="addNewTopicSection()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Topic Section</button>
           <button onclick="addNewTableBlock()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Resizable Table</button>
           <button onclick="addNewFlowchartBlock()" class="px-3 py-1.5 rounded-md theme-panel border hover:bg-[var(--bg-hover)] transition">+ Flowchart</button>
         </div>
@@ -1191,35 +1328,26 @@
     </div>
   </div>
 
-  <!-- PRE-LOADED CHAPTER 15 TEMPLATE (ALL 8 SECTIONS) -->
+  <!-- PRE-LOADED CHAPTER 15 TEMPLATE (FLAT TOPIC SECTIONS, NO TOGGLE COLLAPSE) -->
   <template id="default-chapter-15-template">
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Blood &amp; Its Composition (15.1)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_1">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Blood &amp; Its Composition (15.1)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div contenteditable="false">
           <ul class="list-disc pl-5 space-y-1.5">
             <li><strong>Blood:</strong> Special <span class="cloze cloze-hidden">connective tissue</span> = <strong>Fluid matrix (<span class="cloze cloze-hidden">Plasma, 55%</span>)</strong> + <strong>Formed elements (<span class="cloze cloze-hidden">45%</span>)</strong>.</li>
             <li><em>Lower organisms transport:</em> <span class="cloze cloze-hidden">Sponges</span> &amp; <span class="cloze cloze-hidden">coelenterates</span> circulate water from surroundings through body cavities.</li>
           </ul>
         </div>
-        <div class="toggle-block rounded-lg theme-nested border p-3.5">
-          <div class="toggle-header flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 flex-1">
-              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-              <h3 contenteditable="false" class="font-semibold text-sky-400">15.1.1 Plasma (55% of Blood)</h3>
-            </div>
-            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
-          </div>
-          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+        <div class="subtopic-section">
+          <h3 contenteditable="false" class="font-semibold text-sky-400 mb-2">15.1.1 Plasma (55% of Blood)</h3>
+          <div class="space-y-3">
             <div contenteditable="false" class="space-y-1">
               <p>• <strong>Appearance:</strong> <span class="cloze cloze-hidden">Straw-coloured</span>, viscous fluid.</p>
               <p>• <strong>Composition:</strong> <span class="cloze cloze-hidden">90–92%</span> Water | <span class="cloze cloze-hidden">6–8%</span> Proteins | Small minerals (<span class="font-mono text-xs">Na⁺, Ca²⁺, Mg²⁺, HCO₃⁻, Cl⁻</span>) | Transit glucose, amino acids, lipids | Inactive clotting factors.</p>
@@ -1241,15 +1369,9 @@
             </div>
           </div>
         </div>
-        <div class="toggle-block rounded-lg theme-nested border p-3.5">
-          <div class="toggle-header flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 flex-1">
-              <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-              <h3 contenteditable="false" class="font-semibold text-rose-400">15.1.2 Formed Elements (45% of Blood)</h3>
-            </div>
-            <button onclick="deleteBlock(this)" class="edit-only px-1.5 py-0.5 text-[11px] rounded text-red-400">✕</button>
-          </div>
-          <div class="toggle-body mt-2.5 pl-2 sm:pl-5 space-y-3">
+        <div class="subtopic-section">
+          <h3 contenteditable="false" class="font-semibold text-rose-400 mb-2">15.1.2 Formed Elements (45% of Blood)</h3>
+          <div class="space-y-3">
             <div class="table-wrapper" style="width: 100%;">
               <div class="overflow-x-auto">
                 <table class="notion-table">
@@ -1296,18 +1418,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">2. Blood Grouping: ABO &amp; Rh Systems (15.1.3)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_2">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">2. Blood Grouping: ABO &amp; Rh Systems (15.1.3)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div class="table-wrapper" style="width: 100%;">
           <div class="overflow-x-auto">
             <table class="notion-table">
@@ -1336,18 +1455,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">3. Blood Clotting Cascade &amp; Lymph (15.1.4 &amp; 15.2)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_3">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">3. Blood Clotting Cascade &amp; Lymph (15.1.4 &amp; 15.2)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div class="space-y-2">
           <h3 contenteditable="false" class="font-semibold theme-heading">Coagulation Cascade</h3>
           <div contenteditable="false" class="p-5 rounded-lg theme-nested border text-center space-y-5">
@@ -1385,18 +1501,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">4. Circulatory Pathways &amp; Vertebrate Heart Evolution (15.3)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_4">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">4. Circulatory Pathways &amp; Vertebrate Heart Evolution (15.3)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div contenteditable="false" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="p-3 rounded-lg theme-nested border">
             <div class="font-semibold text-amber-400 mb-1">Open Circulatory System</div>
@@ -1424,18 +1537,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">5. Human Heart, Conducting System &amp; Cardiac Cycle (15.3.1 – 15.3.2)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_5">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">5. Human Heart, Conducting System &amp; Cardiac Cycle (15.3.1 – 15.3.2)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div contenteditable="false" class="space-y-1">
           <p>• <strong>Origin &amp; Protection:</strong> <span class="cloze cloze-hidden">Mesodermally</span> derived; thoracic cavity between lungs, tilted to <span class="cloze cloze-hidden">left</span>; double-walled <span class="cloze cloze-hidden">pericardium</span> enclosing pericardial fluid.</p>
           <p>• <strong>Valves:</strong> RA → RV guarded by <span class="cloze cloze-hidden">Tricuspid valve</span> (3 muscular flaps/cusps); LA → LV guarded by <span class="cloze cloze-hidden">Bicuspid / Mitral valve</span>; RV → Pulmonary artery &amp; LV → Aorta guarded by <span class="cloze cloze-hidden">Semilunar valves</span>.</p>
@@ -1468,18 +1578,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">6. Electrocardiograph (ECG) (15.3.3)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_6">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">6. Electrocardiograph (ECG) (15.3.3)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+      <div class="topic-body space-y-3">
         <div contenteditable="false">• <strong>Standard ECG Leads:</strong> <span class="cloze cloze-hidden">3 electrical leads</span> — one to <span class="cloze cloze-hidden">each wrist</span> and to the <span class="cloze cloze-hidden">left ankle</span>.</div>
         <div class="table-wrapper" style="width: 100%;">
           <div class="overflow-x-auto">
@@ -1496,18 +1603,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">7. Double Circulation &amp; Blood Vessels (15.4)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_7">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">7. Double Circulation &amp; Blood Vessels (15.4)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">
+      <div class="topic-body space-y-3">
         <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
           <div class="font-semibold theme-heading">3 Layers of Arteries &amp; Veins:</div>
           <p>1. <strong>Tunica intima:</strong> Inner lining of <span class="cloze cloze-hidden">squamous endothelium</span>.</p>
@@ -1525,18 +1629,15 @@
       </div>
     </section>
 
-    <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-      <div class="toggle-header flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-1">
-          <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-          <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">8. Regulation of Cardiac Activity &amp; Disorders (15.5 &amp; 15.6)</h2>
-        </div>
+    <section class="topic-section" data-topic-id="t15_8">
+      <div class="topic-header">
+        <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">8. Regulation of Cardiac Activity &amp; Disorders (15.5 &amp; 15.6)</h2>
         <div class="edit-only items-center gap-1">
           <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
           <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
       </div>
-      <div class="toggle-body mt-3 pl-2 sm:pl-6 space-y-4">
+      <div class="topic-body space-y-4">
         <div contenteditable="false" class="p-3.5 rounded-lg theme-nested border space-y-1">
           <div class="font-semibold text-purple-400">15.5 Regulation (Myogenic Heart)</div>
           <p>• Neural centre in <span class="cloze cloze-hidden">Medulla oblongata</span> moderates cardiac function via <span class="cloze cloze-hidden">ANS</span>:</p>
@@ -1575,9 +1676,12 @@
 
     let library = { activeChapterId: 'ch-15', folders: {}, chapters: {} };
     let snapshots = [];
+    let currentView = 'dashboard'; // 'dashboard' | 'mindmap' | 'study'
+    let activeTopicFilterId = null;
     let isEditMode = false;
-    let isReadingMode = false;
-    let isDashboardOpen = true;
+    let isMindMapEditMode = false;
+    let mmZoom = 1;
+    let mmSelectedBranch = null; // { topicIdx, subIdx }
     let editingThumbnailChapterId = null;
     let currentFontSize = 15;
     let currentFontFamily = "'Inter', system-ui, sans-serif";
@@ -1613,7 +1717,7 @@
         <text x="14" y="52" font-family="sans-serif" font-size="8" fill="#334155">Vena cava</text>
         <text x="155" y="34" font-family="sans-serif" font-size="8" fill="#334155">Aorta</text>
         <text x="148" y="82" font-family="sans-serif" font-size="8" fill="#334155">Pulm. artery</text>
-        <text x="14" y="142" font-family="sans-serif" font-size="8" fill="#334155">Right ventricle</text>
+        <text x="148" y="142" font-family="sans-serif" font-size="8" fill="#334155">Right ventricle</text>
         <text x="144" y="152" font-family="sans-serif" font-size="8" fill="#334155">Left ventricle</text>
       </svg>
     `);
@@ -1625,9 +1729,9 @@
       loadPreferences();
       await loadGDriveConfig();
       await loadLibraryFromStorage();
+      migrateLegacyToggleMarkup();
       loadSnapshots();
       renderSidebar();
-      renderDashboard();
       showDashboardView(false);
       setupEventListeners();
       updateClozeCounter();
@@ -1758,7 +1862,7 @@
             title: 'Chapter 15: Body Fluids and Circulation',
             shortTitle: 'Body fluids and circulation',
             thumbnail: DEFAULT_HEART_THUMBNAIL,
-            subtitle: 'Tap any blank underline to reveal that keyword. Double-tap or right-click any cloze to flag as Hard.',
+            subtitle: 'Press E for Edit Mode • R for Recall Mode • Double-tap or right-click any cloze to flag as Hard.',
             html: defaultHtml,
             updatedAt: Date.now()
           }
@@ -1767,16 +1871,44 @@
       await persistLibrary();
     }
 
+    /* Convert any legacy toggle-block HTML into flat topic-sections without toggle arrows */
+    function migrateLegacyToggleMarkup() {
+      Object.values(library.chapters).forEach(ch => {
+        if (!ch || typeof ch.html !== 'string') return;
+        if (ch.html.includes('toggle-block') || ch.html.includes('toggle-arrow') || ch.html.includes('topic-open-page')) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = ch.html;
+          tmp.querySelectorAll('.toggle-arrow, .topic-open-page').forEach(el => el.remove());
+          tmp.querySelectorAll('.toggle-block').forEach((blk, idx) => {
+            blk.classList.remove('toggle-block', 'collapsed', 'rounded-xl', 'rounded-lg', 'theme-panel', 'theme-nested', 'border', 'p-4', 'sm:p-5', 'p-3.5');
+            blk.classList.add(blk.tagName === 'SECTION' ? 'topic-section' : 'subtopic-section');
+            if (!blk.dataset.topicId) blk.dataset.topicId = 'topic-' + idx + '-' + Date.now();
+          });
+          tmp.querySelectorAll('.toggle-header').forEach(h => {
+            h.classList.remove('toggle-header');
+            h.classList.add('topic-header');
+          });
+          tmp.querySelectorAll('.toggle-body').forEach(b => {
+            b.classList.remove('toggle-body', 'pl-2', 'sm:pl-6', 'pl-5');
+            b.classList.add('topic-body');
+            b.style.display = 'block';
+          });
+          ch.html = tmp.innerHTML;
+        }
+      });
+    }
+
     function getCleanNotesCanvasHTML() {
       const canvas = document.getElementById('notes-canvas');
       if (!canvas) return '';
       const clone = canvas.cloneNode(true);
-      clone.querySelectorAll('.topic-open-page').forEach(btn => btn.remove());
+      clone.querySelectorAll('.topic-open-page, .toggle-arrow').forEach(btn => btn.remove());
+      clone.querySelectorAll('.topic-section').forEach(sec => { sec.style.display = ''; });
       return clone.innerHTML;
     }
 
     function captureActiveChapterFromDOM() {
-      if (isDashboardOpen) return false;
+      if (currentView !== 'study') return false;
       const ch = library.chapters[library.activeChapterId];
       if (!ch) return false;
       const title = document.getElementById('chapter-title');
@@ -1808,7 +1940,9 @@
             try { localStorage.removeItem(FALLBACK_KEY); } catch (_) {}
           }
           const ind = document.getElementById('save-indicator');
+          const mmInd = document.getElementById('mm-save-indicator');
           if (ind) ind.textContent = '✓ Saved locally';
+          if (mmInd) mmInd.textContent = '✓ Saved locally';
           return true;
         } catch (err) { idbError = err; }
 
@@ -1841,7 +1975,9 @@
 
     function scheduleAutoSave(forceSnapshot = false) {
       const ind = document.getElementById('save-indicator');
+      const mmInd = document.getElementById('mm-save-indicator');
       if (ind) ind.textContent = 'Saving...';
+      if (mmInd) mmInd.textContent = 'Saving...';
       clearTimeout(saveTimer);
       saveTimer = setTimeout(async () => {
         saveTimer = null;
@@ -1947,52 +2083,39 @@
       const snap = snapshots[index];
       if (!snap || !snap.data) return;
       library = JSON.parse(JSON.stringify(snap.data));
+      migrateLegacyToggleMarkup();
       await persistLibrary();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
+      else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
       else loadActiveChapterIntoDOM();
       closeVersionHistoryModal();
       showToast('Restored notes from snapshot!');
     }
 
     /* =====================================================================
-       DASHBOARD VIEW, THUMBNAIL CUSTOMIZATION & FOLDER ORGANIZATION
+       1. DASHBOARD VIEW & THUMBNAIL CUSTOMIZATION
        ===================================================================== */
     function showDashboardView(shouldFlush = true) {
-      if (shouldFlush && !isDashboardOpen) {
+      if (shouldFlush && currentView === 'study') {
         captureActiveChapterFromDOM();
         persistLibrary().catch(() => {});
       }
       if (isEditMode) setEditMode(false);
-      if (isReadingMode) exitReadingMode();
+      isMindMapEditMode = false;
+      currentView = 'dashboard';
+      activeTopicFilterId = null;
 
-      isDashboardOpen = true;
       document.getElementById('dashboard-view').classList.remove('hidden');
+      document.getElementById('mindmap-view').classList.add('hidden');
       document.getElementById('chapter-study-view').classList.add('hidden');
       document.getElementById('recall-controls').classList.add('hidden');
       document.getElementById('btn-mode-switch').classList.add('hidden');
+      document.getElementById('back-mindmap-btn').classList.add('hidden');
+      document.getElementById('btn-mindmap-edit').classList.add('hidden');
+
       renderDashboard();
       renderSidebar();
-    }
-
-    function openChapterFromDashboard(chapterId) {
-      if (!library.chapters[chapterId]) return;
-      if (!isDashboardOpen && library.activeChapterId !== chapterId) {
-        captureActiveChapterFromDOM();
-      }
-      isDashboardOpen = false;
-      library.activeChapterId = chapterId;
-      setEditMode(false);
-
-      document.getElementById('dashboard-view').classList.add('hidden');
-      document.getElementById('chapter-study-view').classList.remove('hidden');
-      document.getElementById('recall-controls').classList.remove('hidden');
-      document.getElementById('btn-mode-switch').classList.remove('hidden');
-
-      loadActiveChapterIntoDOM();
-      renderSidebar();
-      persistLibrary().catch(() => {});
-      if (window.innerWidth < 768) toggleSidebar(false);
     }
 
     function getShortChapterLabel(ch) {
@@ -2032,7 +2155,7 @@
              </div>`;
 
         return `
-          <div class="dash-card group flex flex-col items-center cursor-pointer" onclick="openChapterFromDashboard('${ch.id}')">
+          <div class="dash-card group flex flex-col items-center cursor-pointer" onclick="openChapterMindMap('${ch.id}')">
             <div class="thumb-sketch-box">
               <span class="thumb-sparkle" style="top:-8px;right:-7px;">✦</span>
               <span class="thumb-sparkle" style="left:-11px;top:52%;">✦</span>
@@ -2042,7 +2165,7 @@
               </div>
               <button type="button"
                 onclick="event.stopPropagation(); triggerThumbnailUpload('${ch.id}')"
-                class="opacity-90 sm:opacity-0 group-hover:opacity-100 absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded bg-black/80 text-white text-[10px] font-semibold border border-white/25 hover:bg-sky-600 transition"
+                class="opacity-90 sm:opacity-0 group-hover:opacity-100 absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded bg-black/80 text-[#EAEAEA] text-[10px] font-semibold border border-white/25 hover:bg-sky-600 transition"
                 title="Upload or change chapter thumbnail">
                 🖼️ Edit
               </button>
@@ -2143,6 +2266,546 @@
       reader.readAsDataURL(file);
     }
 
+    /* =====================================================================
+       2. INTERACTIVE CHAPTER MIND MAP VIEW (DEFAULT ON CHAPTER CLICK)
+       ===================================================================== */
+    function buildDefaultMindMapFromChapterHTML(ch) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = ch.html || '';
+      const rootLabel = getShortChapterLabel(ch);
+      const branches = [];
+
+      tmp.querySelectorAll(':scope > .topic-section, :scope > section').forEach((sec, idx) => {
+        const h2 = sec.querySelector('h2');
+        const topicId = sec.dataset.topicId || ('t-' + idx);
+        const title = h2 ? h2.textContent.replace(/^\d+\.\s*/, '').trim() : `Topic ${idx + 1}`;
+        const children = [];
+        sec.querySelectorAll('h3').forEach((h3, sIdx) => {
+          children.push({
+            id: 'sub-' + idx + '-' + sIdx,
+            title: h3.textContent.replace(/^\d+(\.\d+)*\s*/, '').trim(),
+            bgColor: '#f5d887',
+            fontColor: '#1c1917'
+          });
+        });
+        branches.push({
+          id: 'br-' + idx,
+          topicId,
+          title,
+          bgColor: '#f5d887',
+          fontColor: '#1c1917',
+          children
+        });
+      });
+
+      if (!branches.length) {
+        branches.push({
+          id: 'br-0',
+          topicId: '',
+          title: 'Main Topic 1',
+          bgColor: '#f5d887',
+          fontColor: '#1c1917',
+          children: []
+        });
+      }
+
+      return { rootTitle: rootLabel, branches };
+    }
+
+    function ensureChapterMindMapData(ch) {
+      if (!ch.mindMap || !Array.isArray(ch.mindMap.branches)) {
+        ch.mindMap = buildDefaultMindMapFromChapterHTML(ch);
+      }
+      return ch.mindMap;
+    }
+
+    function openChapterMindMap(chapterId) {
+      if (!library.chapters[chapterId]) return;
+      if (currentView === 'study') {
+        captureActiveChapterFromDOM();
+        persistLibrary().catch(() => {});
+      }
+      if (isEditMode) setEditMode(false);
+      isMindMapEditMode = false;
+      mmSelectedBranch = null;
+      currentView = 'mindmap';
+      library.activeChapterId = chapterId;
+
+      const ch = library.chapters[chapterId];
+      ensureChapterMindMapData(ch);
+
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('chapter-study-view').classList.add('hidden');
+      document.getElementById('mindmap-view').classList.remove('hidden');
+
+      document.getElementById('recall-controls').classList.add('hidden');
+      document.getElementById('btn-mode-switch').classList.add('hidden');
+      document.getElementById('back-mindmap-btn').classList.add('hidden');
+      document.getElementById('btn-mindmap-edit').classList.remove('hidden');
+      document.getElementById('mm-edit-bar').classList.add('hidden');
+      document.getElementById('mm-edit-bar').classList.remove('flex');
+
+      document.getElementById('mm-chapter-badge').textContent = ch.badge || 'NCERT Biology';
+      document.getElementById('mm-chapter-title').textContent = (ch.title || 'Chapter').replace(/<[^>]*>/g, '');
+
+      mmZoom = 1;
+      renderChapterMindMap();
+      renderSidebar();
+      if (window.innerWidth < 768) toggleSidebar(false);
+    }
+
+    function toggleMindMapEditMode() {
+      isMindMapEditMode = !isMindMapEditMode;
+      const btn = document.getElementById('btn-mindmap-edit');
+      const bar = document.getElementById('mm-edit-bar');
+      if (isMindMapEditMode) {
+        btn.className = 'flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 transition';
+        bar.classList.remove('hidden');
+        bar.classList.add('flex');
+      } else {
+        btn.className = 'flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 hover:bg-emerald-500/25 transition';
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+      }
+      renderChapterMindMap();
+    }
+
+    function zoomChapterMindMap(delta) {
+      mmZoom = delta === 0 ? 1 : Math.min(2.0, Math.max(0.45, Number((mmZoom + delta).toFixed(2))));
+      const lbl = document.getElementById('mm-zoom-label');
+      if (lbl) lbl.textContent = Math.round(mmZoom * 100) + '%';
+      renderChapterMindMap();
+    }
+
+    function renderChapterMindMap() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return;
+      const mm = ensureChapterMindMapData(ch);
+      const canvas = document.getElementById('mm-canvas');
+      const stage = document.getElementById('mm-stage');
+      if (!canvas || !stage) return;
+
+      const branches = mm.branches || [];
+      const rowStep = 74;
+      const subStep = 50;
+
+      // Calculate vertical positions for main branches & expanded subtopic branches
+      let curY = 44;
+      const layout = branches.map((br, bIdx) => {
+        const subs = br.children || [];
+        const blockH = Math.max(rowStep, subs.length * subStep);
+        const y = curY + blockH / 2;
+        const subLayouts = subs.map((sub, sIdx) => ({
+          sub,
+          sIdx,
+          y: curY + (sIdx + 0.5) * (blockH / Math.max(1, subs.length))
+        }));
+        curY += blockH + 14;
+        return { br, bIdx, y, subLayouts };
+      });
+
+      const canvasH = Math.max(540, curY + 50);
+      const hasAnySubs = layout.some(l => l.subLayouts.length > 0);
+      const canvasW = hasAnySubs ? 960 : 680;
+
+      const rootX = 48;
+      const rootY = canvasH / 2;
+      const branchX = 280;
+      const subX = 620;
+
+      let svgPaths = '';
+      const arrowStroke = currentTheme === 'dark' ? '#d4d4d8' : '#1e293b';
+
+      layout.forEach(item => {
+        // Curved arrow from root circle right edge to main branch pill left edge
+        const sx = rootX + 142;
+        const sy = rootY;
+        const ex = branchX - 8;
+        const ey = item.y;
+        const cx1 = sx + 38;
+        const cy1 = sy;
+        const cx2 = sx + 28;
+        const cy2 = ey;
+        svgPaths += `<path d="M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}" fill="none" stroke="${arrowStroke}" stroke-width="2.6" stroke-linecap="round" marker-end="url(#mm-arrow)" />`;
+
+        item.subLayouts.forEach(sl => {
+          const ssx = branchX + 225;
+          const ssy = item.y;
+          const sex = subX - 8;
+          const sey = sl.y;
+          const scx1 = ssx + 34;
+          const scx2 = ssx + 24;
+          svgPaths += `<path d="M ${ssx} ${ssy} C ${scx1} ${ssy}, ${scx2} ${sey}, ${sex} ${sey}" fill="none" stroke="${arrowStroke}" stroke-width="2.2" stroke-linecap="round" marker-end="url(#mm-arrow)" />`;
+        });
+      });
+
+      let nodesHTML = `
+        <svg width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}" style="position:absolute;inset:0;pointer-events:none;">
+          <defs>
+            <marker id="mm-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,1 L7,4 L0,7" fill="none" stroke="${arrowStroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </marker>
+          </defs>
+          ${svgPaths}
+        </svg>
+
+        <div class="mm-root-circle"
+             contenteditable="${isMindMapEditMode}"
+             oninput="mmUpdateRootTitle(this.innerText)"
+             style="left:${rootX}px;top:${Math.round(rootY - 68)}px;">
+          ${escapeHTML(mm.rootTitle || getShortChapterLabel(ch))}
+        </div>
+      `;
+
+      layout.forEach(item => {
+        const isSel = mmSelectedBranch && mmSelectedBranch.topicIdx === item.bIdx && mmSelectedBranch.subIdx === -1;
+        const bg = item.br.bgColor || '#f5d887';
+        const fg = item.br.fontColor || '#1c1917';
+        nodesHTML += `
+          <div class="mm-branch-pill ${isSel ? 'mm-selected' : ''}"
+               contenteditable="${isMindMapEditMode}"
+               onclick="mmHandleBranchClick(event, ${item.bIdx}, -1)"
+               oninput="mmUpdateBranchText(${item.bIdx}, -1, this.innerText)"
+               style="left:${branchX}px;top:${Math.round(item.y - 20)}px;width:215px;background:${bg};color:${fg};">
+            ${escapeHTML(item.br.title)}
+          </div>
+        `;
+
+        item.subLayouts.forEach(sl => {
+          const isSubSel = mmSelectedBranch && mmSelectedBranch.topicIdx === item.bIdx && mmSelectedBranch.subIdx === sl.sIdx;
+          const sbg = sl.sub.bgColor || '#f5d887';
+          const sfg = sl.sub.fontColor || '#1c1917';
+          nodesHTML += `
+            <div class="mm-branch-pill sub-pill ${isSubSel ? 'mm-selected' : ''}"
+                 contenteditable="${isMindMapEditMode}"
+                 onclick="mmHandleBranchClick(event, ${item.bIdx}, ${sl.sIdx})"
+                 oninput="mmUpdateBranchText(${item.bIdx}, ${sl.sIdx}, this.innerText)"
+                 style="left:${subX}px;top:${Math.round(sl.y - 16)}px;width:190px;background:${sbg};color:${sfg};">
+              ${escapeHTML(sl.sub.title)}
+            </div>
+          `;
+        });
+      });
+
+      canvas.style.width = canvasW + 'px';
+      canvas.style.height = canvasH + 'px';
+      canvas.style.transform = `scale(${mmZoom})`;
+      stage.style.width = Math.round(canvasW * mmZoom) + 'px';
+      stage.style.height = Math.round(canvasH * mmZoom) + 'px';
+      canvas.innerHTML = nodesHTML;
+    }
+
+    function mmHandleBranchClick(e, topicIdx, subIdx) {
+      e.stopPropagation();
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap) return;
+
+      if (isMindMapEditMode) {
+        mmSelectedBranch = { topicIdx, subIdx };
+        document.querySelectorAll('#mm-canvas .mm-branch-pill').forEach(el => el.classList.remove('mm-selected'));
+        e.currentTarget.classList.add('mm-selected');
+        return;
+      }
+
+      // In normal Mind Map view, clicking any topic/subtopic opens full-screen Recall Mode for that topic
+      const branch = ch.mindMap.branches[topicIdx];
+      const sub = subIdx >= 0 && branch ? branch.children[subIdx] : null;
+      const searchLabel = sub ? sub.title : (branch ? branch.title : '');
+      openTopicInRecallMode(branch?.topicId || '', searchLabel);
+    }
+
+    function mmUpdateRootTitle(val) {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap) return;
+      ch.mindMap.rootTitle = val.trim();
+      scheduleAutoSave();
+    }
+
+    function mmUpdateBranchText(topicIdx, subIdx, val) {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap) return;
+      const br = ch.mindMap.branches[topicIdx];
+      if (!br) return;
+      if (subIdx < 0) br.title = val.trim();
+      else if (br.children[subIdx]) br.children[subIdx].title = val.trim();
+      scheduleAutoSave();
+    }
+
+    function mmAddMainBranch() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return;
+      const mm = ensureChapterMindMapData(ch);
+      const newTopicId = 't-' + Date.now();
+      mm.branches.push({
+        id: 'br-' + Date.now(),
+        topicId: newTopicId,
+        title: 'New Topic',
+        bgColor: '#f5d887',
+        fontColor: '#1c1917',
+        children: []
+      });
+      mmSelectedBranch = { topicIdx: mm.branches.length - 1, subIdx: -1 };
+      renderChapterMindMap();
+      scheduleAutoSave();
+    }
+
+    function mmAddSubBranch() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch) return;
+      const mm = ensureChapterMindMapData(ch);
+      const tIdx = mmSelectedBranch ? mmSelectedBranch.topicIdx : mm.branches.length - 1;
+      if (tIdx < 0 || !mm.branches[tIdx]) {
+        showToast('Select a main topic branch first.');
+        return;
+      }
+      if (!mm.branches[tIdx].children) mm.branches[tIdx].children = [];
+      mm.branches[tIdx].children.push({
+        id: 'sub-' + Date.now(),
+        title: 'Subtopic',
+        bgColor: '#f5d887',
+        fontColor: '#1c1917'
+      });
+      mmSelectedBranch = { topicIdx: tIdx, subIdx: mm.branches[tIdx].children.length - 1 };
+      renderChapterMindMap();
+      scheduleAutoSave();
+    }
+
+    function mmDeleteSelectedBranch() {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap || !mmSelectedBranch) {
+        showToast('Tap a branch box first to select it.');
+        return;
+      }
+      const { topicIdx, subIdx } = mmSelectedBranch;
+      if (subIdx >= 0 && ch.mindMap.branches[topicIdx]) {
+        ch.mindMap.branches[topicIdx].children.splice(subIdx, 1);
+      } else {
+        ch.mindMap.branches.splice(topicIdx, 1);
+      }
+      mmSelectedBranch = null;
+      renderChapterMindMap();
+      scheduleAutoSave();
+    }
+
+    function mmSetBranchColor(bgColor, fontColor) {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap || !mmSelectedBranch) {
+        showToast('Tap a branch box first to change its color.');
+        return;
+      }
+      const { topicIdx, subIdx } = mmSelectedBranch;
+      const br = ch.mindMap.branches[topicIdx];
+      if (!br) return;
+      const target = subIdx >= 0 ? br.children[subIdx] : br;
+      if (target) {
+        target.bgColor = bgColor;
+        target.fontColor = fontColor;
+        renderChapterMindMap();
+        scheduleAutoSave();
+      }
+    }
+
+    function mmSetFontColor(fontColor) {
+      const ch = library.chapters[library.activeChapterId];
+      if (!ch || !ch.mindMap || !mmSelectedBranch) {
+        showToast('Tap a branch box first to change its font color.');
+        return;
+      }
+      const { topicIdx, subIdx } = mmSelectedBranch;
+      const br = ch.mindMap.branches[topicIdx];
+      if (!br) return;
+      const target = subIdx >= 0 ? br.children[subIdx] : br;
+      if (target) {
+        target.fontColor = fontColor;
+        renderChapterMindMap();
+        scheduleAutoSave();
+      }
+    }
+
+    /* =====================================================================
+       3. TOPIC FULL-SCREEN RECALL & EDITOR VIEW
+       ===================================================================== */
+    function openTopicInRecallMode(topicId, fallbackHeadingText = '') {
+      currentView = 'study';
+      activeTopicFilterId = topicId || null;
+      setEditMode(false);
+
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('mindmap-view').classList.add('hidden');
+      document.getElementById('chapter-study-view').classList.remove('hidden');
+
+      document.getElementById('recall-controls').classList.remove('hidden');
+      document.getElementById('btn-mode-switch').classList.remove('hidden');
+      document.getElementById('back-mindmap-btn').classList.remove('hidden');
+      document.getElementById('btn-mindmap-edit').classList.add('hidden');
+
+      loadActiveChapterIntoDOM();
+      applyTopicFocusFilter(topicId, fallbackHeadingText);
+      updateClozeCounter();
+      if (isFocusFullscreen) syncFullscreenBarUI();
+    }
+
+    function openAllTopicsInStudyView() {
+      openTopicInRecallMode('', '');
+    }
+
+    function applyTopicFocusFilter(topicId, fallbackHeadingText = '') {
+      const sections = Array.from(document.querySelectorAll('#notes-canvas > .topic-section'));
+      const pill = document.getElementById('active-topic-pill');
+      const showAllBtn = document.getElementById('show-all-topics-btn');
+      const fsLabel = document.getElementById('fs-current-topic-label');
+
+      if (!topicId && !fallbackHeadingText) {
+        sections.forEach(s => {
+          s.style.display = '';
+          s.querySelectorAll('.subtopic-section').forEach(sub => { sub.style.display = ''; });
+        });
+        if (pill) pill.classList.add('hidden');
+        if (showAllBtn) showAllBtn.classList.add('hidden');
+        if (fsLabel) fsLabel.textContent = 'All Chapter Topics';
+        return;
+      }
+
+      let matched = sections.find(s => s.dataset.topicId === topicId);
+      if (!matched && fallbackHeadingText) {
+        const needle = fallbackHeadingText.toLowerCase().trim();
+        matched = sections.find(s => s.innerText.toLowerCase().includes(needle));
+      }
+
+      if (matched) {
+        sections.forEach(s => {
+          s.style.display = s === matched ? '' : 'none';
+          if (s === matched) {
+            s.querySelectorAll('.subtopic-section').forEach(sub => { sub.style.display = ''; });
+          }
+        });
+        const headingText = matched.querySelector('h2')?.textContent.trim() || fallbackHeadingText;
+        if (pill) {
+          pill.textContent = headingText;
+          pill.classList.remove('hidden');
+        }
+        if (fsLabel) fsLabel.textContent = headingText;
+        if (showAllBtn) showAllBtn.classList.remove('hidden');
+      } else {
+        sections.forEach(s => { s.style.display = ''; });
+        if (pill) pill.classList.add('hidden');
+        if (showAllBtn) showAllBtn.classList.add('hidden');
+        if (fsLabel) fsLabel.textContent = 'All Chapter Topics';
+      }
+    }
+
+    /* =====================================================================
+       DISTRACTION-FREE FULLSCREEN CONTROLLER (MIND MAP & TOPIC NOTES)
+       ===================================================================== */
+    let isFocusFullscreen = false;
+
+    function enterFocusFullscreen() {
+      if (isEditMode) setEditMode(false);
+      if (isMindMapEditMode) toggleMindMapEditMode();
+      isFocusFullscreen = true;
+      document.body.classList.add('focus-fullscreen');
+      syncFullscreenBarUI();
+    }
+
+    function exitFocusFullscreen() {
+      isFocusFullscreen = false;
+      document.body.classList.remove('focus-fullscreen');
+      document.getElementById('fs-topic-menu')?.classList.add('hidden');
+    }
+
+    function syncFullscreenBarUI() {
+      const ddWrap = document.getElementById('fs-topic-dropdown-wrap');
+      if (!ddWrap) return;
+      if (currentView === 'study') {
+        ddWrap.classList.remove('hidden');
+        buildFsTopicDropdownMenu();
+      } else {
+        ddWrap.classList.add('hidden');
+      }
+    }
+
+    function handleFullscreenZoom(dir) {
+      if (currentView === 'mindmap') {
+        zoomChapterMindMap(dir > 0 ? 0.15 : -0.15);
+      } else if (currentView === 'study') {
+        adjustFontSize(dir > 0 ? 1 : -1);
+      }
+    }
+
+    function toggleFsTopicDropdown() {
+      const menu = document.getElementById('fs-topic-menu');
+      if (!menu) return;
+      buildFsTopicDropdownMenu();
+      menu.classList.toggle('hidden');
+    }
+
+    function buildFsTopicDropdownMenu() {
+      const menu = document.getElementById('fs-topic-menu');
+      if (!menu) return;
+      const sections = Array.from(document.querySelectorAll('#notes-canvas > .topic-section'));
+
+      let html = `
+        <button type="button" onclick="selectFsTopic('', '')" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] font-bold text-sky-400 border-b border-[var(--border-color)] flex items-center justify-between">
+          <span>📚 All Chapter Topics</span>
+          <span class="text-[10px] theme-muted">${sections.length} topics</span>
+        </button>
+      `;
+
+      sections.forEach((sec, idx) => {
+        const topicId = sec.dataset.topicId || ('t-' + idx);
+        sec.dataset.topicId = topicId;
+        const h2Text = sec.querySelector('h2')?.textContent.trim() || `Topic ${idx + 1}`;
+        const isCurrent = activeTopicFilterId === topicId;
+
+        html += `
+          <button type="button" onclick="selectFsTopic('${topicId}', '')" class="w-full text-left px-3.5 py-2 hover:bg-[var(--bg-hover)] font-semibold ${isCurrent ? 'text-amber-400 bg-amber-500/10' : 'theme-heading'} flex items-center gap-2">
+            <span class="text-[10px] theme-muted">▸</span>
+            <span class="truncate">${escapeHTML(h2Text)}</span>
+          </button>
+        `;
+
+        sec.querySelectorAll('.subtopic-section h3, h3').forEach((h3, sIdx) => {
+          const subText = h3.textContent.trim();
+          if (!subText) return;
+          const subId = h3.id || `${topicId}-sub-${sIdx}`;
+          h3.id = subId;
+          html += `
+            <button type="button" onclick="selectFsSubtopic('${topicId}', '${subId}', '${escapeHTML(subText).replace(/'/g, "\\'")}')" class="w-full text-left pl-8 pr-3.5 py-1.5 hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)] text-[11px] flex items-center gap-1.5">
+              <span>•</span>
+              <span class="truncate">${escapeHTML(subText)}</span>
+            </button>
+          `;
+        });
+      });
+
+      menu.innerHTML = html;
+    }
+
+    function selectFsTopic(topicId, subId) {
+      activeTopicFilterId = topicId || null;
+      applyTopicFocusFilter(topicId, '');
+      updateClozeCounter();
+      document.getElementById('fs-topic-menu')?.classList.add('hidden');
+      if (subId) {
+        const el = document.getElementById(subId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function selectFsSubtopic(topicId, subId, subTitle) {
+      selectFsTopic(topicId, subId);
+      const fsLabel = document.getElementById('fs-current-topic-label');
+      if (fsLabel && subTitle) fsLabel.textContent = subTitle;
+    }
+
+    function clearTopicFilter() {
+      activeTopicFilterId = null;
+      applyTopicFocusFilter('', '');
+      updateClozeCounter();
+    }
+
     /* --- Folders & Chapter Sidebar --- */
     async function createNewFolder() {
       const name = prompt('Enter folder name (e.g., Human Physiology, Plant Physiology, Genetics):');
@@ -2153,7 +2816,7 @@
       await persistLibrary();
       markLocalChangesPendingSync();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
       showToast(`Folder "${name.trim()}" created!`);
     }
 
@@ -2174,7 +2837,7 @@
       await persistLibrary();
       markLocalChangesPendingSync();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
     }
 
     async function deleteFolder(folderId, event) {
@@ -2188,7 +2851,7 @@
       await persistLibrary();
       markLocalChangesPendingSync();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
       showToast('Folder removed; chapters kept in library.');
     }
 
@@ -2198,28 +2861,25 @@
       await persistLibrary();
       markLocalChangesPendingSync();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
       showToast(folderId ? 'Moved chapter into folder.' : 'Removed chapter from folder.');
     }
 
     function convertBlocksArrayToHTML(blocks) {
-      return blocks.map(b => {
+      return blocks.map((b, idx) => {
         const safeTitle = b.title || 'Section';
-        const collapsedCls = b.collapsed ? ' collapsed' : '';
+        const topicId = b.id || ('t-' + idx + '-' + Date.now());
         const bodyHtml = (b.html || '').replace(/class="cloze"/g, 'class="cloze cloze-hidden"');
         return `
-          <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition${collapsedCls}">
-            <div class="toggle-header flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-1">
-                <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-                <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">${safeTitle}</h2>
-              </div>
+          <section class="topic-section" data-topic-id="${topicId}">
+            <div class="topic-header">
+              <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">${safeTitle}</h2>
               <div class="edit-only items-center gap-1">
                 <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
                 <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
               </div>
             </div>
-            <div contenteditable="false" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-3">${bodyHtml}</div>
+            <div contenteditable="false" class="topic-body space-y-3">${bodyHtml}</div>
           </section>
         `;
       }).join('\n');
@@ -2234,7 +2894,7 @@
     }
 
     function renderChapterRowHTML(ch, foldersList) {
-      const isActive = !isDashboardOpen && ch.id === library.activeChapterId;
+      const isActive = currentView !== 'dashboard' && ch.id === library.activeChapterId;
       const plainTitle = ch.title.replace(/<[^>]*>/g, '').trim() || 'Untitled Chapter';
       const folderOptions = [
         `<option value="" ${!ch.folderId ? 'selected' : ''}>No Folder</option>`,
@@ -2247,7 +2907,7 @@
             ? 'bg-sky-500/15 text-sky-400 font-semibold border border-sky-500/30'
             : 'hover:bg-[var(--bg-hover)] theme-muted hover:text-[var(--text-heading)]'
         }">
-          <div onclick="switchChapter('${ch.id}')" class="truncate flex-1 py-0.5" title="${escapeHTML(plainTitle)}">${escapeHTML(plainTitle)}</div>
+          <div onclick="openChapterMindMap('${ch.id}')" class="truncate flex-1 py-0.5" title="${escapeHTML(plainTitle)}">${escapeHTML(plainTitle)}</div>
           <div class="flex items-center gap-1 opacity-80 sm:opacity-0 group-hover:opacity-100">
             ${foldersList.length > 0 ? `
               <select onchange="moveChapterToFolder('${ch.id}', this.value)" onclick="event.stopPropagation()" class="theme-nested border border-[var(--border-color)] rounded text-[10px] px-1 py-0.5 max-w-[74px]" title="Move chapter to folder">
@@ -2298,12 +2958,6 @@
       list.innerHTML = html;
     }
 
-    async function switchChapter(chapterId) {
-      if (!library.chapters[chapterId]) return false;
-      openChapterFromDashboard(chapterId);
-      return true;
-    }
-
     function loadActiveChapterIntoDOM() {
       const ch = library.chapters[library.activeChapterId];
       if (!ch) return;
@@ -2315,7 +2969,6 @@
       syncEditableAttributes();
       enhanceAllTables();
       rebindInsertedImages();
-      injectTopicFullPageButtons();
       updateClozeCounter();
     }
 
@@ -2323,6 +2976,7 @@
       recordRollingSnapshot('Before creating new chapter');
       const count = Object.keys(library.chapters).length + 1;
       const newId = 'ch-' + Date.now();
+      const topicId = 't-' + Date.now();
       library.chapters[newId] = {
         id: newId,
         folderId: folderId || '',
@@ -2330,20 +2984,17 @@
         title: `Chapter ${count}: New NCERT Chapter Title`,
         shortTitle: `Chapter ${count}`,
         thumbnail: '',
-        subtitle: 'Paste an NCERT paragraph and click ✨ Sentence → Bullets, or highlight keywords to create Cloze active recall blanks.',
+        subtitle: 'Press E for Edit Mode • R for Recall Mode • Double-tap or right-click any cloze to flag as Hard.',
         html: `
-          <section class="toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition">
-            <div class="toggle-header flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-1">
-                <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-                <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Subtopic Heading</h2>
-              </div>
+          <section class="topic-section" data-topic-id="${topicId}">
+            <div class="topic-header">
+              <h2 contenteditable="false" class="text-lg font-bold theme-heading tracking-tight">1. Subtopic Heading</h2>
               <div class="edit-only items-center gap-1">
                 <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
                 <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
               </div>
             </div>
-            <div contenteditable="false" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-1.5">
+            <div contenteditable="false" class="topic-body space-y-1.5">
               <ul class="list-disc pl-5 space-y-1">
                 <li><strong>Keyword:</strong> Add NCERT short notes here, or select a long paragraph and click <strong>✨ Sentence → Bullets</strong>.</li>
               </ul>
@@ -2352,10 +3003,9 @@
         `,
         updatedAt: Date.now()
       };
-      openChapterFromDashboard(newId);
-      setEditMode(true);
+      openChapterMindMap(newId);
       markLocalChangesPendingSync();
-      showToast('Created new blank chapter!');
+      showToast('Created new chapter Mind Map!');
     }
 
     async function deleteChapter(chapterId, event) {
@@ -2375,14 +3025,16 @@
         library.chapters[chapterId] = deletedChapter;
         library.activeChapterId = previousActiveChapterId;
         renderSidebar();
-        if (isDashboardOpen) renderDashboard();
+        if (currentView === 'dashboard') renderDashboard();
+        else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
         else loadActiveChapterIntoDOM();
         showToast('Chapter deletion was not saved.');
         return;
       }
       markLocalChangesPendingSync();
       renderSidebar();
-      if (isDashboardOpen) renderDashboard();
+      if (currentView === 'dashboard') renderDashboard();
+      else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
       else loadActiveChapterIntoDOM();
       showToast('Chapter deleted (Recoverable in History).');
     }
@@ -2428,23 +3080,32 @@
 
     function adjustFontSize(delta) {
       const sel = window.getSelection();
-      const current = sel && !sel.isCollapsed ? (parseFloat((sel.anchorNode.parentElement || {}).style?.fontSize) || 15) : currentFontSize;
-      const next = Math.min(36, Math.max(9, current + delta));
-      if (wrapSelectedTextStyle('fontSize', next + 'px')) {
-        const lbl = document.getElementById('font-size-label');
-        if (lbl) lbl.textContent = next + 'px';
+      if (isEditMode && sel && !sel.isCollapsed) {
+        const current = parseFloat((sel.anchorNode.parentElement || {}).style?.fontSize) || currentFontSize;
+        const next = Math.min(36, Math.max(10, current + delta));
+        if (wrapSelectedTextStyle('fontSize', next + 'px')) {
+          const lbl = document.getElementById('font-size-label');
+          if (lbl) lbl.textContent = next + 'px';
+        }
+        return;
       }
+      // Global note zoom in Recall/Edit Mode
+      currentFontSize = Math.min(26, Math.max(11, currentFontSize + delta));
+      document.documentElement.style.setProperty('--note-size', currentFontSize + 'px');
+      const lbl = document.getElementById('font-size-label');
+      if (lbl) lbl.textContent = currentFontSize + 'px';
+      savePreferences();
     }
 
     function noteUndo() {
-      if (!isEditMode) { showToast('Switch to Edit Mode to undo note edits.'); return; }
+      if (!isEditMode) { showToast('Switch to Edit Mode (E) to undo note edits.'); return; }
       document.getElementById('notes-canvas').focus();
       document.execCommand('undo');
       scheduleAutoSave();
     }
 
     function noteRedo() {
-      if (!isEditMode) { showToast('Switch to Edit Mode to redo note edits.'); return; }
+      if (!isEditMode) { showToast('Switch to Edit Mode (E) to redo note edits.'); return; }
       document.getElementById('notes-canvas').focus();
       document.execCommand('redo');
       scheduleAutoSave();
@@ -2463,7 +3124,7 @@
       if (!rawText) {
         let node = range.commonAncestorContainer;
         if (node.nodeType === 3) node = node.parentElement;
-        targetBlock = node.closest('p, div:not(.toggle-body):not(.toggle-block):not(.toggle-header), li');
+        targetBlock = node.closest('p, div:not(.topic-body):not(.topic-section):not(.topic-header), li');
         if (targetBlock) rawText = targetBlock.innerText.trim();
       }
       if (!rawText) { showToast('Select a long sentence or paragraph to split into bullets.'); return; }
@@ -2507,18 +3168,16 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    /* --- Theme Cycling & Reading Mode --- */
+    /* --- Theme Cycling --- */
     function applyColorTheme(themeName) {
       currentTheme = themeName;
       const html = document.documentElement;
       html.classList.remove('dark', 'light', 'sepia');
       html.classList.add(themeName);
       const labelMap = { dark: '🌙 Dark', light: '☀️ Light', sepia: '📜 Sepia' };
-      const label = labelMap[themeName] || '🌙 Dark';
       const topBtn = document.getElementById('theme-toggle-btn');
-      const readBtn = document.getElementById('reading-theme-btn');
-      if (topBtn) topBtn.textContent = label;
-      if (readBtn) readBtn.textContent = label;
+      if (topBtn) topBtn.textContent = labelMap[themeName] || '🌙 Dark';
+      if (currentView === 'mindmap') renderChapterMindMap();
       savePreferences();
     }
 
@@ -2527,36 +3186,7 @@
       applyColorTheme(order[(order.indexOf(currentTheme) + 1) % order.length]);
     }
 
-    function enterReadingMode() {
-      if (isDashboardOpen) {
-        openChapterFromDashboard(library.activeChapterId || Object.keys(library.chapters)[0]);
-      }
-      if (isEditMode) setEditMode(false);
-      isReadingMode = true;
-      document.body.classList.add('reading-mode');
-      const docEl = document.documentElement;
-      if (docEl.requestFullscreen && !document.fullscreenElement) {
-        docEl.requestFullscreen().catch(() => {});
-      }
-      showToast('Reading Mode active — Tap blank underlines to reveal.', 2400);
-    }
-
-    function exitReadingMode() {
-      isReadingMode = false;
-      document.body.classList.remove('reading-mode');
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && isReadingMode) {
-        isReadingMode = false;
-        document.body.classList.remove('reading-mode');
-      }
-    });
-
-    /* --- JSON Backup, Single Chapter Import/Export & Anki-Style Google Drive Sync --- */
+    /* --- JSON Backup, Single Chapter Import/Export & Anki-Style Google Drive Sync (UNCHANGED) --- */
     function exportFullBackupJSON() {
       captureActiveChapterFromDOM();
       const payload = buildFullBackupPayload();
@@ -2593,10 +3223,12 @@
             if (parsed.preferences && parsed.preferences.theme) {
               applyColorTheme(parsed.preferences.theme);
             }
+            migrateLegacyToggleMarkup();
             await persistLibrary();
             markLocalChangesPendingSync();
             renderSidebar();
-            if (isDashboardOpen) renderDashboard();
+            if (currentView === 'dashboard') renderDashboard();
+            else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
             else loadActiveChapterIntoDOM();
             showToast(`Restored ${importedCount} chapter(s) from backup!`);
           } else if (parsed && (parsed.html || Array.isArray(parsed.blocks))) {
@@ -2613,7 +3245,8 @@
               html: resolvedHtml,
               updatedAt: Date.now()
             };
-            openChapterFromDashboard(newId);
+            migrateLegacyToggleMarkup();
+            openChapterMindMap(newId);
             markLocalChangesPendingSync();
             showToast('Imported chapter into library!');
           } else {
@@ -2642,6 +3275,7 @@
         title: ch.title || plainTitle,
         shortTitle: ch.shortTitle || '',
         thumbnail: ch.thumbnail || '',
+        mindMap: ch.mindMap || null,
         subtitle: ch.subtitle || '',
         html: ch.html || ''
       };
@@ -2698,10 +3332,11 @@
           if (!addedIds.length) { showToast('No valid chapters found.'); return; }
           recordRollingSnapshot('Before importing chapter collection');
           library.chapters = { ...library.chapters, ...additions };
+          migrateLegacyToggleMarkup();
           await persistLibrary();
           markLocalChangesPendingSync();
           renderSidebar();
-          if (isDashboardOpen) renderDashboard();
+          if (currentView === 'dashboard') renderDashboard();
           showToast(`Imported ${addedIds.length} chapter(s).`);
           return;
         }
@@ -2729,13 +3364,15 @@
           title,
           shortTitle: parsed.shortTitle || '',
           thumbnail: parsed.thumbnail || '',
+          mindMap: parsed.mindMap || null,
           subtitle,
           html: resolvedHtml,
           updatedAt: Date.now()
         };
-        openChapterFromDashboard(newId);
+        migrateLegacyToggleMarkup();
+        openChapterMindMap(newId);
         markLocalChangesPendingSync();
-        showToast(`Added "${plainTitle}" in Recall Mode!`);
+        showToast(`Added "${plainTitle}" Mind Map!`);
       } catch (err) {
         console.error('Chapter JSON import failed:', err);
         showToast('Could not import this JSON file.');
@@ -2980,7 +3617,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       captureActiveChapterFromDOM();
       let prefs = {};
       try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') || {}; } catch (e) {}
-      return { app: 'NEET_BioNotes', version: 8, exportedAt: new Date().toISOString(), preferences: prefs, library };
+      return { app: 'NEET_BioNotes', version: 9, exportedAt: new Date().toISOString(), preferences: prefs, library };
     }
 
     async function backupToGoogleDrive(silent = false) {
@@ -3024,13 +3661,15 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         recordRollingSnapshot('Before restoring latest Google Drive backup');
         library = JSON.parse(JSON.stringify(backup.library));
         if (!library.folders) library.folders = {};
+        migrateLegacyToggleMarkup();
         if (backup.preferences) {
           try { localStorage.setItem(PREFS_KEY, JSON.stringify(backup.preferences)); } catch (e) {}
           loadPreferences();
         }
         await persistLibrary();
         renderSidebar();
-        if (isDashboardOpen) renderDashboard();
+        if (currentView === 'dashboard') renderDashboard();
+        else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
         else loadActiveChapterIntoDOM();
         const stamp = response.updatedAt || backup.exportedAt || new Date().toISOString();
         gdriveConfig.lastSync = stamp;
@@ -3047,10 +3686,13 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     /* --- Edit Mode & Resizable Table Engine --- */
     function setEditMode(enable) {
-      if (enable && isDashboardOpen) {
-        openChapterFromDashboard(library.activeChapterId || Object.keys(library.chapters)[0]);
+      if (enable && currentView === 'dashboard') {
+        openTopicInRecallMode('', '');
       }
-      if (enable && isReadingMode) exitReadingMode();
+      if (enable && currentView === 'mindmap') {
+        if (!isMindMapEditMode) toggleMindMapEditMode();
+        return;
+      }
       isEditMode = !!enable;
       const body = document.body;
       const btn = document.getElementById('btn-mode-switch');
@@ -3077,9 +3719,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       syncEditableAttributes();
       enhanceAllTables();
       rebindInsertedImages();
-      injectTopicFullPageButtons();
       updateClozeCounter();
-      if (!isEditMode && !isDashboardOpen) scheduleAutoSave();
+      if (!isEditMode && currentView === 'study') scheduleAutoSave();
     }
 
     function toggleEditMode() {
@@ -3232,7 +3873,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
 
-    /* --- Cloze, Hard Cloze Flagging, Q&A, Diagram Occlusion & Events --- */
+    /* --- Cloze, Hard Cloze Flagging, Q&A, Diagram Occlusion & Keyboard Shortcuts --- */
     function captureActiveEditorLocation() {
       const sel = window.getSelection();
       if (!sel || !sel.rangeCount) return;
@@ -3242,7 +3883,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       lastCaretRange = range.cloneRange();
       let node = range.commonAncestorContainer;
       if (node.nodeType === 3) node = node.parentElement;
-      const block = node.closest('.toggle-body') || node.closest('.toggle-block');
+      const block = node.closest('.topic-body') || node.closest('.topic-section');
       if (block) lastActiveBlock = block;
     }
 
@@ -3321,35 +3962,106 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         if (!isEditMode) return;
         if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
           e.preventDefault();
-          const sec = e.target.closest('.toggle-block');
+          const sec = e.target.closest('.topic-section');
           if (sec) sec.classList.add('drag-over-img');
         }
       });
 
       canvas.addEventListener('dragleave', (e) => {
-        const sec = e.target.closest('.toggle-block');
+        const sec = e.target.closest('.topic-section');
         if (sec) sec.classList.remove('drag-over-img');
       });
 
       canvas.addEventListener('drop', (e) => {
-        const sec = e.target.closest('.toggle-block');
+        const sec = e.target.closest('.topic-section');
         if (sec) sec.classList.remove('drag-over-img');
         if (!isEditMode || !e.dataTransfer || !e.dataTransfer.files.length) return;
         const imageFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
         if (!imageFiles.length) return;
         e.preventDefault();
-        const dropTarget = sec ? (sec.querySelector('.toggle-body') || sec) : null;
+        const dropTarget = sec ? (sec.querySelector('.topic-body') || sec) : null;
         imageFiles.forEach(file => compressAndInsertImage(file, dropTarget));
       });
 
       [canvas, title, subtitle].forEach(el => el.addEventListener('input', () => scheduleAutoSave(false)));
 
+      /* =====================================================================
+         4. KEYBOARD SHORTCUTS (E = Editor, R = Recall, Ctrl+H/U/F/Q/O/T/[ /])
+         ===================================================================== */
       document.addEventListener('keydown', (e) => {
-        if (isEditMode && e.altKey && (e.key === 'c' || e.key === 'C')) {
-          e.preventDefault();
-          wrapSelectionInCloze();
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT' || (document.activeElement && document.activeElement.isContentEditable);
+
+        // Single-key mode switches when not typing inside text
+        if (!isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          if (e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+            if (currentView === 'mindmap') {
+              if (!isMindMapEditMode) toggleMindMapEditMode();
+            } else {
+              setEditMode(true);
+            }
+            return;
+          }
+          if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault();
+            if (currentView === 'mindmap') {
+              if (isMindMapEditMode) toggleMindMapEditMode();
+            } else {
+              setEditMode(false);
+            }
+            return;
+          }
         }
-        if (e.key === 'Escape' && isReadingMode) exitReadingMode();
+
+        // Ctrl / Cmd Tool Shortcuts in Edit Mode
+        if (e.ctrlKey || e.metaKey) {
+          const k = e.key.toLowerCase();
+          if (k === 'h' || (e.altKey && k === 'c')) {
+            e.preventDefault();
+            if (!isEditMode) setEditMode(true);
+            wrapSelectionInCloze();
+            return;
+          }
+          if (k === 'u' && isEditMode) {
+            e.preventDefault();
+            unwrapSelectionCloze();
+            return;
+          }
+          if (k === 'f' && isEditMode) {
+            e.preventDefault();
+            openParagraphTransformer('flowchart');
+            return;
+          }
+          if (k === 'q' && isEditMode) {
+            e.preventDefault();
+            createQuestionAnswer();
+            return;
+          }
+          if (k === 'o' && isEditMode) {
+            e.preventDefault();
+            openDiagramOcclusion();
+            return;
+          }
+          if (k === 't' && isEditMode) {
+            e.preventDefault();
+            openParagraphTransformer('table');
+            return;
+          }
+          if (e.key === '[') {
+            e.preventDefault();
+            adjustFontSize(-1);
+            return;
+          }
+          if (e.key === ']') {
+            e.preventDefault();
+            adjustFontSize(1);
+            return;
+          }
+        }
+        if (e.key === 'Escape' && isFocusFullscreen) {
+          exitFocusFullscreen();
+        }
       });
 
       document.addEventListener('paste', (e) => {
@@ -3429,56 +4141,73 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       showToast(createdCount > 0 ? `Auto-clozed ${createdCount} numerical facts!` : 'All numerical facts are already clozed.');
     }
 
+    function getVisibleClozeScope() {
+      const visibleSections = Array.from(document.querySelectorAll('#notes-canvas > .topic-section')).filter(s => s.style.display !== 'none');
+      return visibleSections.length ? visibleSections : [document.getElementById('notes-canvas')];
+    }
+
     function hideAllClozes() {
-      document.querySelectorAll('#notes-canvas .cloze').forEach(el => el.classList.add('cloze-hidden'));
-      document.querySelectorAll('#notes-canvas .cloze-question').forEach(el => {
-        el.classList.remove('qa-open');
-        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-        if (q) q.style.display = '';
-        if (a) a.style.display = 'none';
+      getVisibleClozeScope().forEach(scope => {
+        scope.querySelectorAll('.cloze').forEach(el => el.classList.add('cloze-hidden'));
+        scope.querySelectorAll('.cloze-question').forEach(el => {
+          el.classList.remove('qa-open');
+          const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
+          if (q) q.style.display = '';
+          if (a) a.style.display = 'none';
+        });
+        scope.querySelectorAll('.diagram-mask').forEach(m => m.classList.remove('revealed'));
       });
-      document.querySelectorAll('#notes-canvas .diagram-mask').forEach(m => m.classList.remove('revealed'));
       updateClozeCounter();
       scheduleAutoSave();
     }
 
     function hideHardClozesOnly() {
-      const hardEls = document.querySelectorAll('#notes-canvas .cloze[data-hard="1"]');
-      if (!hardEls.length) {
+      let hardTotal = 0;
+      getVisibleClozeScope().forEach(scope => {
+        hardTotal += scope.querySelectorAll('.cloze[data-hard="1"]').length;
+      });
+      if (!hardTotal) {
         showToast('No Hard clozes flagged yet. Double-tap or right-click any cloze to flag it.');
         return;
       }
-      document.querySelectorAll('#notes-canvas .cloze').forEach(el => {
-        if (el.getAttribute('data-hard') === '1') el.classList.add('cloze-hidden');
-        else el.classList.remove('cloze-hidden');
+      getVisibleClozeScope().forEach(scope => {
+        scope.querySelectorAll('.cloze').forEach(el => {
+          if (el.getAttribute('data-hard') === '1') el.classList.add('cloze-hidden');
+          else el.classList.remove('cloze-hidden');
+        });
       });
       updateClozeCounter();
       scheduleAutoSave();
-      showToast(`Masked ${hardEls.length} Hard cloze(s) for rapid drill!`);
+      showToast(`Masked ${hardTotal} Hard cloze(s) for rapid drill!`);
     }
 
     function revealAllClozes() {
-      document.querySelectorAll('#notes-canvas .cloze').forEach(el => el.classList.remove('cloze-hidden'));
-      document.querySelectorAll('#notes-canvas .cloze-question').forEach(el => {
-        el.classList.add('qa-open');
-        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-        if (q) q.style.display = 'none';
-        if (a) a.style.display = 'inline';
+      getVisibleClozeScope().forEach(scope => {
+        scope.querySelectorAll('.cloze').forEach(el => el.classList.remove('cloze-hidden'));
+        scope.querySelectorAll('.cloze-question').forEach(el => {
+          el.classList.add('qa-open');
+          const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
+          if (q) q.style.display = 'none';
+          if (a) a.style.display = 'inline';
+        });
+        scope.querySelectorAll('.diagram-mask').forEach(m => m.classList.add('revealed'));
       });
-      document.querySelectorAll('#notes-canvas .diagram-mask').forEach(m => m.classList.add('revealed'));
       updateClozeCounter();
       scheduleAutoSave();
     }
 
     function updateClozeCounter() {
-      const all = document.querySelectorAll('#notes-canvas .cloze');
-      const hidden = document.querySelectorAll('#notes-canvas .cloze.cloze-hidden');
-      const hardCount = document.querySelectorAll('#notes-canvas .cloze[data-hard="1"]').length;
+      let total = 0, hiddenCount = 0, hardCount = 0;
+      getVisibleClozeScope().forEach(scope => {
+        total += scope.querySelectorAll('.cloze').length;
+        hiddenCount += scope.querySelectorAll('.cloze.cloze-hidden').length;
+        hardCount += scope.querySelectorAll('.cloze[data-hard="1"]').length;
+      });
       const counter = document.getElementById('cloze-counter');
       if (counter) {
         counter.textContent = hardCount > 0
-          ? `${all.length - hidden.length}/${all.length} (🎯${hardCount})`
-          : `${all.length - hidden.length}/${all.length}`;
+          ? `${total - hiddenCount}/${total} (🎯${hardCount})`
+          : `${total - hiddenCount}/${total}`;
       }
     }
 
@@ -3494,8 +4223,8 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
 
     function insertImageInsideBlock(btn) {
       if (!isEditMode) setEditMode(true);
-      const sec = btn.closest('.toggle-block');
-      activeInsertTarget = sec ? (sec.querySelector('.toggle-body') || sec) : null;
+      const sec = btn.closest('.topic-section');
+      activeInsertTarget = sec ? (sec.querySelector('.topic-body') || sec) : null;
       lastActiveBlock = activeInsertTarget;
       const input = document.getElementById('image-file-input');
       input.value = '';
@@ -3554,15 +4283,11 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const canvas = document.getElementById('notes-canvas');
       let resolvedTarget = target && document.body.contains(target) ? target : null;
       if (!resolvedTarget) {
-        const firstSection = canvas.querySelector('.toggle-block');
-        if (firstSection) {
-          firstSection.classList.remove('collapsed');
-          resolvedTarget = firstSection.querySelector('.toggle-body') || firstSection;
-        } else { resolvedTarget = canvas; }
+        const firstVisible = Array.from(canvas.querySelectorAll('.topic-section')).find(s => s.style.display !== 'none') || canvas.querySelector('.topic-section');
+        resolvedTarget = firstVisible ? (firstVisible.querySelector('.topic-body') || firstVisible) : canvas;
       }
-      if (resolvedTarget.classList.contains('toggle-block')) {
-        resolvedTarget.classList.remove('collapsed');
-        (resolvedTarget.querySelector('.toggle-body') || resolvedTarget).appendChild(wrapper);
+      if (resolvedTarget.classList.contains('topic-section')) {
+        (resolvedTarget.querySelector('.topic-body') || resolvedTarget).appendChild(wrapper);
       } else { resolvedTarget.appendChild(wrapper); }
 
       wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3610,24 +4335,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       });
     }
 
-    /* --- Toggle, Format & Paragraph Transformer --- */
-    function toggleBlock(arrowEl) {
-      const block = arrowEl.closest('.toggle-block');
-      if (!block) return;
-      block.classList.toggle('collapsed');
-      if (!isReadingMode) scheduleAutoSave();
-    }
-
-    function expandAllToggles() {
-      document.querySelectorAll('#notes-canvas .toggle-block').forEach(b => b.classList.remove('collapsed'));
-      scheduleAutoSave();
-    }
-
-    function collapseAllToggles() {
-      document.querySelectorAll('#notes-canvas > .toggle-block').forEach(b => b.classList.add('collapsed'));
-      scheduleAutoSave();
-    }
-
+    /* --- Formatting & Editable Attribute Sync --- */
     function execFormat(cmd, val = null) {
       if (!isEditMode) return;
       document.execCommand(cmd, false, val);
@@ -3641,6 +4349,9 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     function exportPrintablePDF() {
+      if (currentView !== 'study') {
+        openAllTopicsInStudyView();
+      }
       showToast('Preparing clean printable PDF...', 2200);
       setTimeout(() => window.print(), 250);
     }
@@ -3657,30 +4368,28 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       document.querySelectorAll('.inserted-img-wrapper .img-caption').forEach(cap => cap.setAttribute('contenteditable', val));
     }
 
-    function addNewMainToggle() {
+    function addNewTopicSection() {
       if (!isEditMode) setEditMode(true);
       const canvas = document.getElementById('notes-canvas');
       const sec = document.createElement('section');
-      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      const newTopicId = 't-' + Date.now();
+      sec.className = 'topic-section';
+      sec.dataset.topicId = newTopicId;
       sec.innerHTML = `
-        <div class="toggle-header flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 flex-1">
-            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">New Topic Heading</h2>
-          </div>
+        <div class="topic-header">
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">New Topic Heading</h2>
           <div class="edit-only items-center gap-1">
             <button onclick="insertImageInsideBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/15 text-emerald-400">+ Img</button>
             <button onclick="deleteBlock(this)" class="px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
           </div>
         </div>
-        <div contenteditable="true" class="toggle-body mt-3 pl-2 sm:pl-6 space-y-1.5">
+        <div contenteditable="true" class="topic-body space-y-1.5">
           <ul class="list-disc pl-5 space-y-1">
             <li><strong>NCERT Fact:</strong> Paste a paragraph and click <strong>✨ Sentence → Bullets</strong>, or highlight words and press <strong>[+ Cloze]</strong>.</li>
           </ul>
         </div>
       `;
       canvas.appendChild(sec);
-      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
@@ -3801,10 +4510,10 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const selectedArrow = flow && ptState.activeArrow >= 0 ? ptState.arrows[ptState.activeArrow] : null;
       const arrowColors = [
         { label: 'Default', val: 'var(--text-muted)', swatch: '#71717a' },
-        { label: 'Sky', val: '#38bdf8', swatch: '#38bdf8' },
-        { label: 'Emerald', val: '#34d399', swatch: '#34d399' },
-        { label: 'Amber', val: '#fbbf24', swatch: '#fbbf24' },
-        { label: 'Rose', val: '#fb7185', swatch: '#fb7185' }
+        { label: 'Sky', val: '#7dd3fc', swatch: '#7dd3fc' },
+        { label: 'Emerald', val: '#86efac', swatch: '#86efac' },
+        { label: 'Amber', val: '#fde68a', swatch: '#fde68a' },
+        { label: 'Rose', val: '#fda4af', swatch: '#fda4af' }
       ];
 
       document.getElementById('pt-tools').innerHTML = flow
@@ -3830,14 +4539,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const defsHTML = ptState.arrows.map((ar, idx) => {
           const col = ar.color || 'var(--text-muted)';
           return `<marker id="pt-ah-${idx}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="${col}"/></marker>`;
-        }).join('') + `<marker id="pt-ah-preview" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="#38bdf8"/></marker>`;
+        }).join('') + `<marker id="pt-ah-preview" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 z" fill="#7dd3fc"/></marker>`;
 
         const edgesHTML = ptState.arrows.map((ar, idx) => {
           const isSel = ptState.activeArrow === idx;
-          const col = isSel && !ar.color ? '#38bdf8' : (ar.color || 'var(--text-muted)');
+          const col = isSel && !ar.color ? '#7dd3fc' : (ar.color || 'var(--text-muted)');
           const handles = isSel
-            ? `<circle data-arrow-end="start" data-arrow-idx="${idx}" cx="${ar.x1}" cy="${ar.y1}" r="7" fill="#38bdf8" stroke="#ffffff" stroke-width="2" style="cursor:grab;pointer-events:auto;" />
-               <circle data-arrow-end="end" data-arrow-idx="${idx}" cx="${ar.x2}" cy="${ar.y2}" r="7" fill="#38bdf8" stroke="#ffffff" stroke-width="2" style="cursor:grab;pointer-events:auto;" />`
+            ? `<circle data-arrow-end="start" data-arrow-idx="${idx}" cx="${ar.x1}" cy="${ar.y1}" r="7" fill="#7dd3fc" stroke="#ffffff" stroke-width="2" style="cursor:grab;pointer-events:auto;" />
+               <circle data-arrow-end="end" data-arrow-idx="${idx}" cx="${ar.x2}" cy="${ar.y2}" r="7" fill="#7dd3fc" stroke="#ffffff" stroke-width="2" style="cursor:grab;pointer-events:auto;" />`
             : '';
           return `<g>
             <line x1="${ar.x1}" y1="${ar.y1}" x2="${ar.x2}" y2="${ar.y2}" stroke="${col}" stroke-width="${isSel ? 2.5 : 1.8}" stroke-linecap="round" marker-end="url(#pt-ah-${idx})" style="pointer-events:none;" />
@@ -4131,7 +4840,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           const preview = document.createElementNS('http://www.w3.org/2000/svg', 'line');
           preview.setAttribute('x1', p.x); preview.setAttribute('y1', p.y);
           preview.setAttribute('x2', p.x); preview.setAttribute('y2', p.y);
-          preview.setAttribute('stroke', '#38bdf8'); preview.setAttribute('stroke-width', '2');
+          preview.setAttribute('stroke', '#7dd3fc'); preview.setAttribute('stroke-width', '2');
           preview.setAttribute('marker-end', 'url(#pt-ah-preview)');
           document.getElementById('pt-svg')?.appendChild(preview);
 
@@ -4371,7 +5080,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     function createDiagramOcclusionModal() {
       const m = document.createElement('div');
       m.id = 'diagram-occlusion-modal';
-      m.innerHTML = `<div class="dom-shell"><div class="p-3 flex items-center gap-2 border-b" style="border-color:var(--border-color)"><strong style="flex:1">Diagram Occlusion</strong><button class="pt-btn" onclick="domState.rects.pop();openDiagramOcclusionRefresh()">↶ Undo mask</button><button class="pt-btn" onclick="document.getElementById('diagram-occlusion-modal').classList.remove('open')">Cancel</button><button class="pt-btn primary" onclick="applyDiagramOcclusion()">✓ Apply</button></div><div class="p-2 text-xs theme-muted">Draw rectangles over labels. In Reading/Recall Mode, tap a covered label to reveal it.</div><div class="dom-stage"></div></div>`;
+      m.innerHTML = `<div class="dom-shell"><div class="p-3 flex items-center gap-2 border-b" style="border-color:var(--border-color)"><strong style="flex:1">Diagram Occlusion</strong><button class="pt-btn" onclick="domState.rects.pop();openDiagramOcclusionRefresh()">↶ Undo mask</button><button class="pt-btn" onclick="document.getElementById('diagram-occlusion-modal').classList.remove('open')">Cancel</button><button class="pt-btn primary" onclick="applyDiagramOcclusion()">✓ Apply</button></div><div class="p-2 text-xs theme-muted">Draw rectangles over labels. In Recall Mode, tap a covered label to reveal it.</div><div class="dom-stage"></div></div>`;
       document.body.appendChild(m);
       return m;
     }
@@ -4416,16 +5125,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       if (!isEditMode) setEditMode(true);
       const canvas = document.getElementById('notes-canvas');
       const sec = document.createElement('section');
-      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      sec.className = 'topic-section';
+      sec.dataset.topicId = 't-' + Date.now();
       sec.innerHTML = `
-        <div class="toggle-header flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 flex-1">
-            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Comparison Table</h2>
-          </div>
+        <div class="topic-header">
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Comparison Table</h2>
           <button onclick="deleteBlock(this)" class="edit-only px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
-        <div class="toggle-body mt-3 pl-2 sm:pl-6">
+        <div class="topic-body">
           <div class="table-wrapper" style="width: 100%;">
             <div class="overflow-x-auto">
               <table class="notion-table">
@@ -4438,7 +5145,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       `;
       canvas.appendChild(sec);
       enhanceAllTables();
-      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
@@ -4447,16 +5153,14 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       if (!isEditMode) setEditMode(true);
       const canvas = document.getElementById('notes-canvas');
       const sec = document.createElement('section');
-      sec.className = 'toggle-block rounded-xl theme-panel border p-4 sm:p-5 transition';
+      sec.className = 'topic-section';
+      sec.dataset.topicId = 't-' + Date.now();
       sec.innerHTML = `
-        <div class="toggle-header flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 flex-1">
-            <span class="toggle-arrow theme-muted" onclick="toggleBlock(this)">▼</span>
-            <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Interactive Cloze Flowchart</h2>
-          </div>
+        <div class="topic-header">
+          <h2 contenteditable="true" class="text-lg font-bold theme-heading tracking-tight">Interactive Cloze Flowchart</h2>
           <button onclick="deleteBlock(this)" class="edit-only px-2 py-0.5 text-[11px] rounded bg-red-500/15 text-red-400">✕</button>
         </div>
-        <div contenteditable="true" class="toggle-body mt-3 pl-2 sm:pl-6">
+        <div contenteditable="true" class="topic-body">
           <div class="p-4 rounded-lg theme-nested border text-center space-y-3">
             <div>Initial Stimulus ⟶ <span class="cloze cloze-hidden">Intermediate Enzyme</span></div>
             <div class="theme-muted">↓</div>
@@ -4465,13 +5169,12 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         </div>
       `;
       canvas.appendChild(sec);
-      injectTopicFullPageButtons();
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
       scheduleAutoSave();
     }
 
     function deleteBlock(btn) {
-      const block = btn.closest('.toggle-block');
+      const block = btn.closest('.topic-section');
       if (block) {
         recordRollingSnapshot('Before deleting section');
         block.remove();
@@ -4483,13 +5186,18 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     /* --- Search, Standalone Export, Reset & Toast --- */
     function filterNotes(query) {
       const q = query.trim().toLowerCase();
-      document.querySelectorAll('#notes-canvas > .toggle-block').forEach(block => {
-        if (!q) { block.style.display = ''; return; }
-        if (block.innerText.toLowerCase().includes(q)) {
-          block.style.display = '';
-          block.classList.remove('collapsed');
-        } else { block.style.display = 'none'; }
+      document.querySelectorAll('#notes-canvas > .topic-section').forEach(block => {
+        if (!q) {
+          if (activeTopicFilterId) {
+            block.style.display = block.dataset.topicId === activeTopicFilterId ? '' : 'none';
+          } else {
+            block.style.display = '';
+          }
+          return;
+        }
+        block.style.display = block.innerText.toLowerCase().includes(q) ? '' : 'none';
       });
+      updateClozeCounter();
     }
 
     function toggleMoreMenu() { document.getElementById('more-dropdown').classList.toggle('hidden'); }
@@ -4499,14 +5207,19 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       if (menu && !menu.contains(e.target) && !e.target.closest('button[onclick*="toggleMoreMenu"]')) {
         menu.classList.add('hidden');
       }
+      const fsWrap = document.getElementById('fs-topic-dropdown-wrap');
+      const fsMenu = document.getElementById('fs-topic-menu');
+      if (fsMenu && fsWrap && !fsWrap.contains(e.target)) {
+        fsMenu.classList.add('hidden');
+      }
     });
 
     function exportStandaloneHTML() {
       const clone = document.documentElement.cloneNode(true);
-      clone.querySelector('body')?.classList.remove('edit-mode', 'reading-mode', 'sidebar-open');
+      clone.querySelector('body')?.classList.remove('edit-mode', 'sidebar-open', 'focus-fullscreen');
       const toast = clone.querySelector('#toast-banner');
       if (toast) toast.classList.add('hidden');
-      clone.querySelectorAll('.topic-open-page, #paragraph-transformer, #diagram-occlusion-modal, #topic-reading-overlay').forEach(b => b.remove());
+      clone.querySelectorAll('#paragraph-transformer, #diagram-occlusion-modal').forEach(b => b.remove());
       const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -4540,16 +5253,17 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         title: 'Chapter 15: Body Fluids and Circulation',
         shortTitle: prev.shortTitle || 'Body fluids and circulation',
         thumbnail: prev.thumbnail || DEFAULT_HEART_THUMBNAIL,
-        subtitle: 'Tap any blank underline to reveal that keyword. Double-tap or right-click any cloze to flag as Hard.',
+        subtitle: 'Press E for Edit Mode • R for Recall Mode • Double-tap or right-click any cloze to flag as Hard.',
         html: defaultHtml,
         updatedAt: Date.now()
       };
-      if (!isDashboardOpen && library.activeChapterId === 'ch-15') {
+      if (currentView === 'study' && library.activeChapterId === 'ch-15') {
         loadActiveChapterIntoDOM();
         await persistLibrary();
       } else {
         await persistLibrary();
-        if (isDashboardOpen) renderDashboard();
+        if (currentView === 'dashboard') renderDashboard();
+        else if (currentView === 'mindmap' && library.activeChapterId === 'ch-15') openChapterMindMap('ch-15');
       }
       hideToast();
       showToast('Chapter 15 restored!');
@@ -4572,111 +5286,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       banner.classList.remove('flex');
     }
 
-    /* =====================================================================
-       TOPIC FULL-PAGE READING OVERLAY
-       ===================================================================== */
-    function ensureTopicOverlay() {
-      let ov = document.getElementById('topic-reading-overlay');
-      if (ov) return ov;
-      ov = document.createElement('div');
-      ov.id = 'topic-reading-overlay';
-      ov.innerHTML = `<div class="tro-bar">
-        <strong id="tro-title" style="flex:1;min-width:140px">Topic</strong>
-        <button type="button" class="pt-btn" onclick="topicHideClozes()">🙈 Hide</button>
-        <button type="button" class="pt-btn" onclick="topicRevealClozes()">👁 Reveal</button>
-        <button type="button" class="pt-btn" onclick="cycleColorTheme()">🌗 Theme</button>
-        <button type="button" class="pt-btn" onclick="closeTopicReading()">✕ Close</button>
-      </div><main class="tro-content" id="tro-content"></main>`;
-      document.body.appendChild(ov);
-      ov.addEventListener('click', e => {
-        const mask = e.target.closest('.diagram-mask');
-        if (mask) { e.preventDefault(); mask.classList.toggle('revealed'); return; }
-        const qa = e.target.closest('.cloze-question');
-        if (qa) {
-          e.preventDefault();
-          const open = !qa.classList.contains('qa-open');
-          qa.classList.toggle('qa-open', open);
-          const q = qa.querySelector('.qa-question'), a = qa.querySelector('.qa-answer');
-          if (q) q.style.display = open ? 'none' : '';
-          if (a) a.style.display = open ? 'inline' : 'none';
-          return;
-        }
-        const c = e.target.closest('.cloze');
-        if (c) c.classList.toggle('cloze-hidden');
-      });
-      return ov;
-    }
-
-    function closeTopicReading() {
-      const ov = document.getElementById('topic-reading-overlay');
-      if (ov) { ov.classList.remove('open'); ov.style.display = 'none'; }
-      document.body.style.overflow = '';
-    }
-
-    function topicHideClozes() {
-      const root = document.getElementById('tro-content'); if (!root) return;
-      root.querySelectorAll('.cloze').forEach(el => el.classList.add('cloze-hidden'));
-      root.querySelectorAll('.diagram-mask').forEach(m => m.classList.remove('revealed'));
-      root.querySelectorAll('.cloze-question').forEach(el => {
-        el.classList.remove('qa-open');
-        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-        if (q) q.style.display = ''; if (a) a.style.display = 'none';
-      });
-    }
-
-    function topicRevealClozes() {
-      const root = document.getElementById('tro-content'); if (!root) return;
-      root.querySelectorAll('.cloze').forEach(el => el.classList.remove('cloze-hidden'));
-      root.querySelectorAll('.diagram-mask').forEach(m => m.classList.add('revealed'));
-      root.querySelectorAll('.cloze-question').forEach(el => {
-        el.classList.add('qa-open');
-        const q = el.querySelector('.qa-question'), a = el.querySelector('.qa-answer');
-        if (q) q.style.display = 'none'; if (a) a.style.display = 'inline';
-      });
-    }
-
-    function openTopicInWindow(button) {
-      if (document.body.classList.contains('edit-mode')) {
-        showToast('Switch to Recall Mode to open a topic full page.');
-        return;
-      }
-      const block = button && button.closest ? button.closest('.toggle-block') : null;
-      if (!block) return;
-      const header = Array.from(block.children).find(el => el.classList?.contains('toggle-header')) || block.querySelector('.toggle-header');
-      const heading = header?.querySelector('h1,h2,h3,h4,h5,strong');
-      const title = heading ? heading.textContent.trim() : 'Topic';
-      const source = Array.from(block.children).find(el => el.classList?.contains('toggle-body')) || block.querySelector('.toggle-body');
-      if (!source) return;
-      const content = source.cloneNode(true);
-      content.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-      content.querySelectorAll('.edit-only,.table-toolbar,.table-edge-resizer,.col-resizer,.img-controls,.img-resize-handle,.topic-open-page').forEach(el => el.remove());
-      content.querySelectorAll('.toggle-block').forEach(el => {
-        el.classList.remove('collapsed');
-        const body = el.querySelector(':scope > .toggle-body');
-        if (body) body.style.display = 'block';
-      });
-      const ov = ensureTopicOverlay();
-      ov.querySelector('#tro-title').textContent = title;
-      ov.querySelector('#tro-content').replaceChildren(content);
-      ov.style.display = 'flex';
-      ov.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function injectTopicFullPageButtons() {
-      const canvas = document.getElementById('notes-canvas');
-      if (!canvas) return;
-      canvas.querySelectorAll('.toggle-block > .toggle-header').forEach(header => {
-        if (header.querySelector(':scope > .topic-open-page')) return;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'topic-open-page';
-        btn.textContent = '↗ Full page';
-        btn.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); openTopicInWindow(this);');
-        header.appendChild(btn);
-      });
-    }
-
     (function () {
       function sizeToolbar() {
         const bar = document.getElementById('top-toolbar');
@@ -4687,19 +5296,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const bar = document.getElementById('top-toolbar');
         if (bar && window.ResizeObserver) new ResizeObserver(sizeToolbar).observe(bar);
         window.addEventListener('resize', sizeToolbar);
-
-        const canvas = document.getElementById('notes-canvas');
-        if (canvas) {
-          injectTopicFullPageButtons();
-          canvas.addEventListener('click', (e) => {
-            const btn = e.target.closest('.topic-open-page');
-            if (!btn) return;
-            e.preventDefault();
-            e.stopPropagation();
-            openTopicInWindow(btn);
-          }, true);
-          new MutationObserver(() => injectTopicFullPageButtons()).observe(canvas, { childList: true, subtree: true });
-        }
       });
     })();
 
