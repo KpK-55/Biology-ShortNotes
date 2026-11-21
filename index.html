@@ -1842,6 +1842,7 @@ async function readFromIDB(key) {
         if (subEl) ch.subtitle = subEl.innerHTML;
         if (canvasEl && canvasEl.innerHTML.trim()) ch.html = getCleanNotesCanvasHTML();
         ch.shortTitle = getShortChapterLabel(ch);
+        syncMindMapTopicsFromChapter(ch);
         ch.updatedAt = Date.now();
       }
       return true;
@@ -2318,17 +2319,44 @@ async function readFromIDB(key) {
     }
 
     function ensureChapterMindMapData(ch) {
-      if (!ch.mindMap || !Array.isArray(ch.mindMap.branches) || ch.mindMap.branches.length === 0) {
+      if (!ch.mindMap || !Array.isArray(ch.mindMap.branches)) {
         ch.mindMap = extractMindMapFromChapter(ch);
       }
       return ch.mindMap;
     }
 
+    // Keep the Mind Map connected to the actual topic sections in chapter HTML.
+    // Preserve existing branch colours and subtopics while adding newly-created topics.
+    function syncMindMapTopicsFromChapter(ch) {
+      if (!ch) return;
+      const extracted = extractMindMapFromChapter(ch);
+      const mm = ensureChapterMindMapData(ch);
+      const byTopicId = new Map((mm.branches || []).filter(b => b.topicId).map(b => [b.topicId, b]));
+      const seen = new Set();
+
+      extracted.branches.forEach(fresh => {
+        seen.add(fresh.topicId);
+        const existing = byTopicId.get(fresh.topicId);
+        if (existing) {
+          existing.label = fresh.label;
+          if (!Array.isArray(existing.subtopics)) existing.subtopics = fresh.subtopics;
+        } else {
+          mm.branches.push(fresh);
+        }
+      });
+
+      // Remove branches whose source topic was deleted, but retain manually-created
+      // Mind Map-only branches that do not reference a topic section.
+      mm.branches = (mm.branches || []).filter(branch => !branch.topicId || seen.has(branch.topicId));
+      mm.rootLabel = getShortChapterLabel(ch);
+    }
+
     function openChapterMindMap(chapterId, shouldSaveView = true) {
       if (!library.chapters[chapterId]) return;
       if (currentView === 'study') {
-        captureActiveChapterFromDOM();
-        persistLibrary().catch(() => {});
+        // Finish the active editor capture and local write before changing views.
+        // This prevents a pending debounce from leaving the Mind Map with stale data.
+        flushNow().catch(err => console.error('Could not save before opening Mind Map:', err));
       }
       if (isEditMode) setEditMode(false);
       library.activeChapterId = chapterId;
@@ -2363,6 +2391,7 @@ async function readFromIDB(key) {
     function renderChapterMindMap() {
       const ch = library.chapters[library.activeChapterId];
       if (!ch) return;
+      syncMindMapTopicsFromChapter(ch);
       const mm = ensureChapterMindMapData(ch);
       const svg = document.getElementById('mindmap-svg');
       const nodesLayer = document.getElementById('mindmap-nodes-layer');
@@ -4205,8 +4234,16 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       `;
       canvas.appendChild(sec);
       ensureTopicActionButtons();
+      // Capture the new section immediately so it is part of the chapter model
+      // before the debounce timer or a view switch can run.
+      const ch = library.chapters[library.activeChapterId];
+      if (ch) {
+        ch.html = getCleanNotesCanvasHTML();
+        syncMindMapTopicsFromChapter(ch);
+        ch.updatedAt = Date.now();
+      }
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      scheduleAutoSave();
+      scheduleAutoSave(true);
     }
 
     /* =====================================================================
@@ -4794,6 +4831,11 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       if (block) {
         recordRollingSnapshot('Before deleting section');
         block.remove();
+        const ch = library.chapters[library.activeChapterId];
+        if (ch) {
+          ch.html = getCleanNotesCanvasHTML();
+          syncMindMapTopicsFromChapter(ch);
+        }
         scheduleAutoSave(true);
         showToast('Section deleted (Recoverable via Snapshot History).');
       }
