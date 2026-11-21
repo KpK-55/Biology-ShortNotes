@@ -276,6 +276,7 @@
     }
     .inserted-img-wrapper.align-center { margin-left: auto; margin-right: auto; }
     .inserted-img-wrapper.align-left { margin-left: 0; margin-right: auto; }
+    .inserted-img-wrapper .img-caption { display:none !important; }
     .img-caption {
       font-size: 12px; color: var(--text-muted); padding: 6px 10px;
       border-top: 1px solid var(--border-color); text-align: center; background: var(--bg-nested);
@@ -422,6 +423,45 @@
       outline: 2.5px solid #38bdf8;
     }
 
+
+    /* Chapter Mind Map: responsive non-overlapping hierarchy */
+    #mindmap-viewport { height:auto; min-height:calc(100vh - 220px); overflow:visible; background-image:none; }
+    #mindmap-stage { display:block; }
+    #mindmap-nodes-layer { display:block; }
+    .mm-overview-root { width:min(100%,560px); margin:0 auto 26px; padding:18px 22px; display:flex; flex-direction:column; align-items:center; gap:5px; border:1px solid var(--border-strong); border-radius:18px; background:linear-gradient(135deg,rgba(125,211,252,.16),rgba(167,139,250,.12)); text-align:center; box-shadow:0 8px 26px rgba(0,0,0,.10); }
+    .mm-overview-root-kicker { font-size:10px; letter-spacing:.18em; font-weight:800; color:var(--accent-sky); }
+    .mm-overview-root strong { color:var(--text-main); font-size:clamp(17px,2.4vw,24px); line-height:1.25; }
+    .mm-overview-root-count { font-size:11px; color:var(--text-muted); }
+    .mm-overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:16px; align-items:start; }
+    .mm-overview-card { min-width:0; border:1px solid var(--border-strong); border-radius:16px; overflow:hidden; background:var(--bg-panel); box-shadow:0 5px 18px rgba(0,0,0,.08); transition:border-color .15s,transform .15s,box-shadow .15s; }
+    .mm-overview-card.mm-selected { outline:2px solid var(--accent-sky); outline-offset:2px; }
+    .mm-overview-card.mm-dragging { opacity:.45; }
+    .mm-overview-card.mm-drop-target { border-color:var(--accent-sky); box-shadow:0 0 0 3px rgba(56,189,248,.18); }
+    .mm-overview-card-head { display:flex; align-items:stretch; gap:8px; padding:12px; background:color-mix(in srgb,var(--node-accent) 18%,var(--bg-panel)); border-bottom:1px solid var(--border-color); }
+    .mm-card-grip { display:flex; align-items:center; color:var(--text-muted); cursor:grab; touch-action:none; padding:0 3px; font-size:20px; }
+    .mm-overview-topic { flex:1; min-width:0; display:flex; align-items:center; gap:10px; text-align:left; color:var(--text-main); font-weight:750; font-size:14px; line-height:1.35; }
+    .mm-topic-index { flex:0 0 30px; height:30px; display:grid; place-items:center; border-radius:9px; background:var(--node-accent); color:#17212b; font-size:11px; font-weight:900; }
+    .mm-card-order { display:flex; flex-direction:column; gap:3px; }
+    .mm-card-order button { width:26px; height:22px; border-radius:6px; background:var(--bg-nested); color:var(--text-main); border:1px solid var(--border-color); }
+    .mm-overview-sublist { padding:11px 12px 13px; }
+    .mm-overview-subtitle { display:flex; align-items:center; justify-content:space-between; margin:0 0 8px; color:var(--text-muted); font-size:9px; font-weight:850; letter-spacing:.16em; }
+    .mm-overview-subtitle span { font-size:10px; letter-spacing:0; padding:2px 7px; border-radius:99px; background:var(--bg-nested); }
+    .mm-overview-subnode { width:100%; display:flex; align-items:flex-start; gap:9px; padding:8px 9px; margin-top:5px; text-align:left; border-radius:9px; color:var(--text-main); background:var(--bg-nested); border:1px solid transparent; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+    .mm-overview-subnode:hover,.mm-overview-subnode.mm-selected { border-color:var(--accent-sky); }
+    .mm-overview-sub-dot { width:7px; height:7px; flex:0 0 7px; margin-top:4px; border-radius:50%; background:var(--node-accent); }
+    .mm-overview-empty,.mm-overview-empty-state { padding:16px; text-align:center; color:var(--text-muted); font-size:12px; }
+    .mm-overview-empty-state { border:1px dashed var(--border-strong); border-radius:14px; }
+    .bulk-review-type { display:flex; align-items:center; gap:10px; padding:12px; border:1px solid var(--border-strong); border-radius:12px; background:var(--bg-nested); color:var(--text-main); font-size:13px; font-weight:600; cursor:pointer; }
+    .bulk-review-type input { width:17px; height:17px; accent-color:#a78bfa; }
+    .bulk-review-content { min-height:180px; padding:clamp(12px,3vw,24px); border-radius:14px; background:var(--bg-nested); overflow-wrap:anywhere; }
+    .bulk-review-content img { max-width:100%; max-height:65vh; height:auto; object-fit:contain; display:block; margin:auto; }
+    .bulk-review-content table { width:100%; border-collapse:collapse; font-size:13px; }
+    .bulk-review-content td,.bulk-review-content th { border:1px solid var(--border-strong); padding:7px; }
+    .bulk-review-content .cloze-hidden { color:transparent!important; background:var(--bg-panel)!important; border:1px dashed var(--border-strong); border-radius:4px; cursor:pointer; }
+    .bulk-review-content .cloze-hidden::after { content:" tap to reveal "; color:var(--text-muted); font-size:10px; }
+    .bulk-review-content .img-caption { display:none!important; }
+    .bulk-review-content .img-controls,.bulk-review-content .img-move-handle,.bulk-review-content .img-resize-handle { display:none!important; }
+    @media (max-width:640px) { #mindmap-stage { padding:10px!important; } .mm-overview-grid { grid-template-columns:1fr; gap:12px; } .mm-overview-card-head { padding:10px; } }
     /* =====================================================================
        DISTRACTION-FREE FULLSCREEN FOCUS MODE (MIND MAP & TOPIC NOTES)
        ===================================================================== */
@@ -800,6 +840,11 @@
       <div class="text-center mb-9">
         <h1 class="dash-heading-font text-2xl sm:text-4xl font-extrabold theme-heading uppercase">D A S H B O A R D</h1>
         <p class="text-xs theme-muted mt-2">Click any chapter card to open its Mind Map • Click folder name or ✎ Rename to edit • Use ◀ ▶ / ▲ ▼ to reorder</p>
+      </div>
+      <div class="flex justify-center mb-6">
+        <button onclick="openBulkReview()" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-violet-500/15 text-violet-300 border border-violet-400/35 hover:bg-violet-500/25 font-semibold shadow-sm">
+          <span>🧠</span><span>Bulk Review</span><span class="text-[10px] opacity-70">Images · Numbers · Hard Cloze · Questions</span>
+        </button>
       </div>
       <div id="dashboard-sections" class="space-y-10"></div>
     </section>
@@ -2060,6 +2105,175 @@ async function readFromIDB(key) {
       return plain || 'Untitled Chapter';
     }
 
+    /* =====================================================================
+       BULK REVIEW — CHAPTER-WIDE IMAGE / NUMBER / HARD CLOZE / QUESTIONS
+       ===================================================================== */
+    let bulkReviewState = { items: [], index: 0, selectedTypes: [], chapterIds: [] };
+
+    function openBulkReview() {
+      const chapters = Object.values(library.chapters || {}).filter(ch => ch && ch.id);
+      if (!chapters.length) { showToast('No chapters available for review.'); return; }
+      const options = chapters.map(ch => `<option value="${escapeHTML(ch.id)}" selected>${escapeHTML((ch.title||'Untitled').replace(/<[^>]*>/g,'').trim())}</option>`).join('');
+      const modal = document.createElement('div');
+      modal.id = 'bulk-review-modal';
+      modal.className = 'fixed inset-0 z-[1400] flex items-center justify-center p-3 sm:p-6';
+      modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/70" onclick="closeBulkReview()"></div>
+        <div class="relative w-full max-w-2xl max-h-[92vh] overflow-auto rounded-2xl border shadow-2xl p-5 sm:p-6 theme-panel" style="border-color:var(--border-strong)">
+          <div class="flex items-start justify-between gap-3 mb-5">
+            <div><div class="text-xs font-bold tracking-widest text-violet-400">CHAPTER-WIDE RECALL</div><h2 class="text-xl font-bold theme-heading mt-1">Bulk Review</h2><p class="text-xs theme-muted mt-1">Combine selected recall material across one or more chapters.</p></div>
+            <button onclick="closeBulkReview()" class="px-3 py-1.5 rounded-lg theme-nested border">✕</button>
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm font-semibold theme-heading mb-2">Choose chapters <span class="theme-muted font-normal">(multi-select)</span></label>
+            <select id="bulk-review-chapters" multiple size="7" class="w-full rounded-xl border p-3 text-sm theme-nested" style="border-color:var(--border-strong);min-height:150px">${options}</select>
+            <p class="text-[11px] theme-muted mt-1">Use Ctrl (Windows) or Cmd (Mac) to select multiple chapters. All are selected by default.</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-semibold theme-heading mb-2">Choose what to review</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label class="bulk-review-type"><input type="checkbox" value="images" checked> <span>🖼️ Images</span></label>
+              <label class="bulk-review-type"><input type="checkbox" value="numbers" checked> <span>🔢 NCERT Number Bank</span></label>
+              <label class="bulk-review-type"><input type="checkbox" value="hard" checked> <span>🎯 Hard Cloze</span></label>
+              <label class="bulk-review-type"><input type="checkbox" value="questions" checked> <span>❓ Active Recall Questions</span></label>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <span class="text-xs theme-muted">Items are collected from the saved chapter content.</span>
+            <button onclick="startBulkReview()" class="px-5 py-2.5 rounded-xl bg-violet-500 text-white font-bold hover:bg-violet-600">Start Review →</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+
+    function closeBulkReview() {
+      document.getElementById('bulk-review-modal')?.remove();
+      document.getElementById('bulk-review-session')?.remove();
+    }
+
+    function bulkExtractHeadingBlock(root, matcher) {
+      const out = [];
+      const headings = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5'));
+      headings.forEach(h => {
+        const label = (h.innerText || h.textContent || '').trim();
+        if (!matcher.test(label)) return;
+        const holder = document.createElement('div');
+        const parent = h.parentElement;
+        const start = parent && parent.children.length > 1 ? h : (parent || h);
+        let node = start;
+        // Capture the heading and following sibling content, stopping at the next heading.
+        while (node) {
+          if (node !== start && /^H[1-5]$/.test(node.tagName || '')) break;
+          const clone = node.cloneNode(true);
+          clone.querySelectorAll('button,.edit-only,.img-controls,.img-move-handle,.img-resize-handle,.img-caption').forEach(el=>el.remove());
+          holder.appendChild(clone);
+          node = node.nextElementSibling;
+        }
+        if (parent && start === h && !holder.querySelector('table,ol,ul,p,div')) {
+          let sibling = parent.nextElementSibling;
+          while (sibling && !/^H[1-5]$/.test(sibling.tagName || '')) {
+            holder.appendChild(sibling.cloneNode(true));
+            sibling = sibling.nextElementSibling;
+          }
+        }
+        if ((holder.innerText || '').trim()) out.push(holder.innerHTML);
+      });
+      return [...new Set(out)];
+    }
+
+    function collectBulkReviewItems(ch, types) {
+      const root = document.createElement('div');
+      root.innerHTML = ch.html || '';
+      const title = (ch.title || 'Chapter').replace(/<[^>]*>/g,'').trim();
+      const result = [];
+      if (types.includes('images')) {
+        const seen = new Set();
+        root.querySelectorAll('.inserted-img-wrapper img, .diagram-occlusion-wrap img, img').forEach((img, idx) => {
+          const src = img.getAttribute('src') || '';
+          if (!src || seen.has(src)) return;
+          seen.add(src);
+          const wrap = img.closest('.inserted-img-wrapper, .diagram-occlusion-wrap') || img.parentElement;
+          const clone = wrap ? wrap.cloneNode(true) : img.cloneNode(true);
+          clone.querySelectorAll('.img-controls,.img-move-handle,.img-resize-handle,.img-caption,.edit-only').forEach(el=>el.remove());
+          clone.querySelectorAll('.diagram-mask').forEach(mask=>mask.classList.remove('revealed'));
+          result.push({ type:'images', chapter:title, title:`Image ${idx+1}`, html:clone.outerHTML });
+        });
+      }
+      if (types.includes('numbers')) {
+        const blocks = bulkExtractHeadingBlock(root, /NCERT\s+NUMBER\s+BANK|NUMBER\s+BANK/i);
+        blocks.forEach((block,i)=>result.push({type:'numbers',chapter:title,title:`NCERT Number Bank ${i+1}`,html:block}));
+      }
+      if (types.includes('hard')) {
+        root.querySelectorAll('.cloze[data-hard="1"]').forEach((cloze,i)=>{
+          const clone=cloze.cloneNode(true);
+          clone.classList.add('cloze-hidden');
+          result.push({type:'hard',chapter:title,title:`Hard Cloze ${i+1}`,html:`<div class="bulk-hard-cloze">${clone.outerHTML}</div>`});
+        });
+      }
+      if (types.includes('questions')) {
+        const blocks = bulkExtractHeadingBlock(root, /ACTIVE\s+RECALL/i);
+        blocks.forEach((block,i)=>result.push({type:'questions',chapter:title,title:`Active Recall ${i+1}`,html:block}));
+        // Also include standalone Q&A cards when present.
+        root.querySelectorAll('.cloze-question').forEach((qa,i)=>{
+          result.push({type:'questions',chapter:title,title:`Question ${i+1}`,html:qa.outerHTML});
+        });
+      }
+      return result;
+    }
+
+    function startBulkReview() {
+      const chapterSelect = document.getElementById('bulk-review-chapters');
+      const chapterIds = Array.from(chapterSelect?.selectedOptions || []).map(o=>o.value);
+      const types = Array.from(document.querySelectorAll('#bulk-review-modal input[type="checkbox"]:checked')).map(i=>i.value);
+      if (!chapterIds.length) { showToast('Select at least one chapter.'); return; }
+      if (!types.length) { showToast('Select at least one review category.'); return; }
+      const items = [];
+      chapterIds.forEach(id=>{ const ch=library.chapters[id]; if(ch) items.push(...collectBulkReviewItems(ch,types)); });
+      if (!items.length) { showToast('No saved items found for those categories in the selected chapters.'); return; }
+      bulkReviewState = { items, index:0, selectedTypes:types, chapterIds };
+      document.getElementById('bulk-review-modal')?.remove();
+      renderBulkReviewItem();
+    }
+
+    function renderBulkReviewItem() {
+      document.getElementById('bulk-review-session')?.remove();
+      const state = bulkReviewState;
+      const item = state.items[state.index];
+      if (!item) return;
+      const labels = {images:'Images',numbers:'NCERT Number Bank',hard:'Hard Cloze',questions:'Active Recall Questions'};
+      const session = document.createElement('div');
+      session.id='bulk-review-session';
+      session.className='fixed inset-0 z-[1450] flex items-center justify-center p-3 sm:p-6';
+      session.innerHTML=`
+        <div class="absolute inset-0 bg-black/80"></div>
+        <div class="relative w-full max-w-4xl max-h-[94vh] overflow-auto rounded-2xl border theme-panel shadow-2xl p-4 sm:p-6" style="border-color:var(--border-strong)">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+            <div><div class="text-[11px] font-bold tracking-widest text-violet-400">${labels[item.type]}</div><h2 class="text-lg font-bold theme-heading">${escapeHTML(item.chapter)}</h2></div>
+            <div class="flex items-center gap-3"><span class="text-xs theme-muted">${state.index+1} / ${state.items.length}</span><button onclick="closeBulkReview()" class="px-3 py-1.5 rounded-lg theme-nested border">✕ Exit</button></div>
+          </div>
+          <div class="h-1.5 rounded-full overflow-hidden bg-black/10 mb-5"><div class="h-full bg-violet-400" style="width:${((state.index+1)/state.items.length)*100}%"></div></div>
+          <div class="bulk-review-content theme-heading">${item.html}</div>
+          <div class="flex justify-between items-center gap-3 mt-6 pt-4 border-t" style="border-color:var(--border-color)">
+            <button onclick="moveBulkReview(-1)" ${state.index===0?'disabled':''} class="px-4 py-2 rounded-lg theme-nested border disabled:opacity-30">← Previous</button>
+            <button onclick="moveBulkReview(1)" class="px-5 py-2 rounded-lg bg-violet-500 text-white font-semibold">${state.index===state.items.length-1?'Finish':'Next →'}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(session);
+      session.querySelectorAll('.cloze').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('cloze-hidden')));
+      session.querySelectorAll('.cloze-question').forEach(el=>el.addEventListener('click',()=>{
+        const a=el.querySelector('.qa-answer'),q=el.querySelector('.qa-question');
+        if(a) a.classList.toggle('hidden'); if(q) q.classList.toggle('hidden');
+      }));
+    }
+
+    function moveBulkReview(direction) {
+      const next = bulkReviewState.index + direction;
+      if (next < 0) return;
+      if (next >= bulkReviewState.items.length) { closeBulkReview(); showToast('Bulk Review completed!'); return; }
+      bulkReviewState.index = next;
+      renderBulkReviewItem();
+    }
+
     function showDashboardView(shouldFlush = true) {
       if (shouldFlush && currentView === 'study') {
         captureActiveChapterFromDOM();
@@ -2358,7 +2572,7 @@ async function readFromIDB(key) {
         seen.add(fresh.topicId);
         const existing = byTopicId.get(fresh.topicId);
         if (existing) {
-          existing.label = fresh.label;
+          if (!existing.manualLabel) existing.label = fresh.label;
           if (!Array.isArray(existing.subtopics)) existing.subtopics = fresh.subtopics;
         } else {
           mm.branches.push(fresh);
@@ -2413,41 +2627,58 @@ async function readFromIDB(key) {
       if (!ch) return;
       syncMindMapTopicsFromChapter(ch);
       const mm = ensureChapterMindMapData(ch);
+      const stage = document.getElementById('mindmap-stage');
       const svg = document.getElementById('mindmap-svg');
       const nodesLayer = document.getElementById('mindmap-nodes-layer');
-      const stage = document.getElementById('mindmap-stage');
-      const branchCount = Math.max(1, mm.branches.length);
-      const rowGap = 112, totalHeight = Math.max(660, branchCount * rowGap + 170), totalWidth = 1320;
-      stage.style.width = totalWidth + 'px'; stage.style.height = totalHeight + 'px';
-      stage.style.transform = `scale(${mmZoomLevel})`;
-      svg.setAttribute('width', totalWidth); svg.setAttribute('height', totalHeight);
-      svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
-      document.getElementById('mm-zoom-label').textContent = Math.round(mmZoomLevel * 100) + '%';
-      const rootX = 135, rootY = totalHeight / 2, topicX = 330, topicW = 245, subX = 720;
-      const arrowStroke = currentTheme === 'dark' ? '#aeb8c8' : '#475569';
-      let paths = `<defs><marker id="mm-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="${arrowStroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
-      let nodesHtml = `<div class="mm-root-circle" style="left:${rootX}px;top:${rootY}px;background:${mm.rootBg || '#e8d5a5'};color:${mm.rootFg || '#26313d'};">${escapeHTML(mm.rootLabel)}</div>`;
-      const startY = (totalHeight - (branchCount - 1) * rowGap) / 2;
+      if (!stage || !nodesLayer || !svg) return;
+
+      // Responsive hierarchy: one chapter header, then non-overlapping topic cards.
+      // Subtopics stay inside their parent card so their relationship is always clear.
+      stage.style.width = '100%';
+      stage.style.height = 'auto';
+      stage.style.minHeight = '0';
+      stage.style.transform = 'none';
+      stage.style.padding = '18px';
+      stage.style.boxSizing = 'border-box';
+      svg.style.display = 'none';
+      svg.innerHTML = '';
+
+      const zoomLabel = document.getElementById('mm-zoom-label');
+      if (zoomLabel) zoomLabel.textContent = 'Fit';
+      const safeRoot = escapeHTML(mm.rootLabel || ch.title || 'Chapter');
+      const root = `<div class="mm-overview-root"><span class="mm-overview-root-kicker">CHAPTER OVERVIEW</span><strong>${safeRoot}</strong><span class="mm-overview-root-count">${mm.branches.length} topics · ${mm.branches.reduce((n,b)=>n+(b.subtopics||[]).length,0)} subtopics</span></div>`;
+      let cards = '';
       mm.branches.forEach((br, bIdx) => {
-        if (!Number.isFinite(br.x)) br.x = topicX;
-        if (!Number.isFinite(br.y)) br.y = startY + bIdx * rowGap;
-        const by = br.y, bx = br.x;
-        const isSelected = mmSelectedBranch && mmSelectedBranch.branchIdx === bIdx && mmSelectedBranch.subIdx === -1;
-        paths += `<path d="M ${rootX+74} ${rootY} C ${rootX+135} ${rootY}, ${bx-65} ${by}, ${bx-6} ${by}" fill="none" stroke="${arrowStroke}" stroke-width="2.1" marker-end="url(#mm-arrow)" />`;
-        nodesHtml += `<div data-mm-branch="${bIdx}" data-mm-sub="-1" onclick="handleMindMapNodeClick(${bIdx},-1)" ondblclick="mmStartInlineEdit(this,${bIdx},-1)" class="mm-node-pill ${isSelected?'mm-selected':''} ${isMindMapEditMode?'mm-editable':''}" style="left:${bx}px;top:${by}px;width:${topicW}px;background:${br.bg||'#e8d5a5'};color:${br.fg||'#26313d'};">${isMindMapEditMode?'<span class="mm-node-grip" title="Drag box">⠿</span>':''}<span class="mm-node-label">${escapeHTML(br.label)}</span></div>`;
-        const subs = br.subtopics || [], subGap = 58;
-        const subStartY = by - ((subs.length - 1) * subGap) / 2;
-        subs.forEach((sub,sIdx)=>{
-          if (!Number.isFinite(sub.x)) sub.x = subX;
-          if (!Number.isFinite(sub.y)) sub.y = subStartY + sIdx*subGap;
-          const sx=sub.x, sy=sub.y;
-          const isSubSel=mmSelectedBranch && mmSelectedBranch.branchIdx===bIdx && mmSelectedBranch.subIdx===sIdx;
-          paths += `<path d="M ${bx+topicW+8} ${by} C ${bx+topicW+65} ${by}, ${sx-55} ${sy}, ${sx-6} ${sy}" fill="none" stroke="${arrowStroke}" stroke-width="2" marker-end="url(#mm-arrow)" />`;
-          nodesHtml += `<div data-mm-branch="${bIdx}" data-mm-sub="${sIdx}" onclick="handleMindMapNodeClick(${bIdx},${sIdx})" ondblclick="mmStartInlineEdit(this,${bIdx},${sIdx})" class="mm-node-pill ${isSubSel?'mm-selected':''} ${isMindMapEditMode?'mm-editable':''}" style="left:${sx}px;top:${sy}px;min-width:195px;background:${sub.bg||'#d8e5df'};color:${sub.fg||'#26313d'};">${isMindMapEditMode?'<span class="mm-node-grip" title="Drag box">⠿</span>':''}<span class="mm-node-label">${escapeHTML(sub.label)}</span></div>`;
-        });
+        const selected = mmSelectedBranch && mmSelectedBranch.branchIdx === bIdx && mmSelectedBranch.subIdx === -1;
+        const subs = Array.isArray(br.subtopics) ? br.subtopics : [];
+        const subHTML = subs.length ? `<div class="mm-overview-sublist"><div class="mm-overview-subtitle">SUBTOPICS <span>${subs.length}</span></div>${subs.map((sub,sIdx)=>`
+          <button type="button" data-mm-branch="${bIdx}" data-mm-sub="${sIdx}" onclick="handleMindMapNodeClick(${bIdx},${sIdx})" ondblclick="mmStartInlineEdit(this,${bIdx},${sIdx})" class="mm-overview-subnode ${mmSelectedBranch && mmSelectedBranch.branchIdx===bIdx && mmSelectedBranch.subIdx===sIdx?'mm-selected':''}" style="--node-accent:${sub.bg||'#8db7c9'}">
+            <span class="mm-overview-sub-dot"></span><span class="mm-node-label">${escapeHTML(sub.label)}</span>
+          </button>`).join('')}</div>` : `<div class="mm-overview-empty">No subtopics yet</div>`;
+        cards += `<article class="mm-overview-card ${selected?'mm-selected':''}" data-mm-card="${bIdx}" draggable="${isMindMapEditMode?'true':'false'}" style="--node-accent:${br.bg||'#d7bd78'}">
+          <div class="mm-overview-card-head">
+            ${isMindMapEditMode?`<span class="mm-card-grip" title="Drag to reorder">⠿</span>`:''}
+            <button type="button" data-mm-branch="${bIdx}" data-mm-sub="-1" onclick="handleMindMapNodeClick(${bIdx},-1)" ondblclick="mmStartInlineEdit(this,${bIdx},-1)" class="mm-overview-topic"><span class="mm-topic-index">${String(bIdx+1).padStart(2,'0')}</span><span class="mm-node-label">${escapeHTML(br.label)}</span></button>
+            ${isMindMapEditMode?`<div class="mm-card-order"><button type="button" onclick="moveMindMapTopic(${bIdx},-1)" aria-label="Move topic up">↑</button><button type="button" onclick="moveMindMapTopic(${bIdx},1)" aria-label="Move topic down">↓</button></div>`:''}
+          </div>
+          ${subHTML}
+        </article>`;
       });
-      svg.innerHTML=paths; nodesLayer.innerHTML=nodesHtml;
+      nodesLayer.innerHTML = root + (cards ? `<div class="mm-overview-grid">${cards}</div>` : `<div class="mm-overview-empty-state">No topics yet. Add a topic in Notes or use <strong>+ Topic Branch</strong> in Edit Mode.</div>`);
       if (isMindMapEditMode) bindMindMapNodeInteractions(nodesLayer);
+    }
+
+    function moveMindMapTopic(index, direction) {
+      const ch = library.chapters[library.activeChapterId];
+      const mm = ch && ensureChapterMindMapData(ch);
+      if (!mm) return;
+      const next = index + direction;
+      if (next < 0 || next >= mm.branches.length) return;
+      const [item] = mm.branches.splice(index, 1);
+      mm.branches.splice(next, 0, item);
+      mmSelectedBranch = { branchIdx: next, subIdx: -1 };
+      renderChapterMindMap();
+      scheduleAutoSave(true);
     }
 
     function mmStartInlineEdit(node, branchIdx, subIdx) {
@@ -2460,27 +2691,48 @@ async function readFromIDB(key) {
         label.contentEditable='false';
         const ch=library.chapters[library.activeChapterId], mm=ch&&ensureChapterMindMapData(ch);
         const target=mm && (subIdx>=0 ? mm.branches[branchIdx]?.subtopics?.[subIdx] : mm.branches[branchIdx]);
-        if(target){ const next=label.textContent.trim(); if(next) target.label=next; renderChapterMindMap(); scheduleAutoSave(true); }
+        if(target){ const next=label.textContent.trim(); if(next) { target.label=next; if(subIdx < 0) target.manualLabel=true; } renderChapterMindMap(); scheduleAutoSave(true); }
       };
       label.onblur=finish;
       label.onkeydown=(e)=>{ if(e.key==='Enter'){e.preventDefault();label.blur();} if(e.key==='Escape'){e.preventDefault();label.textContent=(subIdx>=0?library.chapters[library.activeChapterId].mindMap.branches[branchIdx].subtopics[subIdx].label:library.chapters[library.activeChapterId].mindMap.branches[branchIdx].label);label.blur();} };
     }
 
     function bindMindMapNodeInteractions(layer) {
-      layer.querySelectorAll('.mm-node-pill').forEach(node=>{
-        const grip=node.querySelector('.mm-node-grip'); if(!grip) return;
-        grip.addEventListener('pointerdown', e=>{
-          e.preventDefault(); e.stopPropagation(); grip.setPointerCapture?.(e.pointerId);
-          const b=Number(node.dataset.mmBranch), si=Number(node.dataset.mmSub);
-          const ch=library.chapters[library.activeChapterId], mm=ensureChapterMindMapData(ch);
-          const target=si>=0?mm.branches[b].subtopics[si]:mm.branches[b];
-          const startX=e.clientX, startY=e.clientY, origX=target.x, origY=target.y;
-          const move=ev=>{ target.x=Math.max(230,origX+(ev.clientX-startX)/mmZoomLevel); target.y=Math.max(70,origY+(ev.clientY-startY)/mmZoomLevel); renderMindMapDuringDrag(node,b,si,target); };
-          const up=()=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); renderChapterMindMap(); scheduleAutoSave(true); };
-          window.addEventListener('pointermove',move); window.addEventListener('pointerup',up,{once:true});
+      let draggedIndex = null;
+      layer.querySelectorAll('.mm-overview-card[draggable="true"]').forEach(card => {
+        card.addEventListener('dragstart', e => {
+          draggedIndex = Number(card.dataset.mmCard);
+          card.classList.add('mm-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          try { e.dataTransfer.setData('text/plain', String(draggedIndex)); } catch (_) {}
+        });
+        card.addEventListener('dragover', e => { e.preventDefault(); card.classList.add('mm-drop-target'); });
+        card.addEventListener('dragleave', () => card.classList.remove('mm-drop-target'));
+        card.addEventListener('drop', e => {
+          e.preventDefault();
+          card.classList.remove('mm-drop-target');
+          const targetIndex = Number(card.dataset.mmCard);
+          const from = draggedIndex;
+          if (Number.isInteger(from) && from !== targetIndex) {
+            const ch = library.chapters[library.activeChapterId];
+            const mm = ch && ensureChapterMindMapData(ch);
+            if (mm && mm.branches[from]) {
+              const [moved] = mm.branches.splice(from, 1);
+              mm.branches.splice(targetIndex, 0, moved);
+              mmSelectedBranch = { branchIdx: targetIndex, subIdx: -1 };
+              scheduleAutoSave(true);
+              renderChapterMindMap();
+            }
+          }
+        });
+        card.addEventListener('dragend', () => {
+          draggedIndex = null;
+          card.classList.remove('mm-dragging');
+          layer.querySelectorAll('.mm-drop-target').forEach(el => el.classList.remove('mm-drop-target'));
         });
       });
     }
+
     function renderMindMapDuringDrag(node,b,si,target) {
       // Re-rendering while dragging keeps connectors attached to the moving box.
       renderChapterMindMap();
@@ -4145,7 +4397,6 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           <button type="button" onclick="this.closest('.inserted-img-wrapper').style.width='100%'; scheduleAutoSave();" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded">Full</button>
           <button type="button" onclick="recordRollingSnapshot('Before deleting image'); this.closest('.inserted-img-wrapper').remove(); scheduleAutoSave(true);" class="text-[10px] px-1.5 py-0.5 bg-red-600 text-white rounded ml-0.5">✕</button>
         </div>
-        <div contenteditable="${isEditMode}" class="img-caption">Figure: Click in Edit Mode to add diagram label</div>
         <div class="img-resize-handle" title="Drag to resize"></div>
       `;
       attachResizeHandler(wrapper);
