@@ -432,7 +432,8 @@
     .mm-overview-root-kicker { font-size:10px; letter-spacing:.18em; font-weight:800; color:var(--accent-sky); }
     .mm-overview-root strong { color:var(--text-main); font-size:clamp(17px,2.4vw,24px); line-height:1.25; }
     .mm-overview-root-count { font-size:11px; color:var(--text-muted); }
-    .mm-overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:16px; align-items:start; }
+    .mm-overview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+    @media (max-width:700px) { .mm-overview-grid { grid-template-columns:minmax(0,1fr); } }
     .mm-overview-card { min-width:0; border:1px solid var(--border-strong); border-radius:16px; overflow:hidden; background:var(--bg-panel); box-shadow:0 5px 18px rgba(0,0,0,.08); transition:border-color .15s,transform .15s,box-shadow .15s; }
     .mm-overview-card.mm-selected { outline:2px solid var(--accent-sky); outline-offset:2px; }
     .mm-overview-card.mm-dragging { opacity:.45; }
@@ -443,7 +444,13 @@
     .mm-topic-index { flex:0 0 30px; height:30px; display:grid; place-items:center; border-radius:9px; background:var(--node-accent); color:#17212b; font-size:11px; font-weight:900; }
     .mm-card-order { display:flex; flex-direction:column; gap:3px; }
     .mm-card-order button { width:26px; height:22px; border-radius:6px; background:var(--bg-nested); color:var(--text-main); border:1px solid var(--border-color); }
-    .mm-overview-sublist { padding:11px 12px 13px; }
+     .mm-overview-details { border-top:1px solid var(--border-color); }
+    .mm-overview-toggle { display:flex; align-items:center; gap:9px; padding:10px 13px; cursor:pointer; list-style:none; color:var(--text-muted); font-size:10px; font-weight:850; letter-spacing:.13em; }
+    .mm-overview-toggle::-webkit-details-marker { display:none; }
+    .mm-overview-count { margin-left:auto; padding:2px 7px; border-radius:99px; background:var(--bg-nested); color:var(--text-main); letter-spacing:0; }
+    .mm-overview-chevron { font-size:16px; transition:transform .15s; }
+    .mm-overview-details[open] .mm-overview-chevron { transform:rotate(180deg); }
+    .mm-overview-sublist { padding:0 12px 12px; }
     .mm-overview-subtitle { display:flex; align-items:center; justify-content:space-between; margin:0 0 8px; color:var(--text-muted); font-size:9px; font-weight:850; letter-spacing:.16em; }
     .mm-overview-subtitle span { font-size:10px; letter-spacing:0; padding:2px 7px; border-radius:99px; background:var(--bg-nested); }
     .mm-overview-subnode { width:100%; display:flex; align-items:flex-start; gap:9px; padding:8px 9px; margin-top:5px; text-align:left; border-radius:9px; color:var(--text-main); background:var(--bg-nested); border:1px solid transparent; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
@@ -453,7 +460,11 @@
     .mm-overview-empty-state { border:1px dashed var(--border-strong); border-radius:14px; }
     .bulk-review-type { display:flex; align-items:center; gap:10px; padding:12px; border:1px solid var(--border-strong); border-radius:12px; background:var(--bg-nested); color:var(--text-main); font-size:13px; font-weight:600; cursor:pointer; }
     .bulk-review-type input { width:17px; height:17px; accent-color:#a78bfa; }
-    .bulk-review-content { min-height:180px; padding:clamp(12px,3vw,24px); border-radius:14px; background:var(--bg-nested); overflow-wrap:anywhere; }
+     .bulk-review-content { min-height:180px; max-height:calc(94vh - 190px); overflow:auto; padding:clamp(12px,3vw,24px); border-radius:14px; background:var(--bg-nested); overflow-wrap:anywhere; }
+    .bulk-review-notes-layout { width:100%; max-width:100%; }
+    .bulk-review-notes-layout .grid { grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:16px!important; }
+    .bulk-review-notes-layout .grid > * { min-width:0; }
+    @media(max-width:760px) { .bulk-review-notes-layout .grid { grid-template-columns:minmax(0,1fr)!important; } }
     .bulk-review-content img { max-width:100%; max-height:65vh; height:auto; object-fit:contain; display:block; margin:auto; }
     .bulk-review-content table { width:100%; border-collapse:collapse; font-size:13px; }
     .bulk-review-content td,.bulk-review-content th { border:1px solid var(--border-strong); padding:7px; }
@@ -2246,20 +2257,33 @@ async function readFromIDB(key) {
       session.className='fixed inset-0 z-[1450] flex items-center justify-center p-3 sm:p-6';
       session.innerHTML=`
         <div class="absolute inset-0 bg-black/80"></div>
-        <div class="relative w-full max-w-4xl max-h-[94vh] overflow-auto rounded-2xl border theme-panel shadow-2xl p-4 sm:p-6" style="border-color:var(--border-strong)">
+        <div class="relative w-full max-w-6xl max-h-[94vh] overflow-auto rounded-2xl border theme-panel shadow-2xl p-4 sm:p-6" style="border-color:var(--border-strong)">
           <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
             <div><div class="text-[11px] font-bold tracking-widest text-violet-400">${labels[item.type]}</div><h2 class="text-lg font-bold theme-heading">${escapeHTML(item.chapter)}</h2></div>
             <div class="flex items-center gap-3"><span class="text-xs theme-muted">${state.index+1} / ${state.items.length}</span><button onclick="closeBulkReview()" class="px-3 py-1.5 rounded-lg theme-nested border">✕ Exit</button></div>
           </div>
           <div class="h-1.5 rounded-full overflow-hidden bg-black/10 mb-5"><div class="h-full bg-violet-400" style="width:${((state.index+1)/state.items.length)*100}%"></div></div>
-          <div class="bulk-review-content theme-heading">${item.html}</div>
+          <div class="bulk-review-content theme-heading"><div class="bulk-review-notes-layout">${item.html}</div></div>
           <div class="flex justify-between items-center gap-3 mt-6 pt-4 border-t" style="border-color:var(--border-color)">
             <button onclick="moveBulkReview(-1)" ${state.index===0?'disabled':''} class="px-4 py-2 rounded-lg theme-nested border disabled:opacity-30">← Previous</button>
             <button onclick="moveBulkReview(1)" class="px-5 py-2 rounded-lg bg-violet-500 text-white font-semibold">${state.index===state.items.length-1?'Finish':'Next →'}</button>
           </div>
         </div>`;
       document.body.appendChild(session);
-      session.querySelectorAll('.cloze').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('cloze-hidden')));
+      // Keep the same recall interactions as the chapter notes canvas.
+      session.addEventListener('click', (e) => {
+        const mask = e.target.closest('.diagram-mask');
+        if (mask) { e.preventDefault(); mask.classList.toggle('revealed'); return; }
+        const cloze = e.target.closest('.cloze');
+        if (cloze) { e.preventDefault(); cloze.classList.toggle('cloze-hidden'); return; }
+        const qa = e.target.closest('.cloze-question');
+        if (qa) {
+          e.preventDefault();
+          const answer = qa.querySelector('.qa-answer'), question = qa.querySelector('.qa-question');
+          if (answer) answer.classList.toggle('hidden');
+          if (question) question.classList.toggle('hidden');
+        }
+      });
       session.querySelectorAll('.cloze-question').forEach(el=>el.addEventListener('click',()=>{
         const a=el.querySelector('.qa-answer'),q=el.querySelector('.qa-question');
         if(a) a.classList.toggle('hidden'); if(q) q.classList.toggle('hidden');
@@ -2651,10 +2675,10 @@ async function readFromIDB(key) {
       mm.branches.forEach((br, bIdx) => {
         const selected = mmSelectedBranch && mmSelectedBranch.branchIdx === bIdx && mmSelectedBranch.subIdx === -1;
         const subs = Array.isArray(br.subtopics) ? br.subtopics : [];
-        const subHTML = subs.length ? `<div class="mm-overview-sublist"><div class="mm-overview-subtitle">SUBTOPICS <span>${subs.length}</span></div>${subs.map((sub,sIdx)=>`
+        const subHTML = subs.length ? `<details class="mm-overview-details"><summary class="mm-overview-toggle"><span>SUBTOPICS</span><span class="mm-overview-count">${subs.length}</span><span class="mm-overview-chevron">⌄</span></summary><div class="mm-overview-sublist">${subs.map((sub,sIdx)=>`
           <button type="button" data-mm-branch="${bIdx}" data-mm-sub="${sIdx}" onclick="handleMindMapNodeClick(${bIdx},${sIdx})" ondblclick="mmStartInlineEdit(this,${bIdx},${sIdx})" class="mm-overview-subnode ${mmSelectedBranch && mmSelectedBranch.branchIdx===bIdx && mmSelectedBranch.subIdx===sIdx?'mm-selected':''}" style="--node-accent:${sub.bg||'#8db7c9'}">
             <span class="mm-overview-sub-dot"></span><span class="mm-node-label">${escapeHTML(sub.label)}</span>
-          </button>`).join('')}</div>` : `<div class="mm-overview-empty">No subtopics yet</div>`;
+          </button>`).join('')}</div></details>` : `<div class="mm-overview-empty">No subtopics yet</div>`;
         cards += `<article class="mm-overview-card ${selected?'mm-selected':''}" data-mm-card="${bIdx}" draggable="${isMindMapEditMode?'true':'false'}" style="--node-accent:${br.bg||'#d7bd78'}">
           <div class="mm-overview-card-head">
             ${isMindMapEditMode?`<span class="mm-card-grip" title="Drag to reorder">⠿</span>`:''}
