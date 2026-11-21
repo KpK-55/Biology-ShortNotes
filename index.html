@@ -4524,7 +4524,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       document.querySelectorAll('.inserted-img-wrapper .img-caption').forEach(cap => cap.setAttribute('contenteditable', val));
     }
 
-    function addNewMainTopic() {
+    async function addNewMainTopic() {
       if (!isEditMode) setEditMode(true);
       const canvas = document.getElementById('notes-canvas');
       const topicId = 't-' + Date.now();
@@ -4547,16 +4547,44 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       `;
       canvas.appendChild(sec);
       ensureTopicActionButtons();
-      // Capture the new section immediately so it is part of the chapter model
-      // before the debounce timer or a view switch can run.
+
+      // Persist the structural change immediately (not only through the 300 ms debounce).
+      // This protects a newly-created topic from being lost on a fast refresh or view change.
       const ch = library.chapters[library.activeChapterId];
       if (ch) {
         ch.html = getCleanNotesCanvasHTML();
         syncMindMapTopicsFromChapter(ch);
         ch.updatedAt = Date.now();
       }
+      markLocalChangesPendingSync();
+      const indicator = document.getElementById('save-indicator');
+      const mmIndicator = document.getElementById('mm-save-indicator');
+      if (indicator) indicator.textContent = 'Saving topic...';
+      if (mmIndicator) mmIndicator.textContent = 'Saving topic...';
+
+      try {
+        await persistLibrary();
+        renderSidebar();
+        if (ch) renderChapterMindMapIfVisible?.();
+        recordRollingSnapshot('New topic created');
+        showToast('New topic saved locally. Sync to Drive when ready.');
+      } catch (err) {
+        console.error('New topic save failed:', err);
+        if (indicator) indicator.textContent = '✕ Topic save failed';
+        if (mmIndicator) mmIndicator.textContent = '✕ Topic save failed';
+        showToast('Topic could not be saved. Please retry before refreshing.');
+      }
+
       sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      scheduleAutoSave(true);
+      const heading = sec.querySelector('h2');
+      if (heading) {
+        heading.focus();
+        const range = document.createRange();
+        range.selectNodeContents(heading);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     }
 
     /* =====================================================================

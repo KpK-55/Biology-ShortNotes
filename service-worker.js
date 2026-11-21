@@ -3,7 +3,7 @@
  * this cache stores application files only and never replaces user data.
  */
 const CACHE_PREFIX = 'neet-bionotes-pwa-';
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 const APP_SHELL = [
   './',
   './index.html',
