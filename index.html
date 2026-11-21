@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <title>NEET BioNotes — Mind Map &amp; Active Recall Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
@@ -999,42 +1000,50 @@
     </div>
   </div>
 
-  <!-- GOOGLE DRIVE SYNC MODAL -->
+  <!-- GOOGLE DRIVE API SYNC MODAL -->
   <div id="gdrive-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="theme-panel border border-[var(--border-strong)] rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
       <div class="px-5 py-3.5 border-b border-[var(--border-color)] flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-lg">☁️</span>
           <div>
-            <h3 class="text-sm font-bold theme-heading">Google Drive Cloud Sync</h3>
-            <p class="text-[11px] theme-muted">Manual Sync + Automatic Backup on App Close.</p>
+            <h3 class="text-sm font-bold theme-heading">Google Drive API Sync</h3>
+            <p class="text-[11px] theme-muted">Direct Google Drive connection · no Apps Script</p>
           </div>
         </div>
         <button onclick="closeGDriveModal()" class="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] theme-muted font-bold">✕</button>
       </div>
       <div class="p-5 overflow-y-auto space-y-4 text-xs">
         <div class="p-3 rounded-xl theme-nested border border-[var(--border-color)] space-y-1">
-          <div class="font-semibold theme-heading" id="gdrive-status-text">Not connected to Google Drive</div>
-          <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last successful backup: Never</div>
-          <div class="text-[11px] theme-muted">Your Web App URL is saved permanently in LocalStorage, IndexedDB, and inside your Drive backup.</div>
+          <div class="font-semibold theme-heading" id="gdrive-status-text">Google Drive not connected</div>
+          <div class="text-[11px] theme-muted" id="gdrive-last-sync">Last successful sync: Never</div>
+          <div class="text-[11px] theme-muted">Notes remain stored locally in IndexedDB. Drive receives a backup of your complete library, including embedded images.</div>
         </div>
         <div>
-          <label class="block font-semibold theme-heading mb-1">Google Apps Script Web App URL</label>
-          <input id="gdrive-script-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
+          <label class="block font-semibold theme-heading mb-1">Google OAuth Client ID</label>
+          <input id="gdrive-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" oninput="saveGDriveConfig()" class="w-full theme-nested border border-[var(--border-strong)] rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none" />
+          <p class="text-[10px] theme-muted mt-1">Client ID is public configuration, not a client secret. Never paste a client secret here.</p>
         </div>
-        <details class="rounded-lg theme-nested border border-[var(--border-color)] p-3">
-          <summary class="cursor-pointer font-semibold text-sky-400">Setup Google Drive Apps Script</summary>
-          <ol class="list-decimal pl-4 mt-2 space-y-1 theme-muted text-[11px]">
-            <li>Create a project at script.google.com and paste the code below into Code.gs.</li>
-            <li>Deploy as Web app → Execute as <b>Me</b> → Who has access: <b>Anyone</b>.</li>
-            <li>Paste the <code>/exec</code> URL above.</li>
+        <div class="rounded-lg theme-nested border border-[var(--border-color)] p-3 space-y-2">
+          <div class="font-semibold theme-heading">One-time Google Cloud setup</div>
+          <ol class="list-decimal pl-4 space-y-1 theme-muted text-[11px]">
+            <li>Open Google Cloud Console and create/select a project.</li>
+            <li>Enable <b>Google Drive API</b>.</li>
+            <li>Configure OAuth consent screen; add your Google account as a test user if the app is in Testing.</li>
+            <li>Create an OAuth Client ID → Web application.</li>
+            <li>Add your exact GitHub Pages origin under Authorized JavaScript origins (e.g. <code>https://YOUR-USERNAME.github.io</code>).</li>
+            <li>Copy the Client ID and paste it above.</li>
           </ol>
-          <pre id="apps-script-snippet" class="mt-2 p-2.5 rounded bg-black/50 text-[10px] font-mono overflow-x-auto text-emerald-300 select-all"></pre>
-          <button type="button" onclick="copyAppsScriptCode()" class="mt-1.5 px-2.5 py-1 rounded bg-sky-500/20 text-sky-400 text-[11px] font-semibold">📋 Copy Apps Script Code</button>
-        </details>
+          <a class="text-sky-400 underline" href="https://console.cloud.google.com/" target="_blank" rel="noopener">Open Google Cloud Console</a>
+          <p class="text-[10px] theme-muted">The app requests the narrow <code>drive.file</code> permission, limited to files it creates or files you explicitly open with it. Existing Apps Script backups are left untouched; the first direct-API backup creates a new folder.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="connectGoogleDrive()" class="py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 font-semibold">🔐 Connect Google Account</button>
+          <button type="button" onclick="disconnectGoogleDrive()" class="py-2.5 px-3 rounded-xl theme-nested border border-[var(--border-color)] font-semibold">Disconnect</button>
+        </div>
         <div class="grid grid-cols-2 gap-2 border-t border-[var(--border-color)] pt-3">
           <button type="button" onclick="backupToGoogleDrive(false)" class="py-2.5 px-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 font-semibold">☁️ Sync / Backup Now</button>
-          <button type="button" onclick="restoreLatestFromGoogleDrive(true)" class="py-2.5 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 font-semibold">⬇ Restore Latest</button>
+          <button type="button" onclick="restoreLatestFromGoogleDrive(false)" class="py-2.5 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 font-semibold">⬇ Restore Latest</button>
         </div>
       </div>
     </div>
@@ -1490,7 +1499,11 @@
     let persistQueue = Promise.resolve();
 
     let gdriveConfig = {
-      scriptUrl: '',
+      clientId: '',
+      folderId: '',
+      backupsFolderId: '',
+      latestFileId: '',
+      connected: false,
       lastSync: '',
       lastKnownRemoteAt: '',
       hasUnsyncedChanges: false,
@@ -1504,11 +1517,8 @@
       await loadGDriveConfig();
       await loadLibraryFromStorage();
 
-      if (!gdriveConfig.scriptUrl && library.cloudConfig && library.cloudConfig.scriptUrl) {
-        gdriveConfig.scriptUrl = library.cloudConfig.scriptUrl;
-        await persistGDriveConfig();
-      } else if (gdriveConfig.scriptUrl && (!library.cloudConfig || library.cloudConfig.scriptUrl !== gdriveConfig.scriptUrl)) {
-        library.cloudConfig = { scriptUrl: gdriveConfig.scriptUrl };
+      if (gdriveConfig.clientId && (!library.cloudConfig || library.cloudConfig.provider !== 'google-drive-api')) {
+        library.cloudConfig = { provider: 'google-drive-api', clientId: gdriveConfig.clientId };
         await persistLibrary();
       }
 
@@ -1527,12 +1537,12 @@
         showDashboardView(false);
       }
 
-      if (navigator.onLine && gdriveConfig.scriptUrl) {
+      if (navigator.onLine && driveAccessToken) {
         checkRemoteBackupStatus(true);
       }
       window.addEventListener('online', () => {
         updateDriveSyncIndicator();
-        if (gdriveConfig.scriptUrl) checkRemoteBackupStatus(true);
+        if (driveAccessToken) checkRemoteBackupStatus(true);
       });
       window.addEventListener('offline', updateDriveSyncIndicator);
     });
@@ -1754,7 +1764,7 @@ async function readFromIDB(key) {
           [defaultFolderId]: { id: defaultFolderId, name: 'Human Physiology', collapsed: false }
         },
         folderOrder: [defaultFolderId],
-        cloudConfig: { scriptUrl: gdriveConfig.scriptUrl || '' },
+        cloudConfig: { provider: 'google-drive-api', clientId: gdriveConfig.clientId || '' },
         chapters: {
           'ch-15': {
             id: 'ch-15',
@@ -1993,22 +2003,9 @@ async function readFromIDB(key) {
     }
 
     function triggerKeepaliveBackgroundBackup() {
-      if (!gdriveConfig.scriptUrl || !gdriveConfig.hasUnsyncedChanges || !navigator.onLine) return;
-      try {
-        const url = scriptEndpoint();
-        const backup = buildFullBackupPayload();
-        const body = new URLSearchParams();
-        body.set('payload', JSON.stringify({ action: 'saveBackup', backup }));
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(url, body);
-        } else {
-          fetch(url, { method: 'POST', body, keepalive: true, mode: 'no-cors' }).catch(() => {});
-        }
-        gdriveConfig.lastSync = backup.exportedAt;
-        gdriveConfig.lastKnownRemoteAt = backup.exportedAt;
-        gdriveConfig.hasUnsyncedChanges = false;
-        try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
-      } catch (e) {}
+      // Browser page-exit uploads are not reliable with OAuth access tokens.
+      // Local IndexedDB is authoritative; use explicit Drive sync while the app is open.
+      if (gdriveConfig.hasUnsyncedChanges) updateDriveSyncIndicator();
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -3587,46 +3584,24 @@ async function readFromIDB(key) {
     }
 
     /* =====================================================================
-       GOOGLE DRIVE CLOUD SYNC (PERMANENT URL PERSISTENCE + ANKI SYNC FLOW)
+       DIRECT GOOGLE DRIVE API v3 SYNC (NO APPS SCRIPT)
        ===================================================================== */
-    const BIO_APPS_SCRIPT_CODE = `const MAIN_FILE = 'NEET_BioNotes_Latest_Backup.json';
-const BACKUP_PREFIX = 'NEET_BioNotes_Backup_';
-function doGet(e) {
-  const action = (e.parameter && e.parameter.action) || 'meta';
-  const file = getMainFile_();
-  let result;
-  if (action === 'get') {
-    if (!file) result = {ok:true, exists:false, backup:null, updatedAt:null};
-    else { const data = JSON.parse(file.getBlob().getDataAsString() || '{}'); result = {ok:true, exists:true, backup:data.backup || data, updatedAt:data.updatedAt || data.exportedAt || null}; }
-  } else {
-    result = {ok:true, exists:!!file, updatedAt:file ? file.getLastUpdated().toISOString() : null, fileName:MAIN_FILE};
-  }
-  const json = JSON.stringify(result); const cb = e.parameter && e.parameter.callback;
-  return ContentService.createTextOutput(cb ? cb + '(' + json + ');' : json).setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
-}
-function doPost(e) {
-  const lock = LockService.getScriptLock(); lock.waitLock(30000);
-  try {
-    const body = JSON.parse((e.parameter && e.parameter.payload) || '{}');
-    if (body.action !== 'saveBackup' || !body.backup || body.backup.app !== 'NEET_BioNotes') throw new Error('Invalid BioNotes backup payload');
-    const now = new Date(); const existing = getMainFile_();
-    if (existing) {
-      const stamp = Utilities.formatDate(existing.getLastUpdated(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
-      DriveApp.createFile(BACKUP_PREFIX + stamp + '.json', existing.getBlob().getDataAsString(), MimeType.PLAIN_TEXT);
-      existing.setContent(JSON.stringify({updatedAt:now.toISOString(), backup:body.backup}));
-    } else {
-      DriveApp.createFile(MAIN_FILE, JSON.stringify({updatedAt:now.toISOString(), backup:body.backup}), MimeType.PLAIN_TEXT);
-    }
-    return ContentService.createTextOutput(JSON.stringify({ok:true,updatedAt:now.toISOString()})).setMimeType(ContentService.MimeType.JSON);
-  } finally { lock.releaseLock(); }
-}
-function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return files.hasNext()?files.next():null; }`;
+    const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+    const DRIVE_API = 'https://www.googleapis.com/drive/v3';
+    const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
+    const DRIVE_ROOT_NAME = 'NEET BioNotes';
+    const DRIVE_BACKUPS_NAME = 'Backups';
+    const DRIVE_LATEST_NAME = 'NEET_BioNotes_Latest_Backup.json';
+    let driveAccessToken = '';
+    let driveTokenExpiry = 0;
+    let driveTokenClient = null;
+    let driveTokenWaiter = null;
 
     async function persistGDriveConfig() {
       try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
       try { await saveToIDB(GDRIVE_IDB_KEY, gdriveConfig); } catch (e) {}
-      if (gdriveConfig.scriptUrl) {
-        library.cloudConfig = { scriptUrl: gdriveConfig.scriptUrl };
+      if (library && library.cloudConfig) {
+        library.cloudConfig = { provider: 'google-drive-api', clientId: gdriveConfig.clientId || '' };
       }
     }
 
@@ -3635,26 +3610,22 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         const raw = localStorage.getItem(GDRIVE_PREFS_KEY);
         if (raw) gdriveConfig = { ...gdriveConfig, ...JSON.parse(raw) };
       } catch (e) {}
-      if (!gdriveConfig.scriptUrl) {
-        const idbCfg = await readFromIDB(GDRIVE_IDB_KEY);
-        if (idbCfg && idbCfg.scriptUrl) {
-          gdriveConfig = { ...gdriveConfig, ...idbCfg };
-          try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
-        }
-      }
+      const idbCfg = await readFromIDB(GDRIVE_IDB_KEY);
+      if (idbCfg) gdriveConfig = { ...gdriveConfig, ...idbCfg };
+      // Drop the retired Apps Script endpoint from active configuration.
+      delete gdriveConfig.scriptUrl;
     }
 
     async function saveGDriveConfig() {
-      const el = document.getElementById('gdrive-script-url');
-      if (el) gdriveConfig.scriptUrl = el.value.trim();
+      const el = document.getElementById('gdrive-client-id');
+      if (el) gdriveConfig.clientId = el.value.trim();
       await persistGDriveConfig();
-      await persistLibrary();
       updateGDriveUI();
       updateDriveSyncIndicator();
     }
 
     function markLocalChangesPendingSync() {
-      if (!gdriveConfig.scriptUrl) return;
+      if (!gdriveConfig.clientId) return;
       gdriveConfig.hasUnsyncedChanges = true;
       try { localStorage.setItem(GDRIVE_PREFS_KEY, JSON.stringify(gdriveConfig)); } catch (e) {}
       updateDriveSyncIndicator();
@@ -3666,142 +3637,228 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       const label = document.getElementById('drive-sync-label');
       const badge = document.getElementById('drive-remote-badge');
       if (!btn || !icon || !label || !badge) return;
-
       badge.classList.add('hidden');
       if (!navigator.onLine) {
-        icon.textContent = '☁︎';
-        label.textContent = 'Offline';
+        icon.textContent = '☁︎'; label.textContent = 'Offline';
         btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-neutral-500/15 text-neutral-400 border border-neutral-500/35 transition';
         return;
       }
       if (state === 'pending') {
-        icon.textContent = '↻';
-        label.textContent = 'Syncing...';
+        icon.textContent = '↻'; label.textContent = 'Syncing...';
         btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 transition';
         return;
       }
       if (gdriveConfig.remoteUpdateAvailable) {
-        icon.textContent = '☁️';
-        label.textContent = 'Sync';
+        icon.textContent = '☁️'; label.textContent = 'Restore';
         badge.classList.remove('hidden');
-        btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/50 hover:bg-rose-500/30 transition';
+        btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/50 transition';
         return;
       }
       if (gdriveConfig.hasUnsyncedChanges) {
-        icon.textContent = '↻';
-        label.textContent = 'Unsynced';
-        btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/40 hover:bg-sky-500/30 transition';
+        icon.textContent = '↻'; label.textContent = 'Unsynced';
+        btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/40 transition';
         return;
       }
-      icon.textContent = '☁️';
-      label.textContent = 'Sync';
-      btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 hover:bg-blue-500/25 transition';
+      icon.textContent = '☁️'; label.textContent = 'Sync';
+      btn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/35 transition';
+    }
+
+    function googleGISReady() {
+      return !!(window.google && google.accounts && google.accounts.oauth2);
+    }
+
+    function connectGoogleDrive() {
+      if (!gdriveConfig.clientId) {
+        showToast('Enter your Google OAuth Client ID first.');
+        document.getElementById('gdrive-client-id')?.focus();
+        return;
+      }
+      if (!googleGISReady()) {
+        showToast('Google sign-in library is still loading. Try again in a moment.');
+        return;
+      }
+      try {
+        driveTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: gdriveConfig.clientId,
+          scope: DRIVE_SCOPE,
+          callback: async (response) => {
+            if (response.error || !response.access_token) {
+              if (driveTokenWaiter) { driveTokenWaiter.reject(new Error(response.error_description || response.error || 'Google authorization failed.')); driveTokenWaiter = null; }
+              showToast('Google Drive connection was not granted.');
+              return;
+            }
+            driveAccessToken = response.access_token;
+            driveTokenExpiry = Date.now() + ((response.expires_in || 3600) - 60) * 1000;
+            if (driveTokenWaiter) { driveTokenWaiter.resolve(true); driveTokenWaiter = null; }
+            gdriveConfig.connected = true;
+            await persistGDriveConfig();
+            updateGDriveUI();
+            updateDriveSyncIndicator();
+            showToast('Google account connected. Drive access is ready.');
+          }
+        });
+        driveTokenWaiter = {};
+        const wait = new Promise((resolve, reject) => { driveTokenWaiter.resolve = resolve; driveTokenWaiter.reject = reject; });
+        driveTokenClient.requestAccessToken({ prompt: 'consent' });
+        wait.catch(err => showToast(err.message));
+      } catch (err) {
+        showToast('Google sign-in error: ' + err.message);
+      }
+    }
+
+    function disconnectGoogleDrive() {
+      if (driveAccessToken && googleGISReady()) {
+        try { google.accounts.oauth2.revoke(driveAccessToken, () => {}); } catch (e) {}
+      }
+      driveAccessToken = '';
+      driveTokenExpiry = 0;
+      driveTokenClient = null;
+      gdriveConfig.connected = false;
+      persistGDriveConfig();
+      updateGDriveUI();
+      updateDriveSyncIndicator();
+      showToast('Google Drive disconnected on this device.');
+    }
+
+    function ensureDriveAccess() {
+      if (driveAccessToken && Date.now() < driveTokenExpiry) return Promise.resolve(true);
+      return new Promise((resolve, reject) => {
+        if (!gdriveConfig.clientId) return reject(new Error('Add your Google OAuth Client ID first.'));
+        if (!googleGISReady()) return reject(new Error('Google sign-in library is not ready yet.'));
+        driveTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: gdriveConfig.clientId,
+          scope: DRIVE_SCOPE,
+          callback: response => {
+            if (response.error || !response.access_token) return reject(new Error(response.error_description || response.error || 'Google authorization failed.'));
+            driveAccessToken = response.access_token;
+            driveTokenExpiry = Date.now() + ((response.expires_in || 3600) - 60) * 1000;
+            gdriveConfig.connected = true;
+            persistGDriveConfig();
+            updateGDriveUI();
+            resolve(true);
+          }
+        });
+        driveTokenClient.requestAccessToken({ prompt: '' });
+      });
+    }
+
+    async function driveApi(path, options = {}) {
+      if (!driveAccessToken || Date.now() >= driveTokenExpiry) throw new Error('Google Drive session expired. Connect your Google account again.');
+      const response = await fetch(DRIVE_API + path, {
+        ...options,
+        headers: { Authorization: 'Bearer ' + driveAccessToken, ...(options.headers || {}) }
+      });
+      if (!response.ok) {
+        let detail = '';
+        try { const data = await response.json(); detail = data.error?.message || JSON.stringify(data); } catch (e) { detail = response.statusText; }
+        throw new Error('Drive API ' + response.status + ': ' + detail);
+      }
+      if (response.status === 204) return null;
+      const type = response.headers.get('content-type') || '';
+      return type.includes('application/json') ? response.json() : response.text();
+    }
+
+    function driveQueryEscape(value) {
+      return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    async function findDriveFile(name, parentId, mimeType) {
+      const clauses = ["name='" + driveQueryEscape(name) + "'", "trashed=false"];
+      if (parentId) clauses.push("'" + parentId + "' in parents");
+      if (mimeType) clauses.push("mimeType='" + mimeType + "'");
+      const q = encodeURIComponent(clauses.join(' and '));
+      const data = await driveApi('/files?q=' + q + '&pageSize=100&orderBy=modifiedTime%20desc&fields=files(id,name,mimeType,modifiedTime,createdTime)');
+      return data.files || [];
+    }
+
+    async function createDriveFolder(name, parentId) {
+      const metadata = { name, mimeType: 'application/vnd.google-apps.folder' };
+      if (parentId) metadata.parents = [parentId];
+      return driveApi('/files?fields=id,name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(metadata) });
+    }
+
+    async function ensureDriveFolders() {
+      let roots = await findDriveFile(DRIVE_ROOT_NAME, null, 'application/vnd.google-apps.folder');
+      let root = roots[0] || await createDriveFolder(DRIVE_ROOT_NAME);
+      let backups = await findDriveFile(DRIVE_BACKUPS_NAME, root.id, 'application/vnd.google-apps.folder');
+      let backupFolder = backups[0] || await createDriveFolder(DRIVE_BACKUPS_NAME, root.id);
+      gdriveConfig.folderId = root.id;
+      gdriveConfig.backupsFolderId = backupFolder.id;
+      await persistGDriveConfig();
+      return { rootId: root.id, backupsId: backupFolder.id };
+    }
+
+    async function uploadDriveJson(name, parentId, payload, existingId) {
+      const metadata = { name, mimeType: 'application/json' };
+      if (parentId && !existingId) metadata.parents = [parentId];
+      const endpoint = existingId
+        ? DRIVE_UPLOAD_API + '/files/' + encodeURIComponent(existingId) + '?uploadType=resumable'
+        : DRIVE_UPLOAD_API + '/files?uploadType=resumable';
+      const init = await fetch(endpoint, {
+        method: existingId ? 'PATCH' : 'POST',
+        headers: {
+          Authorization: 'Bearer ' + driveAccessToken,
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-Upload-Content-Type': 'application/json'
+        },
+        body: JSON.stringify(metadata)
+      });
+      if (!init.ok) throw new Error('Could not start Drive upload (' + init.status + ').');
+      const uploadUrl = init.headers.get('Location');
+      if (!uploadUrl) throw new Error('Drive did not return an upload session URL.');
+      const data = JSON.stringify(payload);
+      const uploaded = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
+        body: data
+      });
+      if (!uploaded.ok) throw new Error('Drive upload failed (' + uploaded.status + ').');
+      return uploaded.json();
+    }
+
+    async function downloadDriveJson(fileId) {
+      return driveApi('/files/' + encodeURIComponent(fileId) + '?alt=media');
     }
 
     async function handleTopSyncButtonClick() {
-      if (!gdriveConfig.scriptUrl) {
-        openGDriveModal();
-        return;
-      }
-      if (gdriveConfig.remoteUpdateAvailable) {
-        await restoreLatestFromGoogleDrive(true);
-      } else {
-        await backupToGoogleDrive(false);
-      }
+      if (!gdriveConfig.clientId) { openGDriveModal(); return; }
+      if (gdriveConfig.remoteUpdateAvailable) await restoreLatestFromGoogleDrive(true);
+      else await backupToGoogleDrive(false);
     }
 
     async function checkRemoteBackupStatus(silent = true) {
-      if (!gdriveConfig.scriptUrl || !navigator.onLine) return;
+      if (!gdriveConfig.clientId || !navigator.onLine || !driveAccessToken) return;
       try {
-        const meta = await scriptGet('meta');
-        if (meta && meta.exists && meta.updatedAt) {
-          const remoteTime = new Date(meta.updatedAt).getTime();
-          const localTime = gdriveConfig.lastSync ? new Date(gdriveConfig.lastSync).getTime() : 0;
-          if (remoteTime > localTime + 3000) {
-            gdriveConfig.remoteUpdateAvailable = true;
-            gdriveConfig.lastKnownRemoteAt = meta.updatedAt;
-            await persistGDriveConfig();
-            updateDriveSyncIndicator();
-            if (!silent) showToast('Newer backup detected on Google Drive! Click Sync to restore.');
-          }
+        const files = await findDriveFile(DRIVE_LATEST_NAME, gdriveConfig.folderId, 'application/json');
+        if (files[0] && gdriveConfig.lastSync && new Date(files[0].modifiedTime).getTime() > new Date(gdriveConfig.lastSync).getTime() + 3000) {
+          gdriveConfig.remoteUpdateAvailable = true;
+          gdriveConfig.lastKnownRemoteAt = files[0].modifiedTime;
+          await persistGDriveConfig();
+          updateDriveSyncIndicator();
+          if (!silent) showToast('A newer Drive backup is available. Choose Restore Latest.');
         }
-      } catch (e) {}
-    }
-
-    function scriptEndpoint() {
-      const url = (gdriveConfig.scriptUrl || '').trim();
-      if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(url)) {
-        throw new Error('Enter a valid Google Apps Script URL ending in /exec.');
-      }
-      return url;
-    }
-
-    function scriptGet(action = 'meta') {
-      return new Promise((resolve, reject) => {
-        const cb = '__bioBackup_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        const script = document.createElement('script');
-        const timer = setTimeout(() => { cleanup(); reject(new Error('Google Drive request timed out.')); }, 20000);
-        function cleanup() { clearTimeout(timer); delete window[cb]; script.remove(); }
-        window[cb] = data => { cleanup(); resolve(data); };
-        script.onerror = () => { cleanup(); reject(new Error('Could not reach Google Apps Script.')); };
-        script.src = scriptEndpoint() + '?action=' + encodeURIComponent(action) + '&callback=' + cb + '&t=' + Date.now();
-        document.body.appendChild(script);
-      });
-    }
-
-    async function scriptPostBackup(backup) {
-      return new Promise((resolve, reject) => {
-        const frame = document.createElement('iframe');
-        const form = document.createElement('form');
-        const input = document.createElement('input');
-        const target = 'bio_backup_' + Date.now();
-        frame.name = target; frame.src = 'about:blank'; frame.style.display = 'none';
-        form.method = 'POST'; form.action = scriptEndpoint(); form.target = target; form.style.display = 'none';
-        input.type = 'hidden'; input.name = 'payload'; input.value = JSON.stringify({ action: 'saveBackup', backup });
-        form.appendChild(input);
-        document.body.append(frame, form);
-        let submitted = false;
-        const timer = setTimeout(() => { form.remove(); frame.remove(); reject(new Error('Backup upload timed out.')); }, 30000);
-        frame.onload = () => {
-          if (!submitted) return;
-          submitted = false;
-          setTimeout(async () => {
-            clearTimeout(timer); form.remove(); frame.remove();
-            try { resolve(await scriptGet('meta')); } catch (e) { reject(e); }
-          }, 900);
-        };
-        setTimeout(() => { submitted = true; form.submit(); }, 250);
-      });
+      } catch (e) { if (!silent) showToast(e.message); }
     }
 
     function updateGDriveUI() {
-      const url = document.getElementById('gdrive-script-url');
+      const client = document.getElementById('gdrive-client-id');
       const status = document.getElementById('gdrive-status-text');
       const last = document.getElementById('gdrive-last-sync');
-      const code = document.getElementById('apps-script-snippet');
-      if (url && url.value !== gdriveConfig.scriptUrl) url.value = gdriveConfig.scriptUrl || '';
+      if (client && client.value !== (gdriveConfig.clientId || '')) client.value = gdriveConfig.clientId || '';
       if (status) {
-        status.textContent = gdriveConfig.scriptUrl ? 'Connected to Google Drive (URL Saved Permanently)' : 'Add your Apps Script URL to connect Drive';
-        status.className = gdriveConfig.scriptUrl ? 'font-semibold text-emerald-400' : 'font-semibold theme-heading';
+        status.textContent = driveAccessToken ? 'Connected to Google Drive API' : (gdriveConfig.clientId ? 'Client ID saved · connect your Google account' : 'Google Drive not configured');
+        status.className = driveAccessToken ? 'font-semibold text-emerald-400' : 'font-semibold theme-heading';
       }
-      if (last) last.textContent = gdriveConfig.lastSync ? 'Last successful backup: ' + new Date(gdriveConfig.lastSync).toLocaleString() : 'Last successful backup: Never';
-      if (code) code.textContent = BIO_APPS_SCRIPT_CODE;
+      if (last) last.textContent = gdriveConfig.lastSync ? 'Last successful sync: ' + new Date(gdriveConfig.lastSync).toLocaleString() : 'Last successful sync: Never';
     }
 
     function openGDriveModal() {
       updateGDriveUI();
       document.getElementById('gdrive-modal').classList.remove('hidden');
-      if (navigator.onLine && gdriveConfig.scriptUrl) checkRemoteBackupStatus(true);
     }
 
     function closeGDriveModal() {
       document.getElementById('gdrive-modal').classList.add('hidden');
-    }
-
-    function copyAppsScriptCode() {
-      const code = document.getElementById('apps-script-snippet').textContent;
-      navigator.clipboard?.writeText(code).catch(() => {});
-      showToast('Apps Script backup code copied.');
     }
 
     function buildFullBackupPayload() {
@@ -3809,30 +3866,35 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       ensureOrderArrays();
       let prefs = {};
       try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') || {}; } catch (e) {}
-      return { app: 'NEET_BioNotes', version: 10, exportedAt: new Date().toISOString(), preferences: prefs, library };
+      return { app: 'NEET_BioNotes', version: 11, exportedAt: new Date().toISOString(), preferences: prefs, library };
     }
 
     async function backupToGoogleDrive(silent = false) {
       if (gdriveBackupInProgress) return;
-      if (!gdriveConfig.scriptUrl) { if (!silent) showToast('Paste your Apps Script /exec URL first.'); return; }
-      if (!navigator.onLine) { updateDriveSyncIndicator(); if (!silent) showToast('Offline. Notes saved locally.'); return; }
+      if (!navigator.onLine) { updateDriveSyncIndicator(); if (!silent) showToast('Offline. Notes are saved locally; sync when online.'); return; }
       gdriveBackupInProgress = true;
       updateDriveSyncIndicator('pending');
       try {
+        await ensureDriveAccess();
         await flushNow();
+        const folders = await ensureDriveFolders();
         const backup = buildFullBackupPayload();
-        const result = await scriptPostBackup(backup);
-        if (!result || !result.ok) throw new Error('Drive did not confirm backup.');
-        const stamp = result.updatedAt || backup.exportedAt;
-        gdriveConfig.lastSync = stamp;
-        gdriveConfig.lastKnownRemoteAt = stamp;
+        const latestFiles = await findDriveFile(DRIVE_LATEST_NAME, folders.rootId, 'application/json');
+        const latest = await uploadDriveJson(DRIVE_LATEST_NAME, folders.rootId, backup, latestFiles[0]?.id);
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        await uploadDriveJson('BioNotes_Backup_' + stamp + '.json', folders.backupsId, backup);
+        const stampTime = new Date().toISOString();
+        gdriveConfig.lastSync = latest.modifiedTime || stampTime;
+        gdriveConfig.lastKnownRemoteAt = gdriveConfig.lastSync;
+        gdriveConfig.latestFileId = latest.id;
         gdriveConfig.hasUnsyncedChanges = false;
         gdriveConfig.remoteUpdateAvailable = false;
         await persistGDriveConfig();
         updateGDriveUI();
-        if (!silent) showToast('✓ All notes, edits & folders synced to Google Drive!');
+        if (!silent) showToast('✓ Notes and embedded images backed up directly to Google Drive.');
       } catch (e) {
-        if (!silent) showToast('Backup failed: ' + e.message);
+        if (!silent) showToast('Drive sync failed: ' + e.message);
+        console.error('Google Drive API sync failed:', e);
       } finally {
         gdriveBackupInProgress = false;
         updateDriveSyncIndicator();
@@ -3840,22 +3902,23 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
     }
 
     async function restoreLatestFromGoogleDrive(skipConfirm = false) {
-      if (!gdriveConfig.scriptUrl) { showToast('Paste your Apps Script /exec URL first.'); return; }
       if (!navigator.onLine) { showToast('Connect to the internet before restoring.'); return; }
       if (gdriveBackupInProgress) return;
       gdriveBackupInProgress = true;
       updateDriveSyncIndicator('pending');
       try {
+        await ensureDriveAccess();
         await flushNow();
-        const response = await scriptGet('get');
-        if (!response || !response.ok || !response.backup) { showToast('No valid BioNotes backup found in Drive.'); return; }
-        const backup = response.backup;
-        if (backup.app !== 'NEET_BioNotes' || !backup.library || !backup.library.chapters) throw new Error('Invalid BioNotes backup.');
+        const folders = await ensureDriveFolders();
+        const files = await findDriveFile(DRIVE_LATEST_NAME, folders.rootId, 'application/json');
+        if (!files.length) { showToast('No BioNotes backup found in the new NEET BioNotes Drive folder.'); return; }
+        const backup = await downloadDriveJson(files[0].id);
+        if (!backup || backup.app !== 'NEET_BioNotes' || !backup.library || !backup.library.chapters) throw new Error('Invalid BioNotes Drive backup.');
         if (!skipConfirm) {
           const when = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString() : 'unknown date';
-          if (!confirm(`Restore latest Google Drive backup from ${when}?\n\nCurrent local data will first be saved in a recovery snapshot.`)) return;
+          if (!confirm('Restore Drive backup from ' + when + '?\\n\\nCurrent local data will first be saved in a recovery snapshot.')) return;
         }
-        recordRollingSnapshot('Before restoring latest Google Drive backup');
+        recordRollingSnapshot('Before restoring Google Drive API backup');
         const prevActiveChapter = library.activeChapterId;
         library = JSON.parse(JSON.stringify(backup.library));
         if (!library.folders) library.folders = {};
@@ -3865,30 +3928,25 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
           try { localStorage.setItem(PREFS_KEY, JSON.stringify(backup.preferences)); } catch (e) {}
           loadPreferences();
         }
-        if (prevActiveChapter && library.chapters[prevActiveChapter]) {
-          library.activeChapterId = prevActiveChapter;
-        }
+        if (prevActiveChapter && library.chapters[prevActiveChapter]) library.activeChapterId = prevActiveChapter;
         await persistLibrary();
         renderSidebar();
-        if (currentView === 'dashboard') {
-          renderDashboard();
-        } else if (currentView === 'mindmap') {
-          openChapterMindMap(library.activeChapterId);
-        } else {
-          loadActiveChapterIntoDOM();
-          applyTopicFocusFilter(activeTopicFilterId || '', '');
-        }
-        const stamp = response.updatedAt || backup.exportedAt || new Date().toISOString();
+        if (currentView === 'dashboard') renderDashboard();
+        else if (currentView === 'mindmap') openChapterMindMap(library.activeChapterId);
+        else { loadActiveChapterIntoDOM(); applyTopicFocusFilter(activeTopicFilterId || '', ''); }
+        const stamp = files[0].modifiedTime || backup.exportedAt || new Date().toISOString();
         gdriveConfig.lastSync = stamp;
         gdriveConfig.lastKnownRemoteAt = stamp;
+        gdriveConfig.latestFileId = files[0].id;
         gdriveConfig.hasUnsyncedChanges = false;
         gdriveConfig.remoteUpdateAvailable = false;
         await persistGDriveConfig();
         updateGDriveUI();
         closeGDriveModal();
-        showToast('✓ Restored latest notes & edits from Google Drive!');
+        showToast('✓ Restored notes and embedded images from Google Drive.');
       } catch (e) {
         showToast('Restore failed: ' + e.message);
+        console.error('Google Drive restore failed:', e);
       } finally {
         gdriveBackupInProgress = false;
         updateDriveSyncIndicator();
