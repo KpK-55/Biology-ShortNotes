@@ -1505,17 +1505,48 @@
       });
     }
 
-    async function readFromIDB(key) {
-      try {
-        const db = await openIDB();
-        return new Promise((resolve) => {
-          const tx = db.transaction(IDB_STORE, 'readonly');
-          const req = tx.objectStore(IDB_STORE).get(key);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => resolve(null);
-        });
-      } catch (e) { return null; }
-    }
+    
+async function readFromIDB(key) {
+  let db;
+
+  try {
+    db = await openIDB();
+
+    return await new Promise((resolve) => {
+      let result = null;
+
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(key);
+
+      req.onsuccess = () => {
+        result = req.result ?? null;
+      };
+
+      req.onerror = () => {
+        result = null;
+      };
+
+      tx.oncomplete = () => {
+        db.close();
+        resolve(result);
+      };
+
+      tx.onerror = () => {
+        db.close();
+        resolve(null);
+      };
+
+      tx.onabort = () => {
+        db.close();
+        resolve(null);
+      };
+    });
+  } catch (error) {
+    if (db) db.close();
+    return null;
+  }
+}
+
 
     function loadPreferences() {
       try {
