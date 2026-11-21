@@ -30,15 +30,15 @@
   </script>
   <style>
     :root {
-      --bg-main: #0d0e11;
-      --bg-panel: #15171c;
-      --bg-nested: #1b1e25;
-      --bg-hover: #242832;
-      --border-color: #262a34;
-      --border-strong: #373d4c;
-      --text-main: #e0e0e0;
-      --text-muted: #98a0b3;
-      --text-heading: #eceef2;
+      --bg-main: #17191e;
+      --bg-panel: #20232a;
+      --bg-nested: #292d36;
+      --bg-hover: #343945;
+      --border-color: #343945;
+      --border-strong: #48505f;
+      --text-main: #e7e5e1;
+      --text-muted: #b2b7c2;
+      --text-heading: #f1efe9;
       --table-th: #1e222b;
       --table-td: #14161b;
       --cloze-revealed: #7dd3fc;
@@ -284,6 +284,26 @@
       position: absolute; right: 4px; bottom: 4px; width: 18px; height: 18px;
       background: #7dd3fc; border-radius: 4px; cursor: nwse-resize; opacity: 0; transition: opacity 0.15s; touch-action: none;
     }
+    .img-move-handle {
+      position:absolute; left:8px; top:8px; z-index:11; width:30px; height:28px;
+      display:none; align-items:center; justify-content:center; border-radius:7px;
+      color:#e5e7eb; background:rgba(31,41,55,.92); border:1px solid rgba(255,255,255,.25);
+      cursor:grab; touch-action:none; user-select:none; font-size:15px;
+    }
+    body.edit-mode .inserted-img-wrapper:hover .img-move-handle,
+    body.edit-mode .inserted-img-wrapper:focus-within .img-move-handle { display:flex; }
+    body.edit-mode .inserted-img-wrapper { outline:1px dashed transparent; }
+    body.edit-mode .inserted-img-wrapper:hover { outline-color:var(--accent-sky); }
+    .mm-node-grip { display:none; position:absolute; left:5px; top:50%; transform:translateY(-50%); cursor:grab; touch-action:none; opacity:.75; }
+    .mm-node-pill.mm-editable { padding-left:26px; }
+    .mm-node-pill.mm-editable .mm-node-grip { display:block; }
+    .mm-node-pill[contenteditable="true"] { cursor:text; user-select:text; outline:2px solid #7dd3fc; }
+    body.edit-mode .inserted-img-wrapper .img-resize-handle { opacity:1; }
+    @media (pointer: coarse) {
+      body.edit-mode .inserted-img-wrapper .img-move-handle { display:flex; }
+      .mm-node-grip { display:block; }
+    }
+
     .img-controls { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; z-index: 10; }
     body.edit-mode .inserted-img-wrapper:hover .img-resize-handle,
     body.edit-mode .inserted-img-wrapper:hover .img-controls,
@@ -2396,76 +2416,74 @@ async function readFromIDB(key) {
       const svg = document.getElementById('mindmap-svg');
       const nodesLayer = document.getElementById('mindmap-nodes-layer');
       const stage = document.getElementById('mindmap-stage');
-
       const branchCount = Math.max(1, mm.branches.length);
-      const rowGap = 96;
-      const totalHeight = Math.max(660, branchCount * rowGap + 150);
-      const totalWidth = 1220;
-
-      stage.style.width = totalWidth + 'px';
-      stage.style.height = totalHeight + 'px';
+      const rowGap = 112, totalHeight = Math.max(660, branchCount * rowGap + 170), totalWidth = 1320;
+      stage.style.width = totalWidth + 'px'; stage.style.height = totalHeight + 'px';
       stage.style.transform = `scale(${mmZoomLevel})`;
-      svg.setAttribute('width', totalWidth);
-      svg.setAttribute('height', totalHeight);
+      svg.setAttribute('width', totalWidth); svg.setAttribute('height', totalHeight);
       svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
       document.getElementById('mm-zoom-label').textContent = Math.round(mmZoomLevel * 100) + '%';
-
-      const rootX = 135;
-      const rootY = totalHeight / 2;
-      const topicX = 330;
-      const topicW = 235;
-      const subX = 685;
-
-      const arrowStroke = currentTheme === 'dark' ? '#cbd5e1' : '#334155';
+      const rootX = 135, rootY = totalHeight / 2, topicX = 330, topicW = 245, subX = 720;
+      const arrowStroke = currentTheme === 'dark' ? '#aeb8c8' : '#475569';
       let paths = `<defs><marker id="mm-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="${arrowStroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
-      let nodesHtml = `
-        <div class="mm-root-circle" style="left:${rootX}px; top:${rootY}px; background:${mm.rootBg || '#f5d782'}; color:${mm.rootFg || '#1f2937'};">
-          ${escapeHTML(mm.rootLabel)}
-        </div>
-      `;
-
+      let nodesHtml = `<div class="mm-root-circle" style="left:${rootX}px;top:${rootY}px;background:${mm.rootBg || '#e8d5a5'};color:${mm.rootFg || '#26313d'};">${escapeHTML(mm.rootLabel)}</div>`;
       const startY = (totalHeight - (branchCount - 1) * rowGap) / 2;
-
       mm.branches.forEach((br, bIdx) => {
-        const by = startY + bIdx * rowGap;
+        if (!Number.isFinite(br.x)) br.x = topicX;
+        if (!Number.isFinite(br.y)) br.y = startY + bIdx * rowGap;
+        const by = br.y, bx = br.x;
         const isSelected = mmSelectedBranch && mmSelectedBranch.branchIdx === bIdx && mmSelectedBranch.subIdx === -1;
-
-        const rStartX = rootX + 74;
-        const c1X = rStartX + 55;
-        const c2X = topicX - 55;
-        paths += `<path d="M ${rStartX} ${rootY} C ${c1X} ${rootY}, ${c2X} ${by}, ${topicX - 6} ${by}" fill="none" stroke="${arrowStroke}" stroke-width="2.1" marker-end="url(#mm-arrow)" />`;
-
-        nodesHtml += `
-          <div onclick="handleMindMapNodeClick(${bIdx}, -1)"
-               class="mm-node-pill ${isSelected ? 'mm-selected' : ''}"
-               style="left:${topicX}px; top:${by}px; width:${topicW}px; background:${br.bg || '#f5d782'}; color:${br.fg || '#1f2937'};">
-            ${escapeHTML(br.label)}
-          </div>
-        `;
-
-        const subs = br.subtopics || [];
-        const subGap = 52;
+        paths += `<path d="M ${rootX+74} ${rootY} C ${rootX+135} ${rootY}, ${bx-65} ${by}, ${bx-6} ${by}" fill="none" stroke="${arrowStroke}" stroke-width="2.1" marker-end="url(#mm-arrow)" />`;
+        nodesHtml += `<div data-mm-branch="${bIdx}" data-mm-sub="-1" onclick="handleMindMapNodeClick(${bIdx},-1)" ondblclick="mmStartInlineEdit(this,${bIdx},-1)" class="mm-node-pill ${isSelected?'mm-selected':''} ${isMindMapEditMode?'mm-editable':''}" style="left:${bx}px;top:${by}px;width:${topicW}px;background:${br.bg||'#e8d5a5'};color:${br.fg||'#26313d'};">${isMindMapEditMode?'<span class="mm-node-grip" title="Drag box">⠿</span>':''}<span class="mm-node-label">${escapeHTML(br.label)}</span></div>`;
+        const subs = br.subtopics || [], subGap = 58;
         const subStartY = by - ((subs.length - 1) * subGap) / 2;
-        subs.forEach((sub, sIdx) => {
-          const sy = subStartY + sIdx * subGap;
-          const sStartX = topicX + topicW + 8;
-          const sc1X = sStartX + 45;
-          const sc2X = subX - 45;
-          const isSubSel = mmSelectedBranch && mmSelectedBranch.branchIdx === bIdx && mmSelectedBranch.subIdx === sIdx;
-
-          paths += `<path d="M ${sStartX} ${by} C ${sc1X} ${by}, ${sc2X} ${sy}, ${subX - 6} ${sy}" fill="none" stroke="${arrowStroke}" stroke-width="2" marker-end="url(#mm-arrow)" />`;
-          nodesHtml += `
-            <div onclick="handleMindMapNodeClick(${bIdx}, ${sIdx})"
-                 class="mm-node-pill ${isSubSel ? 'mm-selected' : ''}"
-                 style="left:${subX}px; top:${sy}px; min-width:195px; background:${sub.bg || '#f5d782'}; color:${sub.fg || '#1f2937'};">
-              ${escapeHTML(sub.label)}
-            </div>
-          `;
+        subs.forEach((sub,sIdx)=>{
+          if (!Number.isFinite(sub.x)) sub.x = subX;
+          if (!Number.isFinite(sub.y)) sub.y = subStartY + sIdx*subGap;
+          const sx=sub.x, sy=sub.y;
+          const isSubSel=mmSelectedBranch && mmSelectedBranch.branchIdx===bIdx && mmSelectedBranch.subIdx===sIdx;
+          paths += `<path d="M ${bx+topicW+8} ${by} C ${bx+topicW+65} ${by}, ${sx-55} ${sy}, ${sx-6} ${sy}" fill="none" stroke="${arrowStroke}" stroke-width="2" marker-end="url(#mm-arrow)" />`;
+          nodesHtml += `<div data-mm-branch="${bIdx}" data-mm-sub="${sIdx}" onclick="handleMindMapNodeClick(${bIdx},${sIdx})" ondblclick="mmStartInlineEdit(this,${bIdx},${sIdx})" class="mm-node-pill ${isSubSel?'mm-selected':''} ${isMindMapEditMode?'mm-editable':''}" style="left:${sx}px;top:${sy}px;min-width:195px;background:${sub.bg||'#d8e5df'};color:${sub.fg||'#26313d'};">${isMindMapEditMode?'<span class="mm-node-grip" title="Drag box">⠿</span>':''}<span class="mm-node-label">${escapeHTML(sub.label)}</span></div>`;
         });
       });
+      svg.innerHTML=paths; nodesLayer.innerHTML=nodesHtml;
+      if (isMindMapEditMode) bindMindMapNodeInteractions(nodesLayer);
+    }
 
-      svg.innerHTML = paths;
-      nodesLayer.innerHTML = nodesHtml;
+    function mmStartInlineEdit(node, branchIdx, subIdx) {
+      if (!isMindMapEditMode || !node) return;
+      const label = node.querySelector('.mm-node-label'); if (!label) return;
+      label.contentEditable = 'true'; label.focus();
+      const range=document.createRange(); range.selectNodeContents(label); range.collapse(false);
+      const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      const finish=()=>{
+        label.contentEditable='false';
+        const ch=library.chapters[library.activeChapterId], mm=ch&&ensureChapterMindMapData(ch);
+        const target=mm && (subIdx>=0 ? mm.branches[branchIdx]?.subtopics?.[subIdx] : mm.branches[branchIdx]);
+        if(target){ const next=label.textContent.trim(); if(next) target.label=next; renderChapterMindMap(); scheduleAutoSave(true); }
+      };
+      label.onblur=finish;
+      label.onkeydown=(e)=>{ if(e.key==='Enter'){e.preventDefault();label.blur();} if(e.key==='Escape'){e.preventDefault();label.textContent=(subIdx>=0?library.chapters[library.activeChapterId].mindMap.branches[branchIdx].subtopics[subIdx].label:library.chapters[library.activeChapterId].mindMap.branches[branchIdx].label);label.blur();} };
+    }
+
+    function bindMindMapNodeInteractions(layer) {
+      layer.querySelectorAll('.mm-node-pill').forEach(node=>{
+        const grip=node.querySelector('.mm-node-grip'); if(!grip) return;
+        grip.addEventListener('pointerdown', e=>{
+          e.preventDefault(); e.stopPropagation(); grip.setPointerCapture?.(e.pointerId);
+          const b=Number(node.dataset.mmBranch), si=Number(node.dataset.mmSub);
+          const ch=library.chapters[library.activeChapterId], mm=ensureChapterMindMapData(ch);
+          const target=si>=0?mm.branches[b].subtopics[si]:mm.branches[b];
+          const startX=e.clientX, startY=e.clientY, origX=target.x, origY=target.y;
+          const move=ev=>{ target.x=Math.max(230,origX+(ev.clientX-startX)/mmZoomLevel); target.y=Math.max(70,origY+(ev.clientY-startY)/mmZoomLevel); renderMindMapDuringDrag(node,b,si,target); };
+          const up=()=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); renderChapterMindMap(); scheduleAutoSave(true); };
+          window.addEventListener('pointermove',move); window.addEventListener('pointerup',up,{once:true});
+        });
+      });
+    }
+    function renderMindMapDuringDrag(node,b,si,target) {
+      // Re-rendering while dragging keeps connectors attached to the moving box.
+      renderChapterMindMap();
     }
 
     function handleMindMapNodeClick(branchIdx, subIdx) {
@@ -4116,6 +4134,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       wrapper.style.width = '440px';
       wrapper.contentEditable = 'false';
       wrapper.innerHTML = `
+        <div class="img-move-handle" title="Drag diagram within this notes area">✥</div>
         <img src="${dataUrl}" alt="NCERT Diagram" class="w-full h-auto block" />
         <div class="img-controls flex items-center gap-1 bg-black/85 border border-white/20 rounded-lg px-2 py-1 shadow-lg">
           <button type="button" onclick="setImageAlign(this, 'left')" class="text-[10px] px-1.5 py-0.5 text-white hover:bg-white/20 rounded">⫷</button>
@@ -4130,6 +4149,7 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
         <div class="img-resize-handle" title="Drag to resize"></div>
       `;
       attachResizeHandler(wrapper);
+      attachImageMoveHandler(wrapper);
       const canvas = document.getElementById('notes-canvas');
       const visibleSection = Array.from(canvas.querySelectorAll('.topic-section')).find(s => s.style.display !== 'none');
       const resolvedTarget = (target && document.body.contains(target)) ? target : (visibleSection?.querySelector('.topic-body') || canvas);
@@ -4170,9 +4190,27 @@ function getMainFile_() { const files=DriveApp.getFilesByName(MAIN_FILE); return
       handle.addEventListener('touchstart', (e) => { e.stopPropagation(); if (e.touches[0]) startResize(e.touches[0].clientX); }, { passive: true });
     }
 
+    function attachImageMoveHandler(wrapper) {
+      const handle=wrapper.querySelector('.img-move-handle'); if(!handle || handle.dataset.bound) return;
+      handle.dataset.bound='1';
+      handle.addEventListener('pointerdown', e=>{
+        if(!isEditMode) return; e.preventDefault(); e.stopPropagation();
+        const startX=e.clientX, startY=e.clientY;
+        const oldX=parseFloat(wrapper.dataset.moveX||'0'), oldY=parseFloat(wrapper.dataset.moveY||'0');
+        const move=ev=>{
+          const dx=oldX+(ev.clientX-startX), dy=oldY+(ev.clientY-startY);
+          wrapper.dataset.moveX=String(dx); wrapper.dataset.moveY=String(dy);
+          wrapper.style.transform=`translate(${dx}px,${dy}px)`;
+        };
+        const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);scheduleAutoSave();};
+        window.addEventListener('pointermove',move); window.addEventListener('pointerup',up,{once:true});
+      });
+    }
+
     function rebindInsertedImages() {
       document.querySelectorAll('.inserted-img-wrapper').forEach(wrapper => {
         attachResizeHandler(wrapper);
+        attachImageMoveHandler(wrapper);
         const cap = wrapper.querySelector('.img-caption');
         if (cap) cap.setAttribute('contenteditable', isEditMode ? 'true' : 'false');
       });
